@@ -30,27 +30,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define STATE_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
 
 #include <vector>
-#include <state_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/traits.hpp>
 
 
 namespace sf
 {
-template<typename State, typename Observation_>
-class RaoBlackwellObserver
+
+/**
+ * Rao-Blackwellized particle filter observation model interface
+ *
+ * \ingroup observation_models
+ */
+template<typename State_, typename Observation_>
+class RaoBlackwellObserver     
 {
 public:
-    typedef typename internal::VectorTraits<State>::Scalar Scalar;
-    typedef Observation_  Observation;
+    typedef State_       State;
+    typedef Observation_ Observation;
 
 public:
-    virtual ~RaoBlackwellObserver() {}
+    virtual ~RaoBlackwellObserver() { }
 
-    // since we can not implicitly cast a vector globally we do it here locally
-    virtual std::vector<Scalar> Loglikes(const std::vector<State>& states,
+    virtual std::vector<double> Loglikes(const std::vector<State>& states,
                                          std::vector<size_t>& indices,
                                          const bool& update = false) = 0;
 
-    virtual void SetObservation(const Observation& image, const Scalar& delta_time) = 0;
+    virtual void SetObservation(const Observation& image, const double& delta_time) = 0;
 
     // reset the latent variables
     virtual void Reset() = 0;
