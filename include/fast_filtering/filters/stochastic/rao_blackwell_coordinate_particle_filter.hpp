@@ -42,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/distributions/sum_of_deltas.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
-#include <fast_filtering/models/observers/interfaces/rao_blackwell_observer.hpp>
+#include <fast_filtering/models/observers/interfaces/rao_blackwell_observation_model_interface.hpp>
 #include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
 
 namespace ff
@@ -82,7 +82,7 @@ public:
 
         SF_REQUIRE_INTERFACE(
             ObservationModel,
-            RaoBlackwellObserver<State, Observation>);
+            RaoBlackwellObservationModelInterface<State, Observation>);
 
         SamplingBlocks(sampling_blocks);
     }

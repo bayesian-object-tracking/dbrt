@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#ifndef FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
-#define FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
+#ifndef FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVATION_MODEL_INTERFACE_HPP
+#define FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVATION_MODEL_INTERFACE_HPP
 
 #include <vector>
 #include <fast_filtering/utils/traits.hpp>
@@ -42,20 +42,21 @@ namespace ff
  * \ingroup observation_models
  */
 template<typename State_, typename Observation_>
-class RaoBlackwellObserver     
+class RaoBlackwellObservationModelInterface
 {
 public:
     typedef State_       State;
     typedef Observation_ Observation;
 
 public:
-    virtual ~RaoBlackwellObserver() { }
+    virtual ~RaoBlackwellObservationModelInterface() { }
 
     virtual std::vector<double> Loglikes(const std::vector<State>& states,
                                          std::vector<size_t>& indices,
                                          const bool& update = false) = 0;
 
-    virtual void SetObservation(const Observation& image, const double& delta_time) = 0;
+    virtual void SetObservation(const Observation& image,
+                                const double& delta_time) = 0;
 
     // reset the latent variables
     virtual void Reset() = 0;
