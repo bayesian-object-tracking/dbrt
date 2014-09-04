@@ -54,10 +54,10 @@ namespace ff
 {
 
 template <typename State, typename Input>
-class StationaryProcessInterface
+class StationaryProcessModelInterface
 {
 public:
-    virtual ~StationaryProcessInterface() { }
+    virtual ~StationaryProcessModelInterface() { }
 
     virtual void Condition(const double& delta_time,
                            const State& state,

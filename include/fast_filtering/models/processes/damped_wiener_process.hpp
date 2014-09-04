@@ -67,16 +67,16 @@ namespace internal
 template <typename State_>
 struct Traits<DampedWienerProcess<State_> >
 {
-    typedef State_ State; //TODO: DOES THIS MAKE SENSE?
+    typedef State_                                              State;
     typedef typename State::Scalar                              Scalar;
     typedef Eigen::Matrix<Scalar, State::SizeAtCompileTime, 1>  Input;
     typedef Eigen::Matrix<Scalar, State::SizeAtCompileTime, 1>  Noise;
 
-    typedef Gaussian<Noise>                             GaussianType;
-    typedef typename GaussianType::Operator             Operator;
+    typedef Gaussian<Noise>                 GaussianType;
+    typedef typename GaussianType::Operator Operator;
 
-    typedef StationaryProcessInterface<State, Input>    StationaryProcessInterfaceBase;
-    typedef GaussianMappableInterface<State, Noise>     GaussianMappableBase;
+    typedef StationaryProcessModelInterface<State, Input>   ProcessModelBase;
+    typedef GaussianMappableInterface<State, Noise>         GaussianMappableBase;
 };
 }
 
@@ -88,7 +88,7 @@ struct Traits<DampedWienerProcess<State_> >
  */
 template <typename State>
 class DampedWienerProcess:
-        public internal::Traits<DampedWienerProcess<State> >::StationaryProcessInterfaceBase,
+        public internal::Traits<DampedWienerProcess<State> >::ProcessModelBase,
         public internal::Traits<DampedWienerProcess<State> >::GaussianMappableBase
 {
 public:

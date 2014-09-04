@@ -67,7 +67,6 @@ namespace internal
  * IntegratedDampedWienerProcess distribution traits specialization
  * \internal
  */
-//template <typename Scalar_, int INPUT_DIMENSION>
 template <typename State_>
 struct Traits<IntegratedDampedWienerProcess<State_> >
 {
@@ -82,7 +81,7 @@ struct Traits<IntegratedDampedWienerProcess<State_> >
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Input;
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Noise;
 
-    typedef StationaryProcessInterface<State, Input>    StationaryProcessInterfaceBase;
+    typedef StationaryProcessModelInterface<State, Input>    ProcessModelBase;
     typedef GaussianMappableInterface<State, Noise>     GaussianMappableBase;
 
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> WienerProcessState;
@@ -101,7 +100,7 @@ struct Traits<IntegratedDampedWienerProcess<State_> >
  */
 template <typename State_>
 class IntegratedDampedWienerProcess:
-        public internal::Traits<IntegratedDampedWienerProcess<State_> >::StationaryProcessInterfaceBase,
+        public internal::Traits<IntegratedDampedWienerProcess<State_> >::ProcessModelBase,
         public internal::Traits<IntegratedDampedWienerProcess<State_> >::GaussianMappableBase
 {
 public:
