@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef STATE_FILTERING_OCCLUSION_PROCESS_MODEL_HPP_
 #define STATE_FILTERING_OCCLUSION_PROCESS_MODEL_HPP_
 
-#include <state_filtering/models/processes/interfaces/stationary_process_interface.hpp>
+#include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
 
 // TODO: THIS NEEDS TO BE CLEANED!!
 namespace sf

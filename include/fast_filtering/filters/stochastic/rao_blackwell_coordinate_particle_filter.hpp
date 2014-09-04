@@ -36,14 +36,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Eigen/Core>
 
-#include <state_filtering/utils/macros.hpp>
-#include <state_filtering/utils/traits.hpp>
-#include <state_filtering/utils/helper_functions.hpp>
-#include <state_filtering/distributions/gaussian.hpp>
-#include <state_filtering/distributions/sum_of_deltas.hpp>
-#include <state_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
-#include <state_filtering/models/observers/interfaces/rao_blackwell_observer.hpp>
-#include <state_filtering/models/processes/interfaces/stationary_process_interface.hpp>
+#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/helper_functions.hpp>
+#include <fast_filtering/distributions/gaussian.hpp>
+#include <fast_filtering/distributions/sum_of_deltas.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
+#include <fast_filtering/models/observers/interfaces/rao_blackwell_observer.hpp>
+#include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
 
 namespace sf
 {
@@ -52,12 +52,12 @@ template<typename ProcessModel, typename ObservationModel>
 class RaoBlackwellCoordinateParticleFilter
 {
 public:
-    typedef typename internal::Traits<ProcessModel>::Scalar   Scalar;
-    typedef typename internal::Traits<ProcessModel>::State    State;
-    typedef typename internal::Traits<ProcessModel>::Input    Input;
-    typedef typename internal::Traits<ProcessModel>::Noise    Noise;
+    typedef typename internal::Traits<ProcessModel>::Scalar Scalar;
+    typedef typename internal::Traits<ProcessModel>::State  State;
+    typedef typename internal::Traits<ProcessModel>::Input  Input;
+    typedef typename internal::Traits<ProcessModel>::Noise  Noise;
 
-    typedef typename ObservationModel::Observation            Observation;
+    typedef typename ObservationModel::Observation Observation;
 
     // state distribution
     typedef SumOfDeltas<State> StateDistributionType;

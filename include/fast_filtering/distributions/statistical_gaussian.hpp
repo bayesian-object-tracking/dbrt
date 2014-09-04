@@ -47,9 +47,9 @@
 
 #include <Eigen/Dense>
 
-#include <state_filtering/utils/traits.hpp>
-#include <state_filtering/utils/macros.hpp>
-#include <state_filtering/distributions/interfaces/moments_interface.hpp>
+#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
 
 namespace sf
 {
@@ -66,9 +66,9 @@ namespace internal
 template <typename Vector>
 struct Traits<StatisticalGaussian<Vector> >
 {
-    enum { Dimension = VectorTraits<Vector>::Dimension };
+    enum { Dimension = Vector::SizeAtCompileTime };
 
-    typedef typename internal::VectorTraits<Vector>::Scalar  Scalar;
+    typedef typename Vector::Scalar  Scalar;
     typedef Eigen::Matrix<Scalar, Dimension, Dimension>      Operator;
 
     typedef Eigen::Vector<double, Eigen::Dynamic>            WeightVector;
@@ -101,6 +101,8 @@ public:
      */
     explicit StatisticalGaussian(int number_of_points = 1)
     {
+        SF_REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Traits::Dimension, 1>);
+
         if (number_of_points > 0)
         {
             mean_weights_.resize(number_of_points);

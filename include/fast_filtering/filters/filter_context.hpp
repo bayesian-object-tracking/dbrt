@@ -47,7 +47,7 @@
 #ifndef STATE_FILTERING_FILTER_FILTER_CONTEXT_HPP
 #define STATE_FILTERING_FILTER_FILTER_CONTEXT_HPP
 
-#include <state_filtering/distributions/interfaces/moments_estimable.hpp>
+#include <fast_filtering/distributions/interfaces/moments_estimable.hpp>
 
 /**
  * @brief State filtering namespace

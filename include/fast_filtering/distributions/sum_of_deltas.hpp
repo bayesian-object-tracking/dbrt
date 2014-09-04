@@ -54,9 +54,9 @@
 #include <vector>
 
 // state_filtering
-#include <state_filtering/utils/macros.hpp>
-#include <state_filtering/utils/traits.hpp>
-#include <state_filtering/distributions/interfaces/moments_interface.hpp>
+#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
 
 namespace sf
 {

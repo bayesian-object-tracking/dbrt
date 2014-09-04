@@ -49,8 +49,8 @@
 
 #include <boost/assert.hpp>
 
-#include <state_filtering/models/processes/interfaces/stationary_process_interface.hpp>
-#include <state_filtering/distributions/gaussian.hpp>
+#include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
+#include <fast_filtering/distributions/gaussian.hpp>
 
 namespace sf
 {

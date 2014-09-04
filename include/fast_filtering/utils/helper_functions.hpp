@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/lexical_cast.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
 
-#include <state_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/macros.hpp>
 
 
 namespace sf

@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef STATE_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
 #define STATE_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
 
-#include <state_filtering/states/rigid_body_system.hpp>
+#include <fast_filtering/states/rigid_body_system.hpp>
 
 #include <Eigen/Dense>
 #include <boost/static_assert.hpp>
@@ -111,8 +111,7 @@ public:
 
     virtual ~FloatingBodySystem() {}
 
-  virtual void update() const
-  {}
+    virtual void update() const { }
   
     // read
     virtual Vector position(const size_t& body_index = 0) const

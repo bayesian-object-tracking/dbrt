@@ -51,9 +51,9 @@
 #include <Eigen/Dense>
 
 // state_filtering
-#include <state_filtering/distributions/interfaces/moments_interface.hpp>
-#include <state_filtering/distributions/interfaces/evaluation_interface.hpp>
-#include <state_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
+#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
+#include <fast_filtering/distributions/interfaces/evaluation_interface.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
 
 namespace sf
 {

@@ -50,7 +50,7 @@
 #define DISTRIBUTIONS_INTERFACE_UNNORMALIZED_EVAUATION_INTERFACE_HPP
 
 #include <cmath>
-#include <state_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/traits.hpp>
 
 
 namespace sf

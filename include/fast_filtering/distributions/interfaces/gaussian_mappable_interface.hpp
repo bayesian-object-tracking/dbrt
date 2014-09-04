@@ -53,10 +53,10 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
 
-#include <state_filtering/utils/macros.hpp>
-#include <state_filtering/utils/traits.hpp>
-#include <state_filtering/distributions/interfaces/sampling_interface.hpp>
-#include <state_filtering/distributions/standard_gaussian.hpp>
+#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/distributions/interfaces/sampling_interface.hpp>
+#include <fast_filtering/distributions/standard_gaussian.hpp>
 
 namespace sf
 {

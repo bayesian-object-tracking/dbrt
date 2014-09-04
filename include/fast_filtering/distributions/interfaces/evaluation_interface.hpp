@@ -50,8 +50,8 @@
 #define STATE_FILTERING_DISTRIBUTIONS_INTERFACE_EVAUATION_INTERFACE_HPP
 
 #include <cmath>
-#include <state_filtering/utils/traits.hpp>
-#include <state_filtering/distributions/interfaces/unnormalized_evaluation_interface.hpp>
+#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/distributions/interfaces/unnormalized_evaluation_interface.hpp>
 
 namespace sf
 {

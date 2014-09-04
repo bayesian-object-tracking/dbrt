@@ -47,7 +47,7 @@
 #ifndef STATE_FILTERING_FILTER_INTERFACE_MOMENTS_INTERFACE_HPP
 #define STATE_FILTERING_FILTER_INTERFACE_MOMENTS_INTERFACE_HPP
 
-#include <state_filtering/distributions/interfaces/approximate_moments_interface.hpp>
+#include <fast_filtering/distributions/interfaces/approximate_moments_interface.hpp>
 
 namespace sf
 {

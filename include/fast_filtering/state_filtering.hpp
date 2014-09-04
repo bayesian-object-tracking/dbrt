@@ -53,27 +53,27 @@
 
 #include <ros/ros.h>
 
-#include <state_filtering/distributions/gaussian.hpp>
-#include <state_filtering/distributions/sum_of_deltas.hpp>
-#include <state_filtering/distributions/standard_gaussian.hpp>
+#include <fast_filtering/distributions/gaussian.hpp>
+#include <fast_filtering/distributions/sum_of_deltas.hpp>
+#include <fast_filtering/distributions/standard_gaussian.hpp>
 
-#include <state_filtering/states/rigid_body_system.hpp>
-#include <state_filtering/states/floating_body_system.hpp>
+#include <fast_filtering/states/rigid_body_system.hpp>
+#include <fast_filtering/states/floating_body_system.hpp>
 
-#include <state_filtering/models/processes/damped_wiener_process.hpp>
-#include <state_filtering/models/processes/integrated_damped_wiener_process.hpp>
-#include <state_filtering/models/processes/brownian_object_motion.hpp>
+#include <fast_filtering/models/processes/damped_wiener_process.hpp>
+#include <fast_filtering/models/processes/integrated_damped_wiener_process.hpp>
+#include <fast_filtering/models/processes/brownian_object_motion.hpp>
 
-#include <state_filtering/filters/stochastic/rao_blackwell_coordinate_particle_filter.hpp>
+#include <fast_filtering/filters/stochastic/rao_blackwell_coordinate_particle_filter.hpp>
 
-#include <tracking/states/robot_state.hpp>
-#include <tracking/models/observers/image_observer_cpu.hpp>
+#include <pose_tracking/states/robot_state.hpp>
+#include <pose_tracking/models/observers/image_observer_cpu.hpp>
 #ifdef BUILD_GPU
-#include <tracking/models/observers/image_observer_gpu/image_observer_gpu.hpp>
+#include <pose_tracking/models/observers/image_observer_gpu/image_observer_gpu.hpp>
 #endif
 
-#include <tracking/utils/pcl_interface.hpp>
-#include <tracking/utils/ros_interface.hpp>
+#include <pose_tracking/utils/pcl_interface.hpp>
+#include <pose_tracking/utils/ros_interface.hpp>
 
 namespace sf { enum { X = Eigen::Dynamic }; }
 
