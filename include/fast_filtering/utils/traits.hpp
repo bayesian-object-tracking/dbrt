@@ -59,43 +59,6 @@ namespace internal
  * Generic distribution trait template
  */
 template <typename T> struct Traits { };
-
-/**
- * \internal
- * Generic Vector Trait, it assumes that is derived from an Eigen::Matrix having
- * a Scalar type
- */
-template <typename Vector>
-struct VectorTraits
-{
-    typedef typename Vector::Scalar Scalar;
-    enum { Dimension = Vector::SizeAtCompileTime };
-};
-
-// VectorTraits specializations for single dimension vectors (scalars of a
-// specific type)
-
-template <>
-struct VectorTraits<int> { typedef int Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<float> { typedef float Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<double> { typedef double Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<long double> { typedef long double Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<std::complex<float> > { typedef std::complex<float> Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<std::complex<double> > { typedef std::complex<double> Scalar; enum { Dimension = 1 }; };
-
-template <>
-struct VectorTraits<std::complex<long double> > { typedef std::complex<long double> Scalar; enum { Dimension = 1 }; };
-
 }
 
 }
