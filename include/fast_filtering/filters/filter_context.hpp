@@ -44,8 +44,8 @@
  *   Karlsruhe Institute of Technology (KIT)
  */
 
-#ifndef STATE_FILTERING_FILTER_FILTER_CONTEXT_HPP
-#define STATE_FILTERING_FILTER_FILTER_CONTEXT_HPP
+#ifndef FAST_FILTERING_FILTER_FILTER_CONTEXT_HPP
+#define FAST_FILTERING_FILTER_FILTER_CONTEXT_HPP
 
 #include <fast_filtering/distributions/interfaces/moments_estimable.hpp>
 

@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#ifndef STATE_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
-#define STATE_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
+#ifndef FAST_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
+#define FAST_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
 
 #include <fast_filtering/states/rigid_body_system.hpp>
 

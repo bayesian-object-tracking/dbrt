@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#ifndef STATE_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
-#define STATE_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
+#ifndef FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
+#define FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVER_HPP
 
 #include <vector>
 #include <fast_filtering/utils/traits.hpp>

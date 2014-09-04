@@ -43,8 +43,8 @@
  *  University of Southern California
  */
 
-#ifndef STATE_FILTERING_UTILS_TRAITS_HPP
-#define STATE_FILTERING_UTILS_TRAITS_HPP
+#ifndef FAST_FILTERING_UTILS_TRAITS_HPP
+#define FAST_FILTERING_UTILS_TRAITS_HPP
 
 #include <complex>
 #include <Eigen/Dense>

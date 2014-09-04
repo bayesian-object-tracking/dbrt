@@ -25,8 +25,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
-#ifndef STATE_FILTERING_UTILS_MACROS_HPP
-#define STATE_FILTERING_UTILS_MACROS_HPP
+#ifndef FAST_FILTERING_UTILS_MACROS_HPP
+#define FAST_FILTERING_UTILS_MACROS_HPP
 
 #include <sys/time.h>
 #include <iostream>
