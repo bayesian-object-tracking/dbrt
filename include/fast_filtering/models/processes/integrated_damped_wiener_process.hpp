@@ -51,9 +51,9 @@
 
 // state_filtering
 
-#include <state_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
-#include <state_filtering/distributions/gaussian.hpp>
-#include <state_filtering/models/processes/damped_wiener_process.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
+#include <fast_filtering/distributions/gaussian.hpp>
+#include <fast_filtering/models/processes/damped_wiener_process.hpp>
 
 namespace sf
 {
@@ -78,7 +78,7 @@ struct Traits<IntegratedDampedWienerProcess<State_> >
     };
 
     typedef State_                                      State;
-    typedef typename VectorTraits<State>::Scalar        Scalar;
+    typedef typename State::Scalar                      Scalar;
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Input;
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Noise;
 
@@ -108,7 +108,7 @@ public:
     typedef internal::Traits<IntegratedDampedWienerProcess<State_> > Traits;
 
     typedef typename Traits::Scalar     Scalar;
-    typedef typename Traits::State     State;
+    typedef typename Traits::State      State;
     typedef typename Traits::Input      Input;
     typedef typename Traits::Operator   Operator;
     typedef typename Traits::Noise      Noise;

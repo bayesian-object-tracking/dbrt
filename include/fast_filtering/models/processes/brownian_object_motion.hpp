@@ -48,11 +48,11 @@
 #ifndef STATE_FILTERING_MODELS_PROCESS_BROWNIAN_OBJECT_MOTION_HPP
 #define STATE_FILTERING_MODELS_PROCESS_BROWNIAN_OBJECT_MOTION_HPP
 
-#include <state_filtering/utils/helper_functions.hpp>
-#include <state_filtering/states/floating_body_system.hpp>
-#include <state_filtering/models/processes/interfaces/stationary_process_interface.hpp>
-#include <state_filtering/models/processes/damped_wiener_process.hpp>
-#include <state_filtering/models/processes/integrated_damped_wiener_process.hpp>
+#include <fast_filtering/utils/helper_functions.hpp>
+#include <fast_filtering/states/floating_body_system.hpp>
+#include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
+#include <fast_filtering/models/processes/damped_wiener_process.hpp>
+#include <fast_filtering/models/processes/integrated_damped_wiener_process.hpp>
 
 namespace sf
 {
@@ -78,7 +78,7 @@ struct Traits<BrownianObjectMotion<State_, OBJECTS> >
     };
 
     typedef State_                                      State;
-    typedef typename VectorTraits<State>::Scalar        Scalar;
+    typedef typename State::Scalar                      Scalar;
     typedef Eigen::Matrix<Scalar, INPUT_DIMENSION, 1>   Input;
     typedef Input Noise;
 
