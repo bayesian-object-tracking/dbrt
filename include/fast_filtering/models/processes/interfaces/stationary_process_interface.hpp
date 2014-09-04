@@ -47,8 +47,8 @@
 #ifndef STATE_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
 #define STATE_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
 
-#include <state_filtering/utils/macros.hpp>
-#include <state_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/traits.hpp>
 
 namespace sf
 {
@@ -57,12 +57,9 @@ template <typename State, typename Input>
 class StationaryProcessInterface
 {
 public:
-    typedef typename internal::VectorTraits<State>::Scalar Scalar;
+    virtual ~StationaryProcessInterface() { }
 
-public:
-    virtual ~StationaryProcessInterface() {}
-
-    virtual void Condition(const Scalar& delta_time,
+    virtual void Condition(const double& delta_time,
                            const State& state,
                            const Input& input) = 0;
 };
