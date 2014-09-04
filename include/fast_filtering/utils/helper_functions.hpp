@@ -43,7 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fast_filtering/utils/macros.hpp>
 
 
-namespace sf
+namespace ff
 {
 
 namespace hf
@@ -957,7 +957,7 @@ public:
 		fibo_.seed(RANDOM_SEED);
 
 		// compute the likelihoods and normalize them ------------------------------------------------------------------------------
-        sorted_indices_ = sf::hf::SortDescend(log_likelihoods);
+        sorted_indices_ = ff::hf::SortDescend(log_likelihoods);
 		double max = log_likelihoods[sorted_indices_[0]];
 		for(int i = 0; i < int(log_likelihoods.size()); i++)
 			log_likelihoods[i] -= max;

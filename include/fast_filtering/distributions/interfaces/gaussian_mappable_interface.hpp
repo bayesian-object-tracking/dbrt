@@ -58,7 +58,7 @@
 #include <fast_filtering/distributions/interfaces/sampling_interface.hpp>
 #include <fast_filtering/distributions/standard_gaussian.hpp>
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector, typename Noise>

@@ -55,7 +55,7 @@
 #include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/processes/damped_wiener_process.hpp>
 
-namespace sf
+namespace ff
 {
 
 // Forward declarations

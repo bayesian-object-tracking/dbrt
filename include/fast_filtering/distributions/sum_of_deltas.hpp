@@ -58,7 +58,7 @@
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/moments_interface.hpp>
 
-namespace sf
+namespace ff
 {
 
 // Forward declarations

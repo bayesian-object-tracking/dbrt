@@ -48,7 +48,7 @@
 #define FAST_FILTERING_DISTRIBUTION_INTERFACE_SAMPLEBALE_HPP
 
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector>

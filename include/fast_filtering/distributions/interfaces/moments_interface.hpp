@@ -49,7 +49,7 @@
 
 #include <fast_filtering/distributions/interfaces/approximate_moments_interface.hpp>
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector, typename Operator>

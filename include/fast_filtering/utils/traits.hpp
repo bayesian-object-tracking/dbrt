@@ -49,7 +49,7 @@
 #include <complex>
 #include <Eigen/Dense>
 
-namespace sf
+namespace ff
 {
 
 namespace internal

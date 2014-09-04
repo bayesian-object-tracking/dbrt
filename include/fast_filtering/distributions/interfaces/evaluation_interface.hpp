@@ -53,7 +53,7 @@
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/unnormalized_evaluation_interface.hpp>
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector, typename Scalar>

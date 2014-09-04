@@ -52,7 +52,7 @@
 #include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
 #include <fast_filtering/distributions/gaussian.hpp>
 
-namespace sf
+namespace ff
 {
 
 // Forward declarations

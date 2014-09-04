@@ -57,7 +57,7 @@
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/sampling_interface.hpp>
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector>

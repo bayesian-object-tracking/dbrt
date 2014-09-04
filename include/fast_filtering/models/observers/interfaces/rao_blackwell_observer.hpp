@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fast_filtering/utils/traits.hpp>
 
 
-namespace sf
+namespace ff
 {
 
 /**

@@ -52,7 +52,7 @@
 /**
  * @brief State filtering namespace
  */
-namespace sf
+namespace ff
 {
 
 /**

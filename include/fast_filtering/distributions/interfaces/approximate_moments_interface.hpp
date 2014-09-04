@@ -47,7 +47,7 @@
 #ifndef FAST_FILTERING_FILTER_INTERFACE_APPROXIMATE_MOMENTS_INTERFACE_HPP
 #define FAST_FILTERING_FILTER_INTERFACE_APPROXIMATE_MOMENTS_INTERFACE_HPP
 
-namespace sf
+namespace ff
 {
 
 template <typename Vector, typename Operator>

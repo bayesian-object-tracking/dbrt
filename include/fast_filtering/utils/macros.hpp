@@ -78,7 +78,7 @@ if (sf::internal::Invalidate<VariableType::SizeAtCompileTime != Eigen::Dynamic>\
 if (sf::internal::Invalidate<VariableType::SizeAtCompileTime == Eigen::Dynamic>\
     ::YOU_CALLED_A_DYNAMIC_SIZE_METHOD_ON_A_FIXED_SIZE_DISTRIBUTION) { }
 
-namespace sf
+namespace ff
 {
 namespace internal
 {

@@ -55,7 +55,7 @@
 #include <fast_filtering/distributions/interfaces/evaluation_interface.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
 
-namespace sf
+namespace ff
 {
 
 // Forward declarations

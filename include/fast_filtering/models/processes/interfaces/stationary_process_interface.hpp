@@ -50,7 +50,7 @@
 #include <fast_filtering/utils/macros.hpp>
 #include <fast_filtering/utils/traits.hpp>
 
-namespace sf
+namespace ff
 {
 
 template <typename State, typename Input>
