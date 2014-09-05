@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef FAST_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
 #define FAST_FILTERING_STATES_FLOATING_BODY_SYSTEM_HPP_
 
-#include <fast_filtering/states/rigid_body_system.hpp>
+#include <pose_tracking/states/rigid_body_system.hpp>
 
 #include <Eigen/Dense>
 #include <boost/static_assert.hpp>
