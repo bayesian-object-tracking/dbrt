@@ -47,8 +47,6 @@
 #ifndef FAST_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
 #define FAST_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
 
-#include <fast_filtering/utils/macros.hpp>
-#include <fast_filtering/utils/traits.hpp>
 
 namespace ff
 {

@@ -51,6 +51,7 @@
 #include <Eigen/Dense>
 
 // state_filtering
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/moments_interface.hpp>
 #include <fast_filtering/distributions/interfaces/evaluation_interface.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
@@ -106,7 +107,7 @@ public:
         Traits::GaussianMappableBase(dimension)
     {
         // make sure that vector is derived from eigen
-        SF_REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
+        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
                                                    Vector::SizeAtCompileTime, 1>);
 
         mean_.resize(Dimension(), 1);

@@ -50,7 +50,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 
 // state_filtering
-
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
 #include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/processes/damped_wiener_process.hpp>
@@ -128,7 +128,7 @@ public:
         velocity_distribution_(degree_of_freedom),
         position_distribution_(degree_of_freedom)
     {
-        SF_REQUIRE_INTERFACE(State, Eigen::Matrix<Scalar, STATE_DIMENSION, 1>);
+        REQUIRE_INTERFACE(State, Eigen::Matrix<Scalar, STATE_DIMENSION, 1>);
 
         BOOST_STATIC_ASSERT_MSG(
                 STATE_DIMENSION % 2 == 0 || STATE_DIMENSION == Eigen::Dynamic,

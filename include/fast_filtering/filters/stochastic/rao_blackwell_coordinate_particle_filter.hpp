@@ -36,7 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Eigen/Core>
 
-#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/assertions.hpp>
+#include <fast_filtering/utils/profiling.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/utils/helper_functions.hpp>
 #include <fast_filtering/distributions/gaussian.hpp>
@@ -72,15 +73,15 @@ public:
         process_model_(process_model),
         max_kl_divergence_(max_kl_divergence)
     {
-        SF_REQUIRE_INTERFACE(
+        REQUIRE_INTERFACE(
             ProcessModel,
             StationaryProcessModelInterface<State, Input>);
 
-        SF_REQUIRE_INTERFACE(
+        REQUIRE_INTERFACE(
             ProcessModel,
             GaussianMappableInterface<State, Noise>);
 
-        SF_REQUIRE_INTERFACE(
+        REQUIRE_INTERFACE(
             ObservationModel,
             RaoBlackwellObservationModelInterface<State, Observation>);
 

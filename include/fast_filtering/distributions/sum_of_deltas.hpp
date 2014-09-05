@@ -54,7 +54,7 @@
 #include <vector>
 
 // state_filtering
-#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/moments_interface.hpp>
 
@@ -103,7 +103,7 @@ public:
 public:
     explicit SumOfDeltas(const unsigned& dimension = Vector::SizeAtCompileTime)
     {
-        SF_REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
+        REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
         deltas_ = Deltas(1, Vector::Zero(dimension == Eigen::Dynamic ? 0 : dimension));
         weights_ = Weights::Ones(1);

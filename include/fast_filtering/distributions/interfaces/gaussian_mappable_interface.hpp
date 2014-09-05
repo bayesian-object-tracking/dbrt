@@ -53,8 +53,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
 
-#include <fast_filtering/utils/macros.hpp>
-#include <fast_filtering/utils/traits.hpp>
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/sampling_interface.hpp>
 #include <fast_filtering/distributions/standard_gaussian.hpp>
 
@@ -70,7 +69,7 @@ public:
         standard_gaussian_(noise_dimension)
     {
         // make sure that noise is derived from eigen
-        SF_REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
+        REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
     }
 
     virtual ~GaussianMappableInterface() { }   

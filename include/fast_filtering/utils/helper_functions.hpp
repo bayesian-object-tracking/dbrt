@@ -36,12 +36,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <cmath>
+#include <sys/time.h>
+
 
 #include <boost/lexical_cast.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
 
-#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/random_seed.hpp>
 
+
+
+// TODO: THIS HAS TO BE CLEANED, POSSIBLY SPLIT INTO SEVERAL FILES
 
 namespace ff
 {

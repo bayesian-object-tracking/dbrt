@@ -47,8 +47,7 @@
 
 #include <Eigen/Dense>
 
-#include <boost/assert.hpp>
-
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/models/processes/interfaces/stationary_process_interface.hpp>
 #include <fast_filtering/distributions/gaussian.hpp>
 
@@ -106,7 +105,7 @@ public:
         gaussian_(dimension)
     {
         // check that state is derived from eigen
-        SF_REQUIRE_INTERFACE(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
+        REQUIRE_INTERFACE(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
     }
 
     virtual ~DampedWienerProcess() { }
