@@ -52,9 +52,9 @@
 
 // state_filtering
 #include <fast_filtering/utils/assertions.hpp>
-#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
-#include <fast_filtering/distributions/interfaces/evaluation_interface.hpp>
-#include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
+#include <fast_filtering/distributions/interfaces/moments.hpp>
+#include <fast_filtering/distributions/interfaces/evaluation.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 
 namespace ff
 {
