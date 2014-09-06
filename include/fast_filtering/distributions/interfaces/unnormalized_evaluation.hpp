@@ -46,8 +46,8 @@
  */
 
 
-#ifndef DISTRIBUTIONS_INTERFACE_UNNORMALIZED_EVAUATION_INTERFACE_HPP
-#define DISTRIBUTIONS_INTERFACE_UNNORMALIZED_EVAUATION_INTERFACE_HPP
+#ifndef DISTRIBUTIONS_INTERFACES_UNNORMALIZED_EVAUATION_HPP
+#define DISTRIBUTIONS_INTERFACES_UNNORMALIZED_EVAUATION_HPP
 
 #include <cmath>
 #include <fast_filtering/utils/traits.hpp>
@@ -57,10 +57,10 @@ namespace ff
 {
 
 template <typename Vector, typename Scalar>
-class UnnormalizedEvaulationInterface
+class UnnormalizedEvaulation
 {
 public:
-    virtual ~UnnormalizedEvaulationInterface() {}
+    virtual ~UnnormalizedEvaulation() {}
 
     virtual Scalar UnnormalizedProbability(const Vector& vector) const
     {

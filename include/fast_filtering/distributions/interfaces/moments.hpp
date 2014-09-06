@@ -44,8 +44,8 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_FILTER_INTERFACE_MOMENTS_INTERFACE_HPP
-#define FAST_FILTERING_FILTER_INTERFACE_MOMENTS_INTERFACE_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_MOMENTS_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_MOMENTS_HPP
 
 #include <fast_filtering/distributions/interfaces/approximate_moments.hpp>
 
@@ -53,11 +53,11 @@ namespace ff
 {
 
 template <typename Vector, typename Operator>
-class MomentsInterface:
-        public ApproximateMomentsInterface<Vector, Operator>
+class Moments:
+        public ApproximateMoments<Vector, Operator>
 {
 public:
-    virtual ~MomentsInterface() {}
+    virtual ~Moments() {}
 
     virtual Vector Mean() const = 0;
     virtual Operator Covariance() const = 0;

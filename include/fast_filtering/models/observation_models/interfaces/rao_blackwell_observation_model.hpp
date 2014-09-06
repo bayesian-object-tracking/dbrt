@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#ifndef FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVATION_MODEL_INTERFACE_HPP
-#define FAST_FILTERING_MODELS_OBSERVERS_INTERFACE_RAO_BLACKWELL_OBSERVATION_MODEL_INTERFACE_HPP
+#ifndef FAST_FILTERING_MODELS_OBSERVATION_MODELS_INTERFACES_RAO_BLACKWELL_OBSERVATION_MODEL_HPP
+#define FAST_FILTERING_MODELS_OBSERVATION_MODELS_INTERFACES_RAO_BLACKWELL_OBSERVATION_MODEL_HPP
 
 #include <vector>
 #include <fast_filtering/utils/traits.hpp>
@@ -42,14 +42,14 @@ namespace ff
  * \ingroup observation_models
  */
 template<typename State_, typename Observation_>
-class RaoBlackwellObservationModelInterface
+class RaoBlackwellObservationModel
 {
 public:
     typedef State_       State;
     typedef Observation_ Observation;
 
 public:
-    virtual ~RaoBlackwellObservationModelInterface() { }
+    virtual ~RaoBlackwellObservationModel() { }
 
     virtual std::vector<double> Loglikes(const std::vector<State>& states,
                                          std::vector<size_t>& indices,

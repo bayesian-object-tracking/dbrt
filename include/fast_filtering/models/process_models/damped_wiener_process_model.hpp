@@ -42,8 +42,8 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTIONS_DAMPED_WIENER_PROCESS_HPP
-#define FAST_FILTERING_DISTRIBUTIONS_DAMPED_WIENER_PROCESS_HPP
+#ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_DAMPED_WIENER_PROCESS_MODEL_HPP
+#define FAST_FILTERING_MODELS_PROCESS_MODELS_DAMPED_WIENER_PROCESS_MODEL_HPP
 
 #include <Eigen/Dense>
 
@@ -55,7 +55,7 @@ namespace ff
 {
 
 // Forward declarations
-template <typename State> class DampedWienerProcess;
+template <typename State> class DampedWienerProcessModel;
 
 namespace internal
 {
@@ -64,7 +64,7 @@ namespace internal
  * \internal
  */
 template <typename State_>
-struct Traits<DampedWienerProcess<State_> >
+struct Traits<DampedWienerProcessModel<State_> >
 {
     typedef State_                                              State;
     typedef typename State::Scalar                              Scalar;
@@ -74,8 +74,8 @@ struct Traits<DampedWienerProcess<State_> >
     typedef Gaussian<Noise>                 GaussianType;
     typedef typename GaussianType::Operator Operator;
 
-    typedef StationaryProcessModelInterface<State, Input>   ProcessModelBase;
-    typedef GaussianMappableInterface<State, Noise>         GaussianMappableBase;
+    typedef StationaryProcessModel<State, Input>   ProcessModelBase;
+    typedef GaussianMap<State, Noise>         GaussianMapBase;
 };
 }
 
@@ -86,12 +86,12 @@ struct Traits<DampedWienerProcess<State_> >
  * \ingroup process_models
  */
 template <typename State>
-class DampedWienerProcess:
-        public internal::Traits<DampedWienerProcess<State> >::ProcessModelBase,
-        public internal::Traits<DampedWienerProcess<State> >::GaussianMappableBase
+class DampedWienerProcessModel:
+        public internal::Traits<DampedWienerProcessModel<State> >::ProcessModelBase,
+        public internal::Traits<DampedWienerProcessModel<State> >::GaussianMapBase
 {
 public:
-    typedef internal::Traits<DampedWienerProcess<State> > Traits;
+    typedef internal::Traits<DampedWienerProcessModel<State> > Traits;
 
     typedef typename Traits::Scalar         Scalar;
     typedef typename Traits::Operator       Operator;
@@ -100,19 +100,19 @@ public:
     typedef typename Traits::GaussianType   GaussianType;
 
 public:
-    explicit DampedWienerProcess(const unsigned& dimension = State::SizeAtCompileTime):
-        Traits::GaussianMappableBase(dimension),
+    explicit DampedWienerProcessModel(const unsigned& dimension = State::SizeAtCompileTime):
+        Traits::GaussianMapBase(dimension),
         gaussian_(dimension)
     {
         // check that state is derived from eigen
         REQUIRE_INTERFACE(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
     }
 
-    virtual ~DampedWienerProcess() { }
+    virtual ~DampedWienerProcessModel() { }
 
-    virtual State MapGaussian(const Noise& sample) const
+    virtual State MapStandardGaussian(const Noise& sample) const
     {
-        return gaussian_.MapGaussian(sample);
+        return gaussian_.MapStandardGaussian(sample);
     }
 
     virtual void Condition(const Scalar&  delta_time,

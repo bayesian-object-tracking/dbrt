@@ -80,7 +80,7 @@ struct Traits<SumOfDeltas<Vector> >
     typedef std::vector<Vector>                      Deltas;
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Weights;
 
-    typedef MomentsInterface<Vector, Operator> MomentsInterfaceBase;
+    typedef Moments<Vector, Operator> MomentsBase;
 };
 }
 
@@ -90,7 +90,7 @@ struct Traits<SumOfDeltas<Vector> >
  */
 template <typename Vector>
 class SumOfDeltas:
-        public internal::Traits<SumOfDeltas<Vector> >::MomentsInterfaceBase
+        public internal::Traits<SumOfDeltas<Vector> >::MomentsBase
 {
 public:
     typedef internal::Traits<SumOfDeltas<Vector> > Traits;

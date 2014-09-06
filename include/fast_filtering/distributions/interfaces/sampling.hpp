@@ -44,18 +44,18 @@
  *  University of Southern California (USC)
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTION_INTERFACE_SAMPLEBALE_HPP
-#define FAST_FILTERING_DISTRIBUTION_INTERFACE_SAMPLEBALE_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_SAMPLING_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_SAMPLING_HPP
 
 
 namespace ff
 {
 
 template <typename Vector>
-class SamplingInterface
+class Sampling
 {
 public:
-    virtual ~SamplingInterface() {}
+    virtual ~Sampling() {}
 
     virtual Vector Sample() = 0;
 };

@@ -44,18 +44,18 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
-#define FAST_FILTERING_MODELS_PROCESSES_INTERFACE_STATIONARY_PROCESS_INTERFACE_HPP
+#ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
+#define FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 
 
 namespace ff
 {
 
 template <typename State, typename Input>
-class StationaryProcessModelInterface
+class StationaryProcessModel
 {
 public:
-    virtual ~StationaryProcessModelInterface() { }
+    virtual ~StationaryProcessModel() { }
 
     virtual void Condition(const double& delta_time,
                            const State& state,

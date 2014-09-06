@@ -44,8 +44,8 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTION_INTERFACE_GAUSSIAN_MAPPABLE_INTERFACE_HPP
-#define FAST_FILTERING_DISTRIBUTION_INTERFACE_GAUSSIAN_MAPPABLE_INTERFACE_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
 
 #include <Eigen/Dense>
 
@@ -61,24 +61,24 @@ namespace ff
 {
 
 template <typename Vector, typename Noise>
-class GaussianMappableInterface:
-        public SamplingInterface<Vector>
+class GaussianMap:
+        public Sampling<Vector>
 {
 public:
-    explicit GaussianMappableInterface(const unsigned& noise_dimension = Noise::SizeAtCompileTime):
+    explicit GaussianMap(const unsigned& noise_dimension = Noise::SizeAtCompileTime):
         standard_gaussian_(noise_dimension)
     {
         // make sure that noise is derived from eigen
         REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
     }
 
-    virtual ~GaussianMappableInterface() { }   
+    virtual ~GaussianMap() { }
 
-    virtual Vector MapGaussian(const Noise& sample) const = 0;
+    virtual Vector MapStandardGaussian(const Noise& sample) const = 0;
 
     virtual Vector Sample()
     {
-        return MapGaussian(standard_gaussian_.Sample());
+        return MapStandardGaussian(standard_gaussian_.Sample());
     }
 
     virtual int NoiseDimension() const

@@ -44,8 +44,8 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTION_STANDARD_GAUSSIAN_HPP
-#define FAST_FILTERING_DISTRIBUTION_STANDARD_GAUSSIAN_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
 
 #include <Eigen/Dense>
 
@@ -61,7 +61,7 @@ namespace ff
 {
 
 template <typename Vector>
-class StandardGaussian: public SamplingInterface<Vector>
+class StandardGaussian: public Sampling<Vector>
 {
 public:
     StandardGaussian(const int& dimension = Vector::SizeAtCompileTime):

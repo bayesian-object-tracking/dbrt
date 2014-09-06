@@ -75,15 +75,15 @@ public:
     {
         REQUIRE_INTERFACE(
             ProcessModel,
-            StationaryProcessModelInterface<State, Input>);
+            StationaryProcessModel<State, Input>);
 
         REQUIRE_INTERFACE(
             ProcessModel,
-            GaussianMappableInterface<State, Noise>);
+            GaussianMap<State, Noise>);
 
         REQUIRE_INTERFACE(
             ObservationModel,
-            RaoBlackwellObservationModelInterface<State, Observation>);
+            RaoBlackwellObservationModel<State, Observation>);
 
         SamplingBlocks(sampling_blocks);
     }
@@ -112,7 +112,7 @@ public:
                 process_model_->Condition(delta_time,
                                           samples_[particle_index],
                                           input);
-                next_samples_[particle_index] = process_model_->MapGaussian(noises_[particle_index]);
+                next_samples_[particle_index] = process_model_->MapStandardGaussian(noises_[particle_index]);
             }
 
             bool update_occlusions = (block_index == sampling_blocks_.size()-1);

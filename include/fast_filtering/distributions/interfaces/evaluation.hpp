@@ -46,8 +46,8 @@
  */
 
 
-#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACE_EVAUATION_INTERFACE_HPP
-#define FAST_FILTERING_DISTRIBUTIONS_INTERFACE_EVAUATION_INTERFACE_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_EVAUATION_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_EVAUATION_HPP
 
 #include <cmath>
 #include <fast_filtering/utils/traits.hpp>
@@ -57,11 +57,11 @@ namespace ff
 {
 
 template <typename Vector, typename Scalar>
-class EvaluationInterface:
-        public UnnormalizedEvaulationInterface<Vector, Scalar>
+class Evaluation:
+        public UnnormalizedEvaulation<Vector, Scalar>
 {
 public:
-    virtual ~EvaluationInterface() {}
+    virtual ~Evaluation() {}
 
     virtual Scalar Probability(const Vector& vector) const
     {
