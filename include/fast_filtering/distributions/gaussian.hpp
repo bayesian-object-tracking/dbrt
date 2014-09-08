@@ -51,9 +51,10 @@
 #include <Eigen/Dense>
 
 // state_filtering
-#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
-#include <fast_filtering/distributions/interfaces/evaluation_interface.hpp>
-#include <fast_filtering/distributions/interfaces/gaussian_mappable_interface.hpp>
+#include <fast_filtering/utils/assertions.hpp>
+#include <fast_filtering/distributions/interfaces/moments.hpp>
+#include <fast_filtering/distributions/interfaces/evaluation.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 
 namespace ff
 {
@@ -76,9 +77,9 @@ struct Traits<Gaussian<Vector> >
     typedef Eigen::Matrix<Scalar, Vector::SizeAtCompileTime,
                                   Vector::SizeAtCompileTime> Operator;
 
-    typedef MomentsInterface<Vector, Operator>          MomentsInterfaceBase;
-    typedef EvaluationInterface<Vector, Scalar>         EvaluationInterfaceBase;
-    typedef GaussianMappableInterface<Vector, Noise>    GaussianMappableBase;
+    typedef Moments<Vector, Operator>          MomentsBase;
+    typedef Evaluation<Vector, Scalar>         EvaluationBase;
+    typedef GaussianMap<Vector, Noise>         GaussianMapBase;
 
 };
 }
@@ -90,9 +91,9 @@ struct Traits<Gaussian<Vector> >
  */
 template <typename Vector>
 class Gaussian:
-        public internal::Traits<Gaussian<Vector> >::MomentsInterfaceBase,
-        public internal::Traits<Gaussian<Vector> >::EvaluationInterfaceBase,
-        public internal::Traits<Gaussian<Vector> >::GaussianMappableBase
+        public internal::Traits<Gaussian<Vector> >::MomentsBase,
+        public internal::Traits<Gaussian<Vector> >::EvaluationBase,
+        public internal::Traits<Gaussian<Vector> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<Gaussian<Vector> > Traits;
@@ -103,10 +104,10 @@ public:
 
 public:
     explicit Gaussian(const unsigned& dimension = Vector::SizeAtCompileTime):
-        Traits::GaussianMappableBase(dimension)
+        Traits::GaussianMapBase(dimension)
     {
         // make sure that vector is derived from eigen
-        SF_REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
+        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
                                                    Vector::SizeAtCompileTime, 1>);
 
         mean_.resize(Dimension(), 1);
@@ -119,7 +120,7 @@ public:
 
     virtual ~Gaussian() { }
 
-    virtual Vector MapGaussian(const Noise& sample) const
+    virtual Vector MapStandardGaussian(const Noise& sample) const
     {
         return mean_ + cholesky_factor_ * sample;
     }

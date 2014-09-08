@@ -25,8 +25,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
-#ifndef FAST_FILTERING_UTILS_HELPER_FUNCTIONS_HPP_
-#define FAST_FILTERING_UTILS_HELPER_FUNCTIONS_HPP_
+#ifndef FAST_FILTERING_UTILS_HELPER_FUNCTIONS_HPP
+#define FAST_FILTERING_UTILS_HELPER_FUNCTIONS_HPP
 
 #include <vector>
 #include <algorithm>
@@ -36,12 +36,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <cmath>
+#include <sys/time.h>
+
 
 #include <boost/lexical_cast.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
 
-#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/random_seed.hpp>
 
+
+
+// TODO: THIS HAS TO BE CLEANED, POSSIBLY SPLIT INTO SEVERAL FILES
 
 namespace ff
 {
@@ -781,11 +786,11 @@ CartCoord2ImageIndex(const Eigen::Matrix<T, 3, 1>& cart,
                      const Eigen::Matrix<T, 3, 3>& camera_matrix)
 {
 	Eigen::Matrix<T, 2, 1> image = CartCoord2ImageCoord(cart, camera_matrix);
-	Eigen::Matrix<int, 2, 1> image_index;
-	image_index(0) = floor(image(1)+0.5);
-	image_index(1) = floor(image(0)+0.5);
+    Eigen::Matrix<int, 2, 1> image_index;
+    image_index(0) = floor(image(1)+0.5);
+    image_index(1) = floor(image(0)+0.5);
 
-	return image_index;
+    return image_index;
 }
 
 // converts from image coordinates and depth (z value) to cartesian coordinates
@@ -794,11 +799,11 @@ ImageCoord2CartCoord(const Eigen::Matrix<T, 2, 1>& image,
                      const T& depth,
                      const Eigen::Matrix<T, 3, 3>& camera_matrix_inverse)
 {
-	Eigen::Matrix<T, 3, 1> image_augmented;
-	image_augmented.topRows(2) = image;
-	image_augmented(2) = 1;
+    Eigen::Matrix<T, 3, 1> image_augmented;
+    image_augmented.topRows(2) = image;
+    image_augmented(2) = 1;
 
-	return depth * camera_matrix_inverse * image_augmented;
+    return depth * camera_matrix_inverse * image_augmented;
 }
 
 // converts from image index (row, col) and depth (z value) to cartesian coordinates
@@ -808,8 +813,8 @@ ImageIndex2CartCoord(const Eigen::Matrix<int, 2, 1>& image_index,
                      const Eigen::Matrix<T, 3, 3>& camera_matrix_inverse)
 {
 	Eigen::Matrix<T, 2, 1> image;
-	image(0) = image_index(1);
-	image(1) = image_index(0);
+    image(0) = image_index(1);
+    image(1) = image_index(0);
 	return ImageCoord2CartCoord(image, depth, camera_matrix_inverse);
 }
 

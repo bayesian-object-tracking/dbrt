@@ -6,7 +6,7 @@
  *    Manuel Wuthrich (manuel.wuthrich@gmail.com)
  *    Jan Issac (jan.issac@gmail.com)
  *
- *  All rights reserved.
+ *
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -38,14 +38,14 @@
  */
 
 /**
- * @date 2014
+ * @date 05/25/2014
  * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  * @author Jan Issac (jan.issac@gmail.com)
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
-#define FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
 
 #include <Eigen/Dense>
 
@@ -53,51 +53,41 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
 
-#include <fast_filtering/utils/random_seed.hpp>
 #include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/sampling.hpp>
+#include <fast_filtering/distributions/standard_gaussian.hpp>
 
 namespace ff
 {
 
-template <typename Vector>
-class StandardGaussian: public Sampling<Vector>
+template <typename Vector, typename Noise>
+class GaussianMap:
+        public Sampling<Vector>
 {
 public:
-    StandardGaussian(const int& dimension = Vector::SizeAtCompileTime):
-        dimension_ (dimension == Eigen::Dynamic ? 0 : dimension),
-        generator_(RANDOM_SEED),
-        gaussian_distribution_(0.0, 1.0),
-        gaussian_generator_(generator_, gaussian_distribution_)
+    explicit GaussianMap(const unsigned& noise_dimension = Noise::SizeAtCompileTime):
+        standard_gaussian_(noise_dimension)
     {
-        // make sure that vector is derived from eigen
-        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
-                                                   Vector::SizeAtCompileTime, 1>);
+        // make sure that noise is derived from eigen
+        REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
     }
 
-    virtual ~StandardGaussian() { }
+    virtual ~GaussianMap() { }
+
+    virtual Vector MapStandardGaussian(const Noise& sample) const = 0;
 
     virtual Vector Sample()
     {
-        Vector gaussian_sample(Dimension());
-        for (int i = 0; i < Dimension(); i++)
-        {
-            gaussian_sample(i) = gaussian_generator_();
-        }
-
-        return gaussian_sample;
+        return MapStandardGaussian(standard_gaussian_.Sample());
     }
 
-    virtual int Dimension() const
+    virtual int NoiseDimension() const
     {
-        return dimension_;
+        return standard_gaussian_.Dimension();
     }
 
 private:
-    int dimension_;
-    boost::mt19937 generator_;
-    boost::normal_distribution<> gaussian_distribution_;
-    boost::variate_generator<boost::mt19937, boost::normal_distribution<> > gaussian_generator_;
+    StandardGaussian<Noise> standard_gaussian_;
 };
 
 }

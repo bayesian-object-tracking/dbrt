@@ -54,9 +54,9 @@
 #include <vector>
 
 // state_filtering
-#include <fast_filtering/utils/macros.hpp>
+#include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/utils/traits.hpp>
-#include <fast_filtering/distributions/interfaces/moments_interface.hpp>
+#include <fast_filtering/distributions/interfaces/moments.hpp>
 
 namespace ff
 {
@@ -80,7 +80,7 @@ struct Traits<SumOfDeltas<Vector> >
     typedef std::vector<Vector>                      Deltas;
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Weights;
 
-    typedef MomentsInterface<Vector, Operator> MomentsInterfaceBase;
+    typedef Moments<Vector, Operator> MomentsBase;
 };
 }
 
@@ -90,7 +90,7 @@ struct Traits<SumOfDeltas<Vector> >
  */
 template <typename Vector>
 class SumOfDeltas:
-        public internal::Traits<SumOfDeltas<Vector> >::MomentsInterfaceBase
+        public internal::Traits<SumOfDeltas<Vector> >::MomentsBase
 {
 public:
     typedef internal::Traits<SumOfDeltas<Vector> > Traits;
@@ -103,7 +103,7 @@ public:
 public:
     explicit SumOfDeltas(const unsigned& dimension = Vector::SizeAtCompileTime)
     {
-        SF_REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
+        REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
         deltas_ = Deltas(1, Vector::Zero(dimension == Eigen::Dynamic ? 0 : dimension));
         weights_ = Weights::Ones(1);

@@ -38,67 +38,30 @@
  */
 
 /**
- * @date 2014
+ * @date 05/25/2014
  * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  * @author Jan Issac (jan.issac@gmail.com)
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
-#define FAST_FILTERING_DISTRIBUTIONS_STANDARD_GAUSSIAN_HPP
+#ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
+#define FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 
-#include <Eigen/Dense>
-
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-
-#include <fast_filtering/utils/random_seed.hpp>
-#include <fast_filtering/utils/assertions.hpp>
-#include <fast_filtering/distributions/interfaces/sampling.hpp>
 
 namespace ff
 {
 
-template <typename Vector>
-class StandardGaussian: public Sampling<Vector>
+template <typename State, typename Input>
+class StationaryProcessModel
 {
 public:
-    StandardGaussian(const int& dimension = Vector::SizeAtCompileTime):
-        dimension_ (dimension == Eigen::Dynamic ? 0 : dimension),
-        generator_(RANDOM_SEED),
-        gaussian_distribution_(0.0, 1.0),
-        gaussian_generator_(generator_, gaussian_distribution_)
-    {
-        // make sure that vector is derived from eigen
-        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
-                                                   Vector::SizeAtCompileTime, 1>);
-    }
+    virtual ~StationaryProcessModel() { }
 
-    virtual ~StandardGaussian() { }
-
-    virtual Vector Sample()
-    {
-        Vector gaussian_sample(Dimension());
-        for (int i = 0; i < Dimension(); i++)
-        {
-            gaussian_sample(i) = gaussian_generator_();
-        }
-
-        return gaussian_sample;
-    }
-
-    virtual int Dimension() const
-    {
-        return dimension_;
-    }
-
-private:
-    int dimension_;
-    boost::mt19937 generator_;
-    boost::normal_distribution<> gaussian_distribution_;
-    boost::variate_generator<boost::mt19937, boost::normal_distribution<> > gaussian_generator_;
+    virtual void Condition(const double& delta_time,
+                           const State& state,
+                           const Input& input) = 0;
 };
+
 
 }
 
