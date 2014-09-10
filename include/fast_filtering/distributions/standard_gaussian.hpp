@@ -100,6 +100,34 @@ private:
     boost::variate_generator<boost::mt19937, boost::normal_distribution<> > gaussian_generator_;
 };
 
+// specialization for scalar
+template<>
+class StandardGaussian<double>: public Sampling<double>
+{
+public:
+    StandardGaussian():
+        generator_(RANDOM_SEED),
+        gaussian_distribution_(0.0, 1.0),
+        gaussian_generator_(generator_, gaussian_distribution_) { }
+
+    virtual ~StandardGaussian() { }
+
+    virtual double Sample()
+    {
+        return gaussian_generator_();
+    }
+
+    virtual int Dimension() const
+    {
+        return 1;
+    }
+
+private:
+    boost::mt19937 generator_;
+    boost::normal_distribution<> gaussian_distribution_;
+    boost::variate_generator<boost::mt19937, boost::normal_distribution<> > gaussian_generator_;
+};
+
 }
 
 #endif

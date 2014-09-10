@@ -38,6 +38,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <sys/time.h>
 
+#include <fstream>
+#include <ctime>
+
 
 #include <boost/lexical_cast.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
@@ -53,6 +56,24 @@ namespace ff
 
 namespace hf
 {
+
+
+inline std::string DateAndTimeString()
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer,80,"%d.%m.%Y_%I.%M.%S",timeinfo);
+    std::string current_time(buffer);
+
+    return current_time;
+}
+
+
 
 inline double get_wall_time(){
     struct timeval time;

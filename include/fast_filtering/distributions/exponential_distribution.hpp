@@ -6,7 +6,7 @@
  *    Manuel Wuthrich (manuel.wuthrich@gmail.com)
  *    Jan Issac (jan.issac@gmail.com)
  *
- *
+ *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -44,73 +44,67 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
-#define FAST_FILTERING_DISTRIBUTIONS_INTERFACES_GAUSSIAN_MAP_HPP
+#ifndef FAST_FILTERING_DISTRIBUTIONS_EXPONENTIAL_DISTRIBUTION_HPP
+#define FAST_FILTERING_DISTRIBUTIONS_EXPONENTIAL_DISTRIBUTION_HPP
 
-#include <Eigen/Dense>
+// eigen
+#include <limits>
+#include <cmath>
 
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-
-#include <fast_filtering/utils/assertions.hpp>
-#include <fast_filtering/distributions/interfaces/sampling.hpp>
-#include <fast_filtering/distributions/standard_gaussian.hpp>
+// state_filtering
+#include <fast_filtering/distributions/interfaces/evaluation.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 
 namespace ff
 {
 
-template <typename Vector, typename Noise>
-class GaussianMap:
-        public Sampling<Vector>
+class ExponentialDistribution:
+        public Evaluation<double, double>,
+        public GaussianMap<double, double>
 {
+
 public:
-    explicit GaussianMap(const unsigned& noise_dimension = Noise::SizeAtCompileTime):
-        standard_gaussian_(noise_dimension)
+    ExponentialDistribution(double lambda,
+                            double min = 0,
+                            double max = std::numeric_limits<double>::infinity()):
+                                            lambda_(lambda),
+                                            min_(min),
+                                            max_(max)
     {
-        // make sure that noise is derived from eigen
-        REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
+        exp_lambda_min_ = std::exp(-lambda_*min);
+        exp_lambda_max_ = std::exp(-lambda_*max);
     }
 
-    virtual ~GaussianMap() { }
 
-    virtual Vector MapStandardGaussian(const Noise& sample) const = 0;
+    virtual ~ExponentialDistribution() { }
 
-    virtual Vector Sample()
+    virtual double Probability(const double& input) const
     {
-        return MapStandardGaussian(standard_gaussian_.Sample());
+        if(input < min_ || input > max_)
+            return 0;
+
+        return lambda_ * std::exp(-lambda_ * input) / (exp_lambda_min_ - exp_lambda_max_);
     }
 
-    virtual int NoiseDimension() const
+    virtual double LogProbability(const double& input) const
     {
-        return standard_gaussian_.Dimension();
+        return std::log(Probability(input));
+    }
+
+    virtual double MapStandardGaussian(const double& gaussian_sample) const
+    {
+        // map from a gaussian to a uniform distribution
+        double uniform_sample = 0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        // map from a uniform to an exponential distribution
+        return -std::log(exp_lambda_min_ - (exp_lambda_min_ - exp_lambda_max_) * uniform_sample) / lambda_;
     }
 
 private:
-    StandardGaussian<Noise> standard_gaussian_;
-};
-
-// specialization for scalar noise
-template <typename Vector>
-class GaussianMap<Vector, double>:
-        public Sampling<Vector>
-{
-public:
-    virtual ~GaussianMap() { }
-
-    virtual Vector MapStandardGaussian(const double& sample) const = 0;
-
-    virtual Vector Sample()
-    {
-        return MapStandardGaussian(standard_gaussian_.Sample());
-    }
-
-    virtual int NoiseDimension() const
-    {
-        return 1;
-    }
-private:
-    StandardGaussian<double> standard_gaussian_;
+    double lambda_;
+    double min_;
+    double max_;
+    double exp_lambda_min_;
+    double exp_lambda_max_;
 };
 
 }
