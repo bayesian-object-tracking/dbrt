@@ -54,16 +54,14 @@
 #include <boost/random/variate_generator.hpp>
 
 #include <fast_filtering/utils/assertions.hpp>
+#include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/sampling.hpp>
 #include <fast_filtering/distributions/standard_gaussian.hpp>
 
 namespace ff
 {
 
-namespace internal
-{
-struct Empty { };
-}
+
 
 
 template <typename Vector, typename Noise = internal::Empty>

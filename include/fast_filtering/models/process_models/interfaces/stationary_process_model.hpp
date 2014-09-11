@@ -47,11 +47,13 @@
 #ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 #define FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 
+#include <fast_filtering/utils/traits.hpp>
+
 
 namespace ff
 {
 
-template <typename State, typename Input>
+template <typename State, typename Input = internal::Empty>
 class StationaryProcessModel
 {
 public:
@@ -60,6 +62,17 @@ public:
     virtual void Condition(const double& delta_time,
                            const State& state,
                            const Input& input) = 0;
+};
+
+
+template <typename State>
+class StationaryProcessModel<State, internal::Empty>
+{
+public:
+    virtual ~StationaryProcessModel() { }
+
+    virtual void Condition(const double& delta_time,
+                           const State& state) = 0;
 };
 
 
