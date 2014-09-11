@@ -60,7 +60,13 @@
 namespace ff
 {
 
-template <typename Vector, typename Noise>
+namespace internal
+{
+struct Empty { };
+}
+
+
+template <typename Vector, typename Noise = internal::Empty>
 class GaussianMap:
         public Sampling<Vector>
 {
@@ -112,6 +118,30 @@ public:
 private:
     StandardGaussian<double> standard_gaussian_;
 };
+
+
+
+// specialization for no noise
+template <typename Vector>
+class GaussianMap<Vector, internal::Empty>:
+        public Sampling<Vector>
+{
+public:
+    virtual ~GaussianMap() { }
+
+    virtual Vector MapStandardGaussian() const = 0;
+
+    virtual Vector Sample()
+    {
+        return MapStandardGaussian();
+    }
+
+    virtual int NoiseDimension() const
+    {
+        return 0;
+    }
+};
+
 
 }
 

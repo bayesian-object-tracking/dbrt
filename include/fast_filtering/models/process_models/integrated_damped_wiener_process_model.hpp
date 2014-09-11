@@ -55,6 +55,10 @@
 #include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/process_models/damped_wiener_process_model.hpp>
 
+
+//TODO: THIS IS A LINEAR GAUSSIAN PROCESS, THIS CLASS SHOULD DISAPPEAR
+
+
 namespace ff
 {
 
