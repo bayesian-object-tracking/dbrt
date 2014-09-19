@@ -74,16 +74,21 @@ template<typename CohesiveStateProcessModel,
 class FactorizedUnscentedKalmanFilter
 {
 public:
-    typedef Eigen::Matrix<
-        ComposedStateDistribution::Scalar,
-        Eigen::Dynamic,
-        Eigen::Dynamic> JointCovariance;
+    typedef ComposedStateDistribution<typename CohesiveStateProcessModel::State,
+                                      typename FactorizedStateProcessModel::State,
+                                      1> StateDistribution;
 
-    typedef Eigen::Matrix<
-        ComposedStateDistribution::Scalar, Eigen::Dynamic, 1> JointState;
+
+    typedef Eigen::Matrix<typename StateDistribution::Scalar,
+                          Eigen::Dynamic,
+                          Eigen::Dynamic> JointCovariance;
+
+    typedef Eigen::Matrix<typename StateDistribution::Scalar,
+                          Eigen::Dynamic,
+                          1> JointState;
 
     //typedef SumOfDeltas<JointState> SigmaPoints;
-    typedef Eigen::Matrix<ComposedStateDistribution::Scalar,
+    typedef Eigen::Matrix<typename StateDistribution::Scalar,
                           Eigen::Dynamic,
                           Eigen::Dynamic> SigmaPoints;
 
@@ -99,8 +104,8 @@ public:
 
     virtual ~FactorizedUnscentedKalmanFilter() { }
 
-    void predict(const ComposedStateDistribution& prior_state,
-                 ComposedStateDistribution& predicted_state)
+    void predict(const StateDistribution& prior_state,
+                 StateDistribution& predicted_state)
     {
         size_t joint_dimension = prior_state.CohesiveStatesDimension()
                                   + prior_state.FactorizedStateDimension()
@@ -135,13 +140,13 @@ public:
 
     }
 
-    void update(const ComposedStateDistribution& predicted_state,
-                ComposedStateDistribution& posterior_state)
+    void update(const StateDistribution& predicted_state,
+                StateDistribution& posterior_state)
     {
 
     }
 
-protected:
+public:
     template <typename MeanVector, typename CovarianceMatrix>
     void ComputeSigmaPoints(const MeanVector& mean,
                             const CovarianceMatrix& covariance,
@@ -153,25 +158,28 @@ protected:
         size_t joint_dimension = (sigma_points.cols() - 1) / 2;
         CovarianceMatrix covarianceSqr = covariance.llt().matrixL();
 
-        for (size_t i = 1; i < joint_dimension; ++i)
-        {
-            if (offset <= i && i < covariance.rows())
-            {
-                MeanVector pointShift = covarianceSqr.col(i - 1);
+        sigma_points.setZero();
+        sigma_points.col(0) = mean;
 
-                sigma_points.cols(i) = mean + pointShift;
-                sigma_points.cols(joint_dimension + i) = mean - pointShift;
+        for (size_t i = 1; i <= joint_dimension; ++i)
+        {
+            if (offset + 1 <= i && i < offset + 1 + covariance.rows())
+            {
+                MeanVector pointShift = covarianceSqr.col(i - (offset + 1));
+
+                sigma_points.col(i) = mean + pointShift;
+                sigma_points.col(joint_dimension + i) = mean - pointShift;
             }
             else
             {
-                sigma_points.cols(i) = mean;
-                sigma_points.cols(joint_dimension + i) = mean;
+                sigma_points.col(i) = mean;
+                sigma_points.col(joint_dimension + i) = mean;
             }
         }
     }
 
     void ComputeFactorizedStateSigmaPoints(
-            const ComposedStateDistribution& state,
+            const StateDistribution& state,
             size_t factor_index,
             SigmaPoints& sigma_points)
     {
@@ -185,3 +193,5 @@ protected:
 };
 
 }
+
+#endif

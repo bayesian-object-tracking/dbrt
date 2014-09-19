@@ -55,7 +55,7 @@ namespace ff
 {
 
 // Forward declarations
-template <typename CohesiveState, typename FactorizedState>
+template <typename CohesiveState, typename FactorizedState, size_t FACTORIZED_STATES>
 class ComposedStateDistribution;
 
 namespace internal
@@ -113,13 +113,13 @@ public:
                 ComposedStateDistribution<CohesiveState,
                                           FactorizedState,
                                           FACTORIZED_STATES> > Traits;
-    typedef Traits::Scalar Scalar;
-    typedef Traits::CovAA CovAA;
-    typedef Traits::CovAB CovAB;
-    typedef Traits::CovAY CovAY;
-    typedef Traits::CovBB CovBB;
-    typedef Traits::CovBY CovBY;
-    typedef Traits::CovYY CovYY;
+    typedef typename Traits::Scalar Scalar;
+    typedef typename Traits::CovAA CovAA;
+    typedef typename Traits::CovAB CovAB;
+    typedef typename Traits::CovAY CovAY;
+    typedef typename Traits::CovBB CovBB;
+    typedef typename Traits::CovBY CovBY;
+    typedef typename Traits::CovYY CovYY;
 
     struct JointPartitions
     {
@@ -153,7 +153,6 @@ public:
         factorized_state_dimension_(factorized_state_dimension),
         factorized_states_dimension_(factorized_states_dimension)
     {
-        BOOST_STATIC_ASSERT(CohesiveState::Scalar == FactorizedState::Scalar);
     }
 
     virtual ~ComposedStateDistribution() { }
@@ -186,3 +185,5 @@ public:
 };
 
 }
+
+#endif
