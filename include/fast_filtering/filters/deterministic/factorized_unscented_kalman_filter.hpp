@@ -112,28 +112,24 @@ public:
                                   + 1;
 
         size_t number_of_points = 2 * joint_dimension + 1;
+        size_t dim_a = cohesive_state_process_model_->Dimension();
+        size_t dim_Qa = dim_a;
+        size_t dim_b = factorized_state_process_model_->Dimension();
+        size_t dim_Qb = dim_b;
+        size_t dim_y = 1;
+
 
         // cohesive state sigma points Xa
-        SigmaPoints Xa(cohesive_state_process_model_->Dimension(),
-                       number_of_points);
+        SigmaPoints Xa(dim_a, number_of_points);
+        SigmaPoints XQa(dim_Qa, number_of_points);
 
         // factorized state sigma points Xb_i
-        std::vector<SigmaPoints> Xb(
-                    prior_state.FactorizedStatesDimension(),
-                    SigmaPoints(factorized_state_process_model_->Dimension(),
-                                number_of_points));
-
-        // cohesive state noise sigma points X_Qa
-        SigmaPoints XQa(cohesive_state_process_model_->NoiseDimension(),
-                        number_of_points);
-
-        // factorized state noise sigma points X_Qb
-        SigmaPoints XQb(factorized_state_process_model_->NoiseDimension(),
-                        number_of_points);
+        std::vector<SigmaPoints> Xb(prior_state.FactorizedStatesDimension(),
+                                    SigmaPoints(dim_b, number_of_points));
+        SigmaPoints XQb(dim_Qb, number_of_points);
 
         // measurement noise X_R
         SigmaPoints XR(1, number_of_points);
-
 
 
         ComputeSigmaPoints(prior_state.state_a_, prior_state.cov_aa_, 0, Xa);
@@ -151,8 +147,7 @@ public:
     void ComputeSigmaPoints(const MeanVector& mean,
                             const CovarianceMatrix& covariance,
                             const size_t offset,
-                            SigmaPoints& sigma_points,
-                            const size_t factor_index = 0)
+                            SigmaPoints& sigma_points)
     {
         // asster sigma_points.rows() == mean.rows()
         size_t joint_dimension = (sigma_points.cols() - 1) / 2;
@@ -161,11 +156,12 @@ public:
         sigma_points.setZero();
         sigma_points.col(0) = mean;
 
+        MeanVector pointShift;
         for (size_t i = 1; i <= joint_dimension; ++i)
         {
             if (offset + 1 <= i && i < offset + 1 + covariance.rows())
             {
-                MeanVector pointShift = covarianceSqr.col(i - (offset + 1));
+                pointShift = covarianceSqr.col(i - (offset + 1));
 
                 sigma_points.col(i) = mean + pointShift;
                 sigma_points.col(joint_dimension + i) = mean - pointShift;
@@ -178,10 +174,9 @@ public:
         }
     }
 
-    void ComputeFactorizedStateSigmaPoints(
-            const StateDistribution& state,
-            size_t factor_index,
-            SigmaPoints& sigma_points)
+    void ComputeFactorizedStateSigmaPoints(const StateDistribution& state,
+                                           size_t factor_index,
+                                           SigmaPoints& sigma_points)
     {
 
     }

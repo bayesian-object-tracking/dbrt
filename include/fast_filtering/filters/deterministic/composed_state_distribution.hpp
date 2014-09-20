@@ -89,9 +89,8 @@ struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState, FACTORIZ
                           FactorizedState::SizeAtCompileTime,
                           1> CovBY;
 
-    typedef Eigen::Matrix<Scalar,
-                          1,
-                          1> CovYY;
+    typedef Eigen::Matrix<Scalar, 1, 1> Y;
+    typedef Eigen::Matrix<Scalar, 1, 1> CovYY;
 
 //    typedef Eigen::Matrix<Scalar,
 //                          FactorizedState::SizeAtCompileTime == Eigen::Dynamic ?
@@ -120,16 +119,18 @@ public:
     typedef typename Traits::CovBB CovBB;
     typedef typename Traits::CovBY CovBY;
     typedef typename Traits::CovYY CovYY;
+    typedef typename Traits::Y Y;
 
     struct JointPartitions
     {
         FactorizedState b;
-        Scalar y;
+        Y y;
 
         CovAB cov_ab;
         CovAY cov_ay;
         CovBB cov_bb;
         CovBY cov_by;
+        CovYY cov_yy;
     };
 
 public:
