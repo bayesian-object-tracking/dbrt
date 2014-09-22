@@ -55,35 +55,9 @@
 
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/range.hpp>
+#include <boost/make_shared.hpp>
 
-#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-#include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
-
-template <typename State_>
-class ProcessModelDummy:
-        ff::StationaryProcessModel<State_, Eigen::Matrix<double, 0, 0> >
-{
-public:
-    typedef State_ State;
-    typedef Eigen::Matrix<double, 0, 0> Input;
-
-    virtual void Condition(const double& delta_time,
-                           const State& state,
-                           const Input& input)
-    {
-        // foo
-    }
-};
-
-template <typename State>
-class ObservationModelDummy
-{
-public:
-    virtual void predict(const State& state)
-    {
-        // foo
-    }
-};
+#include "fukf_dummy_models.hpp"
 
 
 /**
@@ -99,6 +73,14 @@ public:
                     ProcessModelDummy<State>,
                     ObservationModelDummy<State> > Filter;
 
+    PartitionedUnscentedTransformTest():
+        filter(Filter(boost::make_shared<ProcessModelDummy<State> >(),
+                      boost::make_shared<ProcessModelDummy<State> >(),
+                      boost::make_shared<ObservationModelDummy<State> >()))
+    {
+
+    }
+
     virtual void SetUp()
     {
         SetRandom(mu_a,  cov_aa,  Qa,  1.342);
@@ -108,7 +90,10 @@ public:
     }
 
     template <typename Mean, typename Covariance, typename NoiseCovaiance>
-    void SetRandom(Mean& mu, Covariance& cov, NoiseCovaiance& noise_cov, double sigma)
+    void SetRandom(Mean& mu,
+                   Covariance& cov,
+                   NoiseCovaiance& noise_cov,
+                   double sigma)
     {
         mu = Mean::Random();
         cov = Covariance::Random();
@@ -116,31 +101,7 @@ public:
         noise_cov = NoiseCovaiance::Identity() * sigma;
     }
 
-    void ComputeSigmaPointPartitions(
-            const std::vector<std::pair<Eigen::MatrixXd, Eigen::MatrixXd> >& moments_list,
-            std::vector<Eigen::MatrixXd>& sigma_point_partitions)
-    {
-        size_t dim = 0;
-        for (auto& moments : moments_list)
-        {
-            dim += moments.first.rows();
-        }
-        size_t number_of_points = 2 * dim + 1;
-
-        Eigen::MatrixXd sigma_points;
-        size_t offset = 0;
-        for (auto& moments : moments_list)
-        {
-            sigma_points = Filter::SigmaPoints(moments.first.rows(), number_of_points);
-
-            filter.ComputeSigmaPoints(moments.first, moments.second, offset, sigma_points);
-            sigma_point_partitions.push_back(sigma_points);
-
-            offset += moments.first.rows();
-        }
-    }
-
-    Eigen::MatrixXd AugmentPartitionedSigmaPoints(
+    Filter::SigmaPoints AugmentPartitionedSigmaPoints(
             const std::vector<Filter::SigmaPoints>& sigma_point_list)
     {
         size_t dim = 0;
@@ -149,8 +110,8 @@ public:
             dim += sigma_points.rows();
         }
         size_t number_of_points = sigma_point_list[0].cols();
-        Eigen::MatrixXd joint_partitions_X =
-                Eigen::MatrixXd::Zero(dim, number_of_points);
+        Filter::SigmaPoints joint_partitions_X =
+                Filter::SigmaPoints::Zero(dim, number_of_points);
 
         size_t dim_offset = 0;
         for (auto& sigma_points: sigma_point_list)
@@ -251,17 +212,18 @@ TEST_F(PartitionedUnscentedTransformTest, firstUTColumn)
 
 TEST_F(PartitionedUnscentedTransformTest, partitionUT)
 {
-    Eigen::MatrixXd augmented_X;
-    Eigen::MatrixXd augmented_partitioned_X;
+    Filter::SigmaPoints augmented_X;
+    Filter::SigmaPoints augmented_partitioned_X;
 
     // compute the sigma point partitions X = [Xa  XQa  Xb  XQb  XR]
     std::vector<Filter::SigmaPoints> X_partitions;
-    ComputeSigmaPointPartitions({ {mu_a, cov_aa},
-                                  {State::Zero(), Qa},
-                                  {mu_b, cov_bb},
-                                  {State::Zero(), Qb},
-                                  {Filter::StateDistribution::Y::Zero(), R} },
-                                X_partitions);
+    filter.ComputeSigmaPointPartitions(
+        { {mu_a, cov_aa},
+          {State::Zero(), Qa},
+          {mu_b, cov_bb},
+          {State::Zero(), Qb},
+          {Filter::StateDistribution::Y::Zero(), R} },
+        X_partitions);
     augmented_partitioned_X = AugmentPartitionedSigmaPoints(X_partitions);
 
     // compute the sigma point from augmented covariance and mean
@@ -294,10 +256,10 @@ TEST_F(PartitionedUnscentedTransformTest, partitionCovariance)
 
     std::vector<Filter::SigmaPoints> X_partitions;
 
-    ComputeSigmaPointPartitions({ {mu_a, cov_aa},
-                                  {mu_b, cov_bb},
-                                  {mu_y, cov_yy} },
-                                X_partitions);
+    filter.ComputeSigmaPointPartitions({ {mu_a, cov_aa},
+                                         {mu_b, cov_bb},
+                                         {mu_y, cov_yy} },
+                                       X_partitions);
 
     Xa = X_partitions[0];
     Xb = X_partitions[1];
@@ -389,14 +351,18 @@ TEST_F(PartitionedUnscentedTransformTest, partitionOffset)
         }
 
         // the segment starting at the offset contain the distinct sigma points
-        for (int i = offset + 1; i < offset + 1 + state.CohesiveStatesDimension(); ++i)
+        for (int i = offset + 1;
+             i < offset + 1 + state.CohesiveStatesDimension();
+             ++i)
         {
             EXPECT_FALSE(X.col(i).isApprox(mu_a, EPSILON));
             EXPECT_FALSE(X.col(joint_dimension + i).isApprox(mu_a, EPSILON));
         }
 
         // the segment after the offset must be equal to the mean
-        for (int i = offset + 1 + state.CohesiveStatesDimension(); i <= joint_dimension; ++i)
+        for (int i = offset + 1 + state.CohesiveStatesDimension();
+             i <= joint_dimension;
+             ++i)
         {
             EXPECT_TRUE(X.col(i).isApprox(mu_a, EPSILON));
             EXPECT_TRUE(X.col(joint_dimension + i).isApprox(mu_a, EPSILON));
