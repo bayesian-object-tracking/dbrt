@@ -91,20 +91,16 @@ struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState, FACTORIZ
 
     typedef Eigen::Matrix<Scalar, 1, 1> Y;
     typedef Eigen::Matrix<Scalar, 1, 1> CovYY;
-
-//    typedef Eigen::Matrix<Scalar,
-//                          FactorizedState::SizeAtCompileTime == Eigen::Dynamic ?
-//                          Eigen::Dynamic : FactorizedState::SizeAtCompileTime + 1, 1> StateBY;
 };
 }
 
 /**
  * \class ComposedStateDistribution
  * \ingroup states
- *
- *
  */
-template <typename CohesiveState, typename FactorizedState, size_t FACTORIZED_STATES = -1>
+template <typename CohesiveState,
+          typename FactorizedState,
+          size_t FACTORIZED_STATES = -1>
 class ComposedStateDistribution
 {
 public:
@@ -149,15 +145,15 @@ public:
     ComposedStateDistribution(
             const size_t& cohesive_state_dimension = CohesiveState::SizeAtCompileTime,
             const size_t& factorized_state_dimension = FactorizedState::SizeAtCompileTime,
-            const size_t& factorized_states_dimension = FACTORIZED_STATES):
+            const size_t& factorized_states_count = FACTORIZED_STATES):
         cohesive_state_dimension_(cohesive_state_dimension),
         factorized_state_dimension_(factorized_state_dimension),
-        factorized_states_dimension_(factorized_states_dimension)
+        factorized_states_count_(factorized_states_count)
     {
+
     }
 
     virtual ~ComposedStateDistribution() { }
-
 
     size_t CohesiveStatesDimension()
     {
@@ -169,9 +165,9 @@ public:
         return factorized_state_dimension_;
     }
 
-    size_t FactorizedStatesDimension()
+    size_t FactorizedStatesCount()
     {
-        return factorized_states_dimension_;
+        return factorized_states_count_;
     }
 
 public:
@@ -182,7 +178,7 @@ public:
 
     size_t cohesive_state_dimension_;
     size_t factorized_state_dimension_;
-    size_t factorized_states_dimension_;
+    size_t factorized_states_count_;
 };
 
 }
