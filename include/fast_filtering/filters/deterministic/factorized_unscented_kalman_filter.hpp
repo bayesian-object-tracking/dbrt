@@ -134,6 +134,7 @@ public:
 
         ComputeSigmaPoints(prior_state.state_a_, prior_state.cov_aa_, 0, Xa);
 
+
     }
 
     void update(const StateDistribution& predicted_state,
@@ -174,12 +175,61 @@ public:
         }
     }
 
-    void ComputeFactorizedStateSigmaPoints(const StateDistribution& state,
-                                           size_t factor_index,
-                                           SigmaPoints& sigma_points)
+    template <typename MatrixAInv,
+              typename MatrixB,
+              typename MatrixC,
+              typename MatrixD,
+              typename ResultMatrix>
+    void SMWInversion(const MatrixAInv& A_inv,
+                      const MatrixB& B,
+                      const MatrixC& C,
+                      const MatrixD& D,
+                      ResultMatrix& inv)
     {
+        Eigen::MatrixXd CAinv = C * A_inv;
+        Eigen::MatrixXd AinvB = A_inv * B;
+        Eigen::MatrixXd D_m_CAinvB__inv = D - C * AinvB;
+        D_m_CAinvB__inv = D_m_CAinvB__inv.inverse();
 
+        Eigen::MatrixXd D_m_CAinvB__inv_CAinv = D_m_CAinvB__inv * CAinv;
+
+        inv.resize(A_inv.rows() + C.rows(), A_inv.cols() + B.cols());
+
+        inv.block(0, 0, A_inv.rows(), A_inv.rows()) = A_inv + AinvB * D_m_CAinvB__inv_CAinv;
+        inv.block(0, A_inv.cols(), B.rows(), B.cols()) = -(AinvB * D_m_CAinvB__inv);
+        inv.block(A_inv.rows(), 0, C.rows(), C.cols()) = -(D_m_CAinvB__inv_CAinv);
+        inv.block(A_inv.rows(), A_inv.cols(), D.rows(), D.cols()) = D_m_CAinvB__inv;
     }
+
+    template <typename MatrixAInv,
+              typename MatrixB,
+              typename MatrixC,
+              typename MatrixD,
+              typename MatrixLA,
+              typename MatrixLB,
+              typename MatrixLC,
+              typename MatrixLD>
+    void SMWInversion(const MatrixAInv& A_inv,
+                      const MatrixB& B,
+                      const MatrixC& C,
+                      const MatrixD& D,
+                      MatrixLA& L_A,
+                      MatrixLB& L_B,
+                      MatrixLC& L_C,
+                      MatrixLD& L_D)
+    {
+        Eigen::MatrixXd CAinv = C * A_inv;
+        Eigen::MatrixXd AinvB = A_inv * B;
+
+        L_D = (D - C * AinvB).inverse();
+
+        Eigen::MatrixXd L_D_CAinv = L_D * CAinv;
+
+        L_A = A_inv + AinvB * L_D_CAinv;
+        L_B = -(AinvB * L_D);
+        L_C = -L_D_CAinv;
+    }
+
 
 protected:
     CohesiveStateProcessModelPtr cohesive_state_process_model_;
@@ -190,3 +240,4 @@ protected:
 }
 
 #endif
+
