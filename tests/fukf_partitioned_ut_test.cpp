@@ -217,6 +217,7 @@ TEST_F(PartitionedUnscentedTransformTest, partitionUT)
 
     // compute the sigma point partitions X = [Xa  XQa  Xb  XQb  XR]
     std::vector<Filter::SigmaPoints> X_partitions;
+
     filter.ComputeSigmaPointPartitions(
         { {mu_a, cov_aa},
           {State::Zero(), Qa},
@@ -224,6 +225,7 @@ TEST_F(PartitionedUnscentedTransformTest, partitionUT)
           {State::Zero(), Qb},
           {Filter::StateDistribution::Y::Zero(), R} },
         X_partitions);
+
     augmented_partitioned_X = AugmentPartitionedSigmaPoints(X_partitions);
 
     // compute the sigma point from augmented covariance and mean
@@ -244,6 +246,7 @@ TEST_F(PartitionedUnscentedTransformTest, partitionUT)
 
     // verify identity
     EXPECT_TRUE(augmented_partitioned_X.isApprox(augmented_X, EPSILON));
+
 }
 
 TEST_F(PartitionedUnscentedTransformTest, partitionCovariance)
@@ -318,7 +321,6 @@ TEST_F(PartitionedUnscentedTransformTest, partitionCovariance)
 
     EXPECT_TRUE(joint_partitioned_cov.isApprox(joint_cov, EPSILON));
 }
-
 
 
 /**

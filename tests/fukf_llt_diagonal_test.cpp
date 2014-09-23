@@ -53,6 +53,7 @@
 
 size_t dia_dimension = 40;
 size_t dia_iterations = 10000;
+size_t dia_iterations_1x1 = 1e7;
 
 TEST(Diags, diaDiaLLT) /* remains in O(n^3) even though the matrix is diagonal */
 {
@@ -76,6 +77,46 @@ TEST(Diags, diaElementWiseSqrt)  /* in O(n) */
         for (int j = 0; j < dia_dimension; ++j)
         {
             R(j, j) = std::sqrt(C(j, 0));
+        }
+    }
+}
+
+TEST(Diags, diaDiaLLT1x1) /* remains in O(n^3) even though the matrix is diagonal */
+{
+    Eigen::MatrixXd C = Eigen::MatrixXd::Ones(1, 1)*25.;
+
+    Eigen::MatrixXd R;
+
+    for (int i = 0; i < dia_iterations_1x1; i++)
+    {
+        R = C.llt().matrixL();
+    }
+}
+
+TEST(Diags, diaElementWiseSqrt1x1)  /* in O(n) */
+{
+    Eigen::MatrixXd C = Eigen::MatrixXd::Ones(1, 1)*25.;
+    Eigen::MatrixXd R = Eigen::MatrixXd::Zero(1, 1);
+
+    for (int i = 0; i < dia_iterations_1x1; i++)
+    {
+        for (int j = 0; j < 1; ++j)
+        {
+            R(j, j) = std::sqrt(C(j, 0));
+        }
+    }
+}
+
+TEST(Diags, isDiagonalSpeedTest) // too slow
+{
+    Eigen::MatrixXd C = Eigen::MatrixXd::Identity(6, 6);
+    Eigen::MatrixXd R;
+
+    for (int i = 0; i < dia_iterations_1x1; i++)
+    {
+        if (C.isDiagonal())
+        {
+             R = C;
         }
     }
 }
