@@ -82,11 +82,16 @@ TEST(InversionTests, SMWInversion)
     Eigen::MatrixXd C = cov.block(14,  0, 1,  14);
     Eigen::MatrixXd D = cov.block(14, 14, 1,   1);
 
+    Eigen::MatrixXd L_A;
+    Eigen::MatrixXd L_B;
+    Eigen::MatrixXd L_C;
+    Eigen::MatrixXd L_D;
+
     Eigen::MatrixXd cov_inv = cov.inverse();
     Eigen::MatrixXd cov_smw_inv;
 
     Eigen::MatrixXd A_inv = A.inverse();
-    filter.SMWInversion(A_inv, B, C, D, cov_smw_inv);
+    filter.SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D, cov_smw_inv);
 
     EXPECT_TRUE(cov_smw_inv.isApprox(cov_inv, EPSILON));
 }
@@ -133,12 +138,17 @@ TEST(InversionTests, SMWMatrixInversionSpeed)
     Eigen::MatrixXd D = cov.block(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1, 1, 1);
     Eigen::MatrixXd A_inv = A.inverse();
 
+    Eigen::MatrixXd L_A = Eigen::MatrixXd(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1);
+    Eigen::MatrixXd L_B = Eigen::MatrixXd(INVERSION_DIMENSION-1, 1);
+    Eigen::MatrixXd L_C = Eigen::MatrixXd(1, INVERSION_DIMENSION-1);
+    Eigen::MatrixXd L_D = Eigen::MatrixXd(1, 1);
+
     Eigen::MatrixXd cov_smw_inv;
     std::clock_t start = std::clock();
     size_t number_of_inversions = 0;
     while ( (( std::clock() - start ) / (double) CLOCKS_PER_SEC) < 1.0 )
     {
-        filter.SMWInversion(A_inv, B, C, D, cov_smw_inv);
+        filter.SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D, cov_smw_inv);
         number_of_inversions++;
     }
 

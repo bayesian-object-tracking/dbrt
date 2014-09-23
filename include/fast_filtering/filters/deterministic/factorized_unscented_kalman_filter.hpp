@@ -80,89 +80,34 @@ public:
                                       typename FactorizedStateProcessModel::State,
                                       1> StateDistribution;
 
+    typedef typename StateDistribution::CovAA CovAA;
+    typedef typename StateDistribution::CovBB CovBB;
+    typedef typename StateDistribution::CovYY CovYY;
+    typedef typename StateDistribution::CovAY CovAY;
+    typedef typename StateDistribution::CovAB CovAB;
+    typedef typename StateDistribution::CovBY CovBY;
 
-    typedef Eigen::Matrix<typename StateDistribution::Scalar,
-                          Eigen::Dynamic,
-                          Eigen::Dynamic> JointCovariance;
-
-    typedef Eigen::Matrix<typename StateDistribution::Scalar,
-                          Eigen::Dynamic,
-                          1> JointState;
-
-    //typedef SumOfDeltas<JointState> SigmaPoints;
     typedef Eigen::Matrix<typename StateDistribution::Scalar,
                           Eigen::Dynamic,
                           Eigen::Dynamic> SigmaPoints;
-
-    typedef std::vector<double> Weights;
-
-//    struct SigmaPoints:
-//        public SigmaPointMatrix
-//    {
-//        SigmaPoints() { }
-//        SigmaPoints(size_t rows, size_t cols): SigmaPointMatrix(rows, cols) { }
-
-//        SigmaPoints operator=(const SigmaPoints& sigma_points)
-//        {
-//            w_m = sigma_points.w_m;
-//            w_c = sigma_points.w_c;
-//        }
-
-//        SigmaPoints operator=(const SigmaPointMatrix& sigma_points)
-//        {
-//            w_m = 1;
-//            w_c = 1;
-//        }
-
-//        double w_c;
-//        double w_m;
-//    };
 
     typedef boost::shared_ptr<CohesiveStateProcessModel> CohesiveStateProcessModelPtr;
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
     typedef boost::shared_ptr<ObservationModel> ObservationModelPtr;
 
+    enum RandomVariableIndex { a = 0, Q_a , b_i, Q_bi, R_yi, y_i = R_yi };
+
 public:
     FactorizedUnscentedKalmanFilter(
             const CohesiveStateProcessModelPtr cohesive_state_process_model,
             const FactorizedStateProcessModelPtr factorized_state_process_model,
-            const ObservationModelPtr observation_model):
-        cohesive_state_process_model_(cohesive_state_process_model),
-        factorized_state_process_model_(factorized_state_process_model),
-        observation_model_(observation_model)
+            const ObservationModelPtr observation_model,
+            double kappa = 0.7):
+        f_a_(cohesive_state_process_model),
+        f_b_(factorized_state_process_model),
+        h_(observation_model),
+        kappa_(kappa)
     {
-        dim_a_ = cohesive_state_process_model_->Dimension();
-        dim_Qa_ = cohesive_state_process_model_->NoiseDimension();
-
-        dim_b_i_ = factorized_state_process_model_->Dimension();
-        dim_Qb_i_ = factorized_state_process_model_->NoiseDimension();
-
-        dim_y_i_ = 1;
-        dim_R_ = observation_model_->NoiseDimension();
-
-        dim_joint_ = dim_a_ + dim_b_i_ + dim_y_i_;
-        number_of_points_ = 2 * dim_joint_ + 1;
-
-        // cohesive state sigma points Xa
-        Xa_ = SigmaPoints(dim_a_, number_of_points_);
-        XQa_ = SigmaPoints(dim_Qa_, number_of_points_);
-
-        // factorized state sigma points Xb_i
-        XQb_ = SigmaPoints(dim_Qb_i_, number_of_points_);
-
-        // measurement noise X_R
-        Xy_ = SigmaPoints(1, number_of_points_);
-        XR_ = SigmaPoints(1, number_of_points_);
-
-        zero_noise_a_ = Eigen::MatrixXd::Zero(dim_Qa_, 1);
-        zero_noise_b_ = Eigen::MatrixXd::Zero(dim_Qb_i_, 1);
-        zero_noise_y_ = Eigen::MatrixXd::Zero(dim_R_, 1);
-
-        dummy_b_i_ = Eigen::MatrixXd(dim_b_i_, 0);
-        dummy_cov_bb_i_ = Eigen::MatrixXd(dim_b_i_, 0);
-
-        w_m_.resize(number_of_points_, 1./double(number_of_points_));
-        w_c_.resize(number_of_points_, 1./double(number_of_points_));
     }
 
     virtual ~FactorizedUnscentedKalmanFilter() { }
@@ -170,164 +115,324 @@ public:
     void predict(const StateDistribution& prior_state,
                  StateDistribution& predicted_state)
     {
-        if (Xb_.size() == 0)
-        {
-            size_t dim_b = prior_state.FactorizedStatesCount();
-            Xb_.resize(dim_b, SigmaPoints(dim_b_i_, number_of_points_));
-        }
-
         // compute the sigma point partitions X = [Xa  XQa  0(b^[i])  XQb  XR]
         // 0(b^[i]) is the place holder for the a b^[i]
         ComputeSigmaPointPartitions(
-            { {prior_state.state_a_, prior_state.cov_aa_},
-              {zero_noise_a_, cohesive_state_process_model_->NoiseCovariance()},
-              {dummy_b_i_, dummy_cov_bb_i_},
-              {zero_noise_b_, factorized_state_process_model_->NoiseCovariance()},
-              {zero_noise_y_, observation_model_->NoiseCovariance()} },
-            X_partitions_);
+            {
+                {prior_state.state_a_,                prior_state.cov_aa_},
+                {Eigen::MatrixXd::Zero(Dim(Q_a), 1),  f_a_->NoiseCovariance()},
+                {Eigen::MatrixXd::Zero(Dim(b_i), 1),  Eigen::MatrixXd::Zero(Dim(b_i), Dim(b_i))},
+                {Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance()},
+                {Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance()(0, 0)}
+            },
+            X_);
 
-        Xa_ = X_partitions_[0];
-        XQa_ = X_partitions_[1];
-        XQb_ = X_partitions_[3];
-        XR_ = X_partitions_[4];
+        // X_[Q_a];
+        // X_[Q_bi];
+        // X_[R_yi];
 
-        /*  PROCESS Xa[j] = f_a(Xa[j], XQa[j])  */
+        /*  X_[a] = f_a->predict(X_[a], X_[Q_bi])  */
 
-        // predict the cohersive state segment a
-        SigmaPointsMean(Xa_, w_m_, predicted_state.state_a_);
-        NormalizeSigmaPoints(predicted_state.state_a_,  w_c_, Xa_);
-        predicted_state.cov_aa_ = Xa_ * Xa_.transpose();
-        predicted_state.cov_aa_inverse_ = predicted_state.cov_aa_.inverse();
+        // predict the cohesive state segment a
+        Mean(X_[a], predicted_state.state_a_);
+        Normalize(predicted_state.state_a_, X_[a]);
+        predicted_state.cov_aa_ = X_[a] * X_[a].transpose();
 
         // predict the joint state [a  b_i  y_i]
         for (size_t i = 0; i < prior_state.joint_partitions_.size(); ++i)
         {
+            ComputeSigmaPoints(prior_state.joint_partitions_[i].b,
+                               prior_state.joint_partitions_[i].cov_bb,
+                               Dim(a) + Dim(Q_a),
+                               X_[b_i]);
+
+            /*  X_[b_i] = f_a->predict(X_[b_i], X_[Q_bi])  */
+            /*  X_[y_i] = h->predict(X_[a], X_[Q_bi], X_[R_yi])  */
+
             typename StateDistribution::JointPartitions& predicted_partition =
                     predicted_state.joint_partitions_[i];
 
-            ComputeSigmaPoints(prior_state.joint_partitions_[i].b,
-                               prior_state.joint_partitions_[i].cov_bb,
-                               dim_a_ + dim_Qa_,
-                               Xb_[i]);
+            Mean(X_[b_i], predicted_partition.b);
+            Mean(X_[y_i], predicted_partition.y);
 
-            /*  PROCESS Xb[i, j] = f_a(Xb[i, j], XQb[i, j])  */
-            /*  PROCESS Xy_[j] = h(Xa[j], Xb[i, j], XR_[j])  */
+            Normalize(predicted_partition.b, X_[b_i]);
+            Normalize(predicted_partition.y, X_[y_i]);
 
-            SigmaPointsMean(Xb_[i], w_m_, predicted_partition.b);
-            SigmaPointsMean(Xy_, w_m_, predicted_partition.y);
-
-            NormalizeSigmaPoints(predicted_partition.b, w_c_, Xb_[i]);
-            NormalizeSigmaPoints(predicted_partition.y, w_c_, Xy_);
-
-            predicted_partition.cov_ab = Xa_ * Xb_[i].transpose();
-            predicted_partition.cov_ay = Xa_ * Xy_.transpose();
-            predicted_partition.cov_bb = Xb_[i] * Xb_[i].transpose();
-            predicted_partition.cov_by = Xb_[i] * Xy_.transpose();
-            predicted_partition.cov_yy = Xy_ * Xy_.transpose();
+            predicted_partition.cov_ab = X_[a] * X_[b_i].transpose();
+            predicted_partition.cov_ay = X_[a] * X_[y_i].transpose();
+            predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
+            predicted_partition.cov_by = X_[b_i] * X_[y_i].transpose();
+            predicted_partition.cov_yy = X_[y_i] * X_[y_i].transpose();
         }
     }
 
+    /**
+     * Update the predicted_state and store the result in the posterior_state
+     * The update step involves updating the cohesive state followed by the
+     * update of the factorized part
+     *
+     * @param [in]  predicted_state     Propagated state
+     * @param [in]  y                   Measurement
+     * @param [out] posterior_state     Updated posterior state
+     */
     void update(const StateDistribution& predicted_state,
-                StateDistribution& posterior_state,
-                Eigen::MatrixXd y)
+                const Eigen::MatrixXd& y,
+                StateDistribution& posterior_state)
+    {
+        update_a(predicted_state, y, posterior_state);
+    }
+
+
+    /**
+     * Update the cohesive predicted_state part a
+     *
+     * @param [in]  predicted_state     Propagated state
+     * @param [in]  y                   Measurement
+     * @param [out] posterior_state     Updated posterior state
+     */
+    void update_a(const StateDistribution& predicted_state,
+                  const Eigen::MatrixXd& y,
+                  StateDistribution& posterior_state)
     {
         size_t dim_b = predicted_state.FactorizedStatesCount();
 
-        Eigen::MatrixXd A(dim_b, dim_a_);
-        Eigen::MatrixXd b(dim_b, 1);
-        Eigen::MatrixXd Cov_yy_given_a(dim_b, 1);
-        Eigen::MatrixXd Cov_yy_given_a_inv(dim_b, 1);
-        Eigen::MatrixXd AT_Cov_yy_given_a;
+        Eigen::MatrixXd A(dim_b, Dim(a));
+        Eigen::MatrixXd mu_y(dim_b, 1);
+        Eigen::MatrixXd cov_yy_given_a_inv(dim_b, 1);
 
-        typedef typename StateDistribution::CovAY CovAA;
-        typedef typename StateDistribution::CovAY CovAY;
-        typedef typename StateDistribution::CovYY CovYY;
-
-        CovAA& cov_aa = predicted_state.cov_aa_;
-        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse_;
+        CovAA cov_aa_inv = predicted_state.cov_aa_.inverse();
 
         for (size_t i = 0; i < dim_b; ++i)
         {
             CovAY& cov_ay = predicted_state.joint_partitions_[i].cov_ay_;
             CovYY& cov_yy = predicted_state.joint_partitions_[i].cov_yy_;
 
-            A.block(i, 0, 1, dim_a_) = cov_ay.transpose();
-            b.block(i, 0, 1, 1) = predicted_state.joint_partitions_[i].y;
+            A.block(i, 0, 1, Dim(a)) = cov_ay.transpose();
+            mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions_[i].y;
 
-            Cov_yy_given_a.block(i, 0, 1, 1) =
+            cov_yy_given_a_inv.block(i, 0, 1, 1) =
                     cov_yy - cov_ay.transpose() * cov_aa_inv * cov_ay;
         }
-        A = A * predicted_state.cov_aa_inverse_;
-        b -= A * predicted_state.state_a_;
+        A = A * cov_aa_inv;
 
-        InvertDiagonalAsVector(Cov_yy_given_a, Cov_yy_given_a_inv);
-
-        AT_Cov_yy_given_a = A.transpose() * Cov_yy_given_a_inv;
+        InvertDiagonalAsVector(cov_yy_given_a_inv, cov_yy_given_a_inv);
+        Eigen::MatrixXd AT_Cov_yy_given_a = A.transpose() * cov_yy_given_a_inv.asDiagonal();
 
         // update cohesive state segment
-        posterior_state.state_a_ =
-                predicted_state.state_a_
-                + cov_aa * AT_Cov_yy_given_a * (y - A * predicted_state.state_a_ + b);
-
         posterior_state.cov_aa_ = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
+
+        posterior_state.state_a_ =
+                predicted_state.state_a_ +
+                posterior_state.cov_aa_ * AT_Cov_yy_given_a * (y - mu_y);
     }
+
+    /**
+     * Update the factorized predicted_state part b given the updated cohesive
+     * part a.
+     *
+     * @param [in]  predicted_state     Propagated state
+     * @param [in]  y                   Measurement
+     * @param [out] posterior_state     Updated posterior state
+     */
+    void update_b(const StateDistribution& predicted_state,
+                  const Eigen::MatrixXd& y,
+                  StateDistribution& posterior_state)
+    {
+        Eigen::MatrixXd L;
+        Eigen::MatrixXd L_aa;
+        Eigen::MatrixXd L_ay;
+        Eigen::MatrixXd L_ya;
+        Eigen::MatrixXd L_yy;
+
+        size_t dim_b = predicted_state.FactorizedStatesCount();
+
+        Eigen::MatrixXd B;
+        Eigen::MatrixXd c;
+        Eigen::MatrixXd ba_by;
+        Eigen::MatrixXd K;
+        Eigen::MatrixXd innov;
+        Eigen::MatrixXd cov_b_given_a_y;
+        ba_by.resize(Dim(b_i), Dim(a) + Dim(y_i));
+        innov.resize(Dim(a) + Dim(y_i), 1);
+        innov.block(0, 0, Dim(a), 1) = -predicted_state.state_a_;
+
+        CovAA cov_aa_inv = predicted_state.cov_aa_.inverse(); // avoid this
+
+        for (size_t i = 0; i < dim_b; ++i)
+        {
+            CovAY& cov_ay = predicted_state.joint_partitions_[i].cov_ay_;
+            CovAB& cov_ab = predicted_state.joint_partitions_[i].cov_ab_;
+            CovBY& cov_by = predicted_state.joint_partitions_[i].cov_by_;
+            CovBB& cov_bb = predicted_state.joint_partitions_[i].cov_bb_;
+            CovYY& cov_yy = predicted_state.joint_partitions_[i].cov_yy_;
+
+            SMWInversion(cov_aa_inv, cov_ay, cov_ay.transpose(), cov_yy,
+                         L_aa, L_ay, L_ya, L_yy,
+                         L);
+
+            B = cov_ab.transpose() * L_aa  +  cov_by * L_ya;
+
+            ba_by.block(0, 0, Dim(b_i), Dim(a)) = cov_ab.transpose();
+            ba_by.block(0, Dim(a), Dim(b_i), Dim(y_i)) = cov_by;
+
+            K = ba_by * L;
+            innov.block(Dim(a), 0, Dim(y_i), 1) =
+                    y(i, 0) - predicted_state.joint_partitions_[i].y;
+
+            c = predicted_state.joint_partitions_[i].b + K * innov;
+
+            cov_b_given_a_y = cov_bb - K * ba_by.transpose();
+
+            // update b_[i]
+            posterior_state.joint_partitions_[i].b =
+                    B * posterior_state.state_a_ + c;
+            posterior_state.joint_partitions_[i].cov_bb_ =
+                    cov_b_given_a_y
+                    - B * posterior_state.cov_aa_ * B.transpose();
+        }
+    }
+
 
 public:
-    template <typename MeanVector>
-    void SigmaPointsMean(const SigmaPoints& sigma_points,
-                         const Weights& w,
-                         MeanVector& mean)
+    /**
+     * @brief Dim Returns the dimension of the specified random variable ID
+     *
+     * @param var_id    ID of the requested random variable
+     */
+    size_t Dim(RandomVariableIndex var_id)
     {
-        mean.setZero();
-
-        for (size_t i = 0; i < sigma_points.cols(); ++i)
+        switch(var_id)
         {
-            mean += w[i] * sigma_points[i];
+        case a:     return f_a_->Dimension();
+        case Q_a:   return f_a_->NoiseDimension();
+        case b_i:    return f_b_->Dimension();
+        case Q_bi:  return f_b_->NoiseDimension();
+        case y_i:   return 1;
+        case R_yi:  return 1;
         }
     }
 
-    template <typename MeanVector>
-    void NormalizeSigmaPoints(const MeanVector& mean,
-                              const Weights& w,
-                              SigmaPoints& sigma_points)
+    /**
+     * Returns the number of sigma points accroding to the specified random
+     * variable list. E.g. {a, b_i, y_i} results in
+     * 2*(dim(a)+dim(b_i)+dim(y_i)) + 1
+     *
+     * @param var_ids The list of random variable IDs
+     */
+    size_t CountSigmas(const std::vector<RandomVariableIndex>& var_ids)
     {
+        size_t sigmas = 0;
+        for (auto& var_id: var_ids) { sigmas += Dim(var_id); }
+        return 2 * sigmas + 1;
+    }
+
+    /**
+     * Computes the weighted mean of the given sigma points
+     */
+    template <typename MeanVector>
+    void Mean(const SigmaPoints& sigma_points, MeanVector& mean)
+    {
+        double w_0_sqrt;
+        double w_i_sqrt;
+        ComputeWeights(sigma_points.cols(), w_0_sqrt, w_i_sqrt);
+
+        mean = w_0_sqrt * sigma_points.col(0);
         for (size_t i = 0; i < sigma_points.cols(); ++i)
         {
-            sigma_points[i] = std::sqrt(w[i]) * (sigma_points[i] - mean);
+            mean +=  w_i_sqrt * sigma_points.col(i);
         }
     }
 
+    /**
+     * Normalizes the given sigma point such that they represent zero mean
+     * weighted points.
+     * @param [in]  mean          Mean of the sigma points
+     * @param [in]  w             Weights of the points used to determine the
+     *                            covariance
+     * @param [out] sigma_points  The sigma point collection
+     */
+    template <typename MeanVector>    
+    void Normalize(const MeanVector& mean, SigmaPoints& sigma_points)
+    {
+        double w_0_sqrt;
+        double w_i_sqrt;
+        ComputeWeights(sigma_points.cols(), w_0_sqrt, w_i_sqrt);
+
+        sigma_points.col(0) = w_0_sqrt * (sigma_points.col(0) - mean);
+
+        for (size_t i = 1; i < sigma_points.cols(); ++i)
+        {
+            sigma_points.col(i) = w_i_sqrt * (sigma_points.col(i) - mean);
+        }
+    }
+
+    /**
+     * Computes the Unscented Transform weights according to the specified
+     * sigmapoints
+     *
+     * @param [in]  number_of_sigma_points
+     * @param [out] w_0_sqrt    The weight for the first sigma point
+     * @param [out] w_i_sqrt    The weight for the remaining sigma points
+     */
+    void ComputeWeights(size_t number_of_sigma_points,
+                        double& w_0_sqrt,
+                        double& w_i_sqrt)
+    {
+        size_t dimension = (number_of_sigma_points - 1) / 2;
+        w_0_sqrt = std::sqrt(kappa_ / (double(dimension) + kappa_));
+        w_i_sqrt = std::sqrt(1. / (2. * (double(dimension) + kappa_)));
+    }
+
+    /**
+     * Computes the sigma point partitions for all specified moment pairs
+     *
+     * @param moments_list              Moment pair of each partition.
+     *                                  For a place holder, the first moment
+     *                                  (the mean) must have the required number
+     *                                  of rows and 0 columns.
+     * @param sigma_point_partitions    sigma point partitions
+     */
     void ComputeSigmaPointPartitions(
             const std::vector<std::pair<Eigen::MatrixXd,
-                                        Eigen::MatrixXd> >& moments_list,
-            std::vector<SigmaPoints>& sigma_point_partitions)
+                                        Eigen::MatrixXd> >& moment_pairs,
+            std::vector<SigmaPoints>& X)
     {
         size_t dim = 0;
-        for (auto& moments : moments_list)
-        {
-            dim += moments.first.rows();
-        }
+        for (auto& moments : moment_pairs) { dim += moments.first.rows(); }
         size_t number_of_points = 2 * dim + 1;
 
-        Eigen::MatrixXd sigma_points;
+        X.resize(moment_pairs.size());
+
         size_t offset = 0;
-        for (auto& moments : moments_list)
+        size_t i = 0;
+        for (auto& moments : moment_pairs)
         {
-            sigma_points = SigmaPoints(moments.first.rows(), number_of_points);
+            X[i].resize(moments.first.rows(), number_of_points);
+
             // check whether this is only a place holder
-            if (moments.first.cols() > 0)
+            if (!moments.second.isZero())
             {
-                ComputeSigmaPoints(moments.first,
-                                   moments.second,
-                                   offset,
-                                   sigma_points);
+                ComputeSigmaPoints(moments.first, moments.second, offset, X[i]);
             }
-            sigma_point_partitions.push_back(sigma_points);
 
             offset += moments.first.rows();
+            i++;
         }
     }
 
+    /**
+     * Computes the sigma point partition. Given a random variable X and its
+     * partitions [Xa  Xb  Xc] this function computes the sigma points of
+     * a single partition, say Xb. This is done such that the number of sigma
+     * points in Xb is 2*dim([Xa  Xb  Xc])+1. In so doing, the sigma points of X
+     * can be computed partition wise, and ultimately augmented together.
+     *
+     * @param [in]  mean          First moment
+     * @param [in]  covariance    Second centered moment
+     * @param [in]  offset        Offset dimension if this transform is a
+     *                            partition of a larger one
+     * @param [out] sigma_points  Selected sigma points
+     */
     template <typename MeanVector, typename CovarianceMatrix>
     void ComputeSigmaPoints(const MeanVector& mean,
                             const CovarianceMatrix& covariance,
@@ -337,6 +442,8 @@ public:
         // asster sigma_points.rows() == mean.rows()
         size_t joint_dimension = (sigma_points.cols() - 1) / 2;
         CovarianceMatrix covarianceSqr = covariance.llt().matrixL();
+
+        covarianceSqr *= std::sqrt((double(joint_dimension) + kappa_));
 
         sigma_points.setZero();
         sigma_points.col(0) = mean;
@@ -400,32 +507,12 @@ public:
         }
     }
 
-    template <typename MatrixAInv,
-              typename MatrixB,
-              typename MatrixC,
-              typename MatrixD,
-              typename ResultMatrix>
-    void SMWInversion(const MatrixAInv& A_inv,
-                      const MatrixB& B,
-                      const MatrixC& C,
-                      const MatrixD& D,
-                      ResultMatrix& inv)
-    {
-        Eigen::MatrixXd CAinv = C * A_inv;
-        Eigen::MatrixXd AinvB = A_inv * B;
-        Eigen::MatrixXd D_m_CAinvB__inv = D - C * AinvB;
-        D_m_CAinvB__inv = D_m_CAinvB__inv.inverse();
-
-        Eigen::MatrixXd D_m_CAinvB__inv_CAinv = D_m_CAinvB__inv * CAinv;
-
-        inv.resize(A_inv.rows() + C.rows(), A_inv.cols() + B.cols());
-
-        inv.block(0, 0, A_inv.rows(), A_inv.rows()) = A_inv + AinvB * D_m_CAinvB__inv_CAinv;
-        inv.block(0, A_inv.cols(), B.rows(), B.cols()) = -(AinvB * D_m_CAinvB__inv);
-        inv.block(A_inv.rows(), 0, C.rows(), C.cols()) = -(D_m_CAinvB__inv_CAinv);
-        inv.block(A_inv.rows(), A_inv.cols(), D.rows(), D.cols()) = D_m_CAinvB__inv;
-    }
-
+    /**
+     * Blockweise matrix inversion using the Sherman-Morrision-Woodbury
+     * indentity given that A^-1 is already available
+     * | A B |-1  | L_A L_B |
+     * | C D |  = | L_C L_D |
+     */
     template <typename MatrixAInv,
               typename MatrixB,
               typename MatrixC,
@@ -455,41 +542,52 @@ public:
         L_C = -L_D_CAinv;
     }
 
-protected:
-    CohesiveStateProcessModelPtr cohesive_state_process_model_;
-    FactorizedStateProcessModelPtr factorized_state_process_model_;
-    ObservationModelPtr observation_model_;
+    /**
+     * Blockweise matrix inversion using the Sherman-Morrision-Woodbury
+     * indentity given that A^-1 is already available
+     * | A B |-1  | L_A L_B |
+     * | C D |  = | L_C L_D | = inv
+     */
+    template <typename MatrixAInv,
+              typename MatrixB,
+              typename MatrixC,
+              typename MatrixD,
+              typename MatrixLA,
+              typename MatrixLB,
+              typename MatrixLC,
+              typename MatrixLD,
+              typename ResultMatrix>
+    void SMWInversion(const MatrixAInv& A_inv,
+                      const MatrixB& B,
+                      const MatrixC& C,
+                      const MatrixD& D,
+                      MatrixLA& L_A,
+                      MatrixLB& L_B,
+                      MatrixLC& L_C,
+                      MatrixLD& L_D,
+                      ResultMatrix& inv)
+    {
+        SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D);
 
-    size_t dim_a_;
-    size_t dim_Qa_;
-    size_t dim_b_i_;
-    size_t dim_Qb_i_;
-    size_t dim_y_i_;
-    size_t dim_R_;
-    size_t dim_joint_;
-    size_t number_of_points_;
+        inv.resize(L_A.rows() + L_C.rows(), L_A.cols() + L_B.cols());
+
+        inv.block(0,          0,          L_A.rows(), L_A.cols()) = L_A;
+        inv.block(0,          L_A.cols(), L_B.rows(), L_B.cols()) = L_B;
+        inv.block(L_A.rows(), 0,          L_C.rows(), L_C.cols()) = L_C;
+        inv.block(L_A.rows(), L_A.cols(), L_D.rows(), L_D.cols()) = L_D;
+    }
+
+protected:
+    CohesiveStateProcessModelPtr f_a_;
+    FactorizedStateProcessModelPtr f_b_;
+    ObservationModelPtr h_;
+
+    double kappa_;
 
     // sigma points
-    SigmaPoints Xa_;
-    SigmaPoints XQa_;
-    std::vector<SigmaPoints> Xb_;
-    SigmaPoints XQb_;
-    SigmaPoints Xy_;
-    SigmaPoints XR_;
-
-    Eigen::MatrixXd zero_noise_a_;
-    Eigen::MatrixXd zero_noise_b_;
-    Eigen::MatrixXd zero_noise_y_;
-    Eigen::MatrixXd dummy_b_i_;
-    Eigen::MatrixXd dummy_cov_bb_i_;
-
-    std::vector<SigmaPoints> X_partitions_;
-
-    Weights w_m_;
-    Weights w_c_;
+    std::vector<SigmaPoints> X_;
 };
 
 }
 
 #endif
-
