@@ -83,7 +83,8 @@ public:
         if(input < min_ || input > max_)
             return 0;
 
-        return lambda_ * std::exp(-lambda_ * input) / (exp_lambda_min_ - exp_lambda_max_);
+        return lambda_ * std::exp(-lambda_ * input) /
+                            (exp_lambda_min_ - exp_lambda_max_);
     }
 
     virtual double LogProbability(const double& input) const
@@ -94,9 +95,25 @@ public:
     virtual double MapStandardGaussian(const double& gaussian_sample) const
     {
         // map from a gaussian to a uniform distribution
-        double uniform_sample = 0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        double uniform_sample = 0.5 *
+                        (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
         // map from a uniform to an exponential distribution
-        return -std::log(exp_lambda_min_ - (exp_lambda_min_ - exp_lambda_max_) * uniform_sample) / lambda_;
+        return -std::log(exp_lambda_min_ - (exp_lambda_min_ - exp_lambda_max_)
+                            * uniform_sample) / lambda_;
+    }
+
+
+    virtual double MapStandardGaussian(const double& gaussian_sample,
+                                       const double& max) const
+    {
+        double exp_lambda_max = std::exp(-lambda_*max);
+
+        // map from a gaussian to a uniform distribution
+        double uniform_sample = 0.5 *
+                        (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        // map from a uniform to an exponential distribution
+        return -std::log(exp_lambda_min_ - (exp_lambda_min_ - exp_lambda_max)
+                            * uniform_sample) / lambda_;
     }
 
 private:

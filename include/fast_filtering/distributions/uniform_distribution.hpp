@@ -64,7 +64,8 @@ class UniformDistribution:
 {
 
 public:
-    UniformDistribution(double min = 0.0, double max = 1.0): min_(min), max_(max)
+    UniformDistribution(double min = 0.0,
+                        double max = 1.0): min_(min), max_(max)
     {
         delta_ = max_ - min_;
         density_ = 1.0 / delta_;
@@ -93,7 +94,8 @@ public:
     virtual double MapStandardGaussian(const double& gaussian_sample) const
     {
         // map from a gaussian to a uniform distribution
-        double standard_uniform_sample = 0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        double standard_uniform_sample =
+                0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
         return mean_ + (standard_uniform_sample - 0.5) * delta_;
     }
 

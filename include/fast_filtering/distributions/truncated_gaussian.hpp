@@ -74,10 +74,13 @@ public:
                                                         min_(min),
                                                         max_(max)
     {
-        cumulative_min_ = 0.5 + 0.5 * std::erf( (min_-mean_) / (sigma_*std::sqrt(2)) );
-        cumulative_max_ = 0.5 + 0.5 * std::erf( (max_-mean_) / (sigma_*std::sqrt(2)) );
+        cumulative_min_ = 0.5 +
+                0.5 * std::erf( (min_-mean_) / (sigma_*std::sqrt(2)) );
+        cumulative_max_ = 0.5 +
+                0.5 * std::erf( (max_-mean_) / (sigma_*std::sqrt(2)) );
 
-        normalization_factor_ = 1.0 / (sigma_ * (cumulative_max_-cumulative_min_) * std::sqrt(2.0*M_PI));
+        normalization_factor_ = 1.0 /
+             (sigma_ * (cumulative_max_-cumulative_min_) * std::sqrt(2.0*M_PI));
     }
 
     virtual ~TruncatedGaussian() { }
@@ -87,7 +90,8 @@ public:
         if(input < min_ || input > max_)
             return 0;
 
-        return normalization_factor_ * std::exp(-0.5 * std::pow((input-mean_)/sigma_, 2));
+        return normalization_factor_ *
+                std::exp(-0.5 * std::pow((input-mean_)/sigma_, 2));
     }
 
     virtual double LogProbability(const double& input) const
@@ -98,12 +102,14 @@ public:
     virtual double MapStandardGaussian(const double& gaussian_sample) const
     {
         // map from a gaussian to a uniform distribution
-        double standard_uniform_sample = 0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        double standard_uniform_sample = 0.5 *
+                (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
         // map onto truncated uniform distribution
-        double truncated_uniform_sample =
-                cumulative_min_ + standard_uniform_sample * (cumulative_max_ - cumulative_min_);
+        double truncated_uniform_sample = cumulative_min_ +
+                  standard_uniform_sample * (cumulative_max_ - cumulative_min_);
         // map onto truncated gaussian
-        return mean_ + sigma_ * std::sqrt(2.0) * boost::math::erf_inv(2.0 * truncated_uniform_sample - 1.0);
+        return mean_ + sigma_ * std::sqrt(2.0) *
+                  boost::math::erf_inv(2.0 * truncated_uniform_sample - 1.0);
     }
 
 private:

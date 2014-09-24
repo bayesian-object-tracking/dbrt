@@ -58,6 +58,18 @@ namespace hf
 {
 
 
+
+
+inline double Sigmoid(const double& x)
+{
+    return 1.0 / (1.0 + std::exp(-x));
+}
+inline double Logit(const double& x)
+{
+    return std::log(x / (1.0 - x));
+}
+
+
 inline std::string DateAndTimeString()
 {
     time_t rawtime;
