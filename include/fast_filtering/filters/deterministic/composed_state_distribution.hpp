@@ -146,39 +146,39 @@ public:
             const size_t& cohesive_state_dimension = CohesiveState::SizeAtCompileTime,
             const size_t& factorized_state_dimension = FactorizedState::SizeAtCompileTime,
             const size_t& factorized_states_count = FACTORIZED_STATES):
-        cohesive_state_dimension_(cohesive_state_dimension),
-        factorized_state_dimension_(factorized_state_dimension),
-        factorized_states_count_(factorized_states_count)
+        a_dimension_(cohesive_state_dimension),
+        b_i_dimension_(factorized_state_dimension),
+        b_dimension_(factorized_states_count)
     {
 
     }
 
     virtual ~ComposedStateDistribution() { }
 
-    size_t CohesiveStatesDimension()
+    size_t a_dimension()
     {
-        return cohesive_state_dimension_;
+        return a_dimension_;
     }
 
-    size_t FactorizedStateDimension()
+    size_t b_i_dimension()
     {
-        return factorized_state_dimension_;
+        return b_i_dimension_;
     }
 
-    size_t FactorizedStatesCount()
+    size_t b_dimension()
     {
-        return factorized_states_count_;
+        return b_dimension_;
     }
 
 public:
-    CohesiveState state_a_;
+    CohesiveState a_;
     CovAA cov_aa_;
     CovAA cov_aa_inverse_;
     std::vector<JointPartitions> joint_partitions_;
 
-    size_t cohesive_state_dimension_;
-    size_t factorized_state_dimension_;
-    size_t factorized_states_count_;
+    size_t a_dimension_;
+    size_t b_i_dimension_;
+    size_t b_dimension_;
 };
 
 }
