@@ -71,7 +71,8 @@ public:
     typedef ff::FactorizedUnscentedKalmanFilter<
                     ProcessModelDummy<State>,
                     ProcessModelDummy<State>,
-                    ObservationModelDummy<State> > Filter;
+                    ObservationModelDummy<State>,
+                    1> Filter;
 
     PartitionedUnscentedTransformTest():
         filter(Filter(boost::make_shared<ProcessModelDummy<State> >(),

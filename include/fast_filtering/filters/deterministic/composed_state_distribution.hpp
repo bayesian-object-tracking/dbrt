@@ -133,7 +133,7 @@ public:
     /**
      * Creates a composed state distribution. This distribution harbors a
      * cohesive state part and a number of factorized states. The total state
-     * dimension is \f$\dim(CohesiveState) + FACTORIZED_STATES *
+     * dimension is \f$\dim(CohesiveState) + FACTORIZED\_STATES *
      * \dim(FactorizedState) \f$.
      *
      * @param cohesive_state_dimension      Dimension of the cohesive state part
@@ -148,7 +148,8 @@ public:
             const size_t& factorized_states_count = FACTORIZED_STATES):
         a_dimension_(cohesive_state_dimension),
         b_i_dimension_(factorized_state_dimension),
-        b_dimension_(factorized_states_count)
+        b_dimension_(factorized_states_count),
+      joint_partitions_(factorized_states_count)
     {
 
     }
