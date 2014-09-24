@@ -72,13 +72,14 @@ namespace ff
  */
 template<typename CohesiveStateProcessModel,
          typename FactorizedStateProcessModel,
-         typename ObservationModel>
+         typename ObservationModel,
+         size_t FACTORIZED_STATES = -1>
 class FactorizedUnscentedKalmanFilter
 {
 public:
     typedef ComposedStateDistribution<typename CohesiveStateProcessModel::State,
                                       typename FactorizedStateProcessModel::State,
-                                      1> StateDistribution;
+                                      FACTORIZED_STATES> StateDistribution;
 
     typedef typename StateDistribution::CovAA CovAA;
     typedef typename StateDistribution::CovBB CovBB;
@@ -90,6 +91,9 @@ public:
     typedef Eigen::Matrix<typename StateDistribution::Scalar,
                           Eigen::Dynamic,
                           Eigen::Dynamic> SigmaPoints;
+
+    typedef typename CohesiveStateProcessModel::State State_a;
+    typedef typename FactorizedStateProcessModel::State State_b_i;
 
     typedef boost::shared_ptr<CohesiveStateProcessModel> CohesiveStateProcessModelPtr;
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
@@ -108,7 +112,6 @@ public:
         h_(observation_model),
         kappa_(kappa)
     {
-
         alpha_ = 1.2;
         beta_ = 2.;
         kappa_ = 0.;
@@ -116,6 +119,12 @@ public:
 
     virtual ~FactorizedUnscentedKalmanFilter() { }
 
+    /**
+     * Predicts the state for the next time step
+     *
+     * @param [in]  prior_state         State prior distribution
+     * @param [out] predicted_state     Predicted state posterior distribution
+     */
     void predict(const StateDistribution& prior_state,
                  StateDistribution& predicted_state)
     {
@@ -123,19 +132,16 @@ public:
         // 0(b^[i]) is the place holder for the a b^[i]
         ComputeSigmaPointPartitions(
             {
-                {prior_state.a_,                prior_state.cov_aa_},
-                {Eigen::MatrixXd::Zero(Dim(Q_a), 1),  f_a_->NoiseCovariance()},
-                {Eigen::MatrixXd::Zero(Dim(b_i), 1),  Eigen::MatrixXd::Zero(Dim(b_i), Dim(b_i))},
-                {Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance()},
-                {Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance()(0, 0)}
+                { prior_state.a_,                      prior_state.cov_aa_ },
+                { Eigen::MatrixXd::Zero(Dim(Q_a),  1), f_a_->NoiseCovariance() },
+                { Eigen::MatrixXd::Zero(Dim(b_i),  1), Eigen::MatrixXd::Zero(Dim(b_i), Dim(b_i)) },
+                { Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance() },
+                { Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance() }
             },
             X_);
 
-        // X_[Q_a];
-        // X_[Q_bi];
-        // X_[R_yi];
-
-        /*  X_[a] = f_a->predict(X_[a], X_[Q_bi])  */
+        // FOR ALL X_[a]
+        // X_[a] = f_a_ -> predict(X_[a], X_[Q_bi]);
 
         // predict the cohesive state segment a
         Mean(X_[a], predicted_state.a_);
@@ -150,8 +156,9 @@ public:
                                Dim(a) + Dim(Q_a),
                                X_[b_i]);
 
-            /*  X_[b_i] = f_a->predict(X_[b_i], X_[Q_bi])  */
-            /*  X_[y_i] = h->predict(X_[a], X_[Q_bi], X_[R_yi])  */
+            // FOR ALL X_[b_i] and X_[y_i]
+            //X_[b_i] = f_b_ -> predict(X_[b_i], X_[Q_bi]);
+            //X_[y_i] = h_   -> predict(X_[a],   X_[Q_bi], X_[R_yi]);
 
             typename StateDistribution::JointPartitions& predicted_partition =
                     predicted_state.joint_partitions_[i];
@@ -314,26 +321,14 @@ public:
         case b_i:   return f_b_->Dimension();
         case Q_bi:  return f_b_->NoiseDimension();
         case y_i:   return 1;
-        case R_yi:  return 1;
+        //case R_yi:  return 1;
         }
     }
 
     /**
-     * Returns the number of sigma points accroding to the specified random
-     * variable list. E.g. {a, b_i, y_i} results in
-     * 2*(dim(a)+dim(b_i)+dim(y_i)) + 1
-     *
-     * @param var_ids The list of random variable IDs
-     */
-    size_t CountSigmas(const std::vector<RandomVariableIndex>& var_ids)
-    {
-        size_t sigmas = 0;
-        for (auto& var_id: var_ids) { sigmas += Dim(var_id); }
-        return 2 * sigmas + 1;
-    }
-
-    /**
      * Computes the weighted mean of the given sigma points
+     *
+     * @note TESTED
      */
     template <typename MeanVector>
     void Mean(const SigmaPoints& sigma_points, MeanVector& mean)
@@ -357,6 +352,8 @@ public:
      * @param [in]  w             Weights of the points used to determine the
      *                            covariance
      * @param [out] sigma_points  The sigma point collection
+     *
+     * @note TESTED
      */
     template <typename MeanVector>    
     void Normalize(const MeanVector& mean, SigmaPoints& sigma_points)
@@ -385,6 +382,8 @@ public:
      * @param [in]  number_of_sigma_points
      * @param [out] w_0_sqrt    The weight for the first sigma point
      * @param [out] w_i_sqrt    The weight for the remaining sigma points
+     *
+     * @note TESTED
      */
     void ComputeWeights(size_t number_of_sigma_points,
                         double& w_0,
@@ -406,6 +405,8 @@ public:
      *                                  (the mean) must have the required number
      *                                  of rows and 0 columns.
      * @param sigma_point_partitions    sigma point partitions
+     *
+     * @note TESTED
      */
     void ComputeSigmaPointPartitions(
             const std::vector<std::pair<Eigen::MatrixXd,
@@ -447,6 +448,8 @@ public:
      * @param [in]  offset        Offset dimension if this transform is a
      *                            partition of a larger one
      * @param [out] sigma_points  Selected sigma points
+     *
+     * @note TESTED
      */
     template <typename MeanVector, typename CovarianceMatrix>
     void ComputeSigmaPoints(const MeanVector& mean,
@@ -483,6 +486,9 @@ public:
         }
     }
 
+    /**
+     * @note TESTED
+     */
     template <typename RegularMatrix, typename SquareRootMatrix>
     void SquareRoot(const RegularMatrix& regular_matrix,
                     SquareRootMatrix& square_root)
@@ -490,6 +496,9 @@ public:
         square_root = regular_matrix.llt().matrixL();
     }
 
+    /**
+     * @note TESTED
+     */
     template <typename RegularMatrix>
     void SquareRootDiagonal(const RegularMatrix& regular_matrix,
                             RegularMatrix& square_root)
@@ -501,6 +510,9 @@ public:
         }
     }
 
+    /**
+     * @note TESTED
+     */
     template <typename RegularMatrix, typename SquareRootVector>
     void SquareRootDiagonalAsVector(const RegularMatrix& regular_matrix,
                                   SquareRootVector& square_root)
@@ -526,9 +538,33 @@ public:
 
     /**
      * Blockweise matrix inversion using the Sherman-Morrision-Woodbury
-     * indentity given that A^-1 is already available
-     * | A B |-1  | L_A L_B |
-     * | C D |  = | L_C L_D |
+     * indentity given that \f$\Sigma^{-1}_{aa}\f$ of
+     *
+     * \f$
+     *  \begin{pmatrix} \Sigma_{aa} & \Sigma_{ab} \\
+     *                  \Sigma_{ba} & \Sigma_{bb} \end{pmatrix}^{-1}
+     * \f$
+     *
+     * is already available.
+     *
+     * \f$
+     *  \begin{pmatrix} \Sigma_{aa} & \Sigma_{ab} \\
+     *                  \Sigma_{ba} & \Sigma_{bb} \end{pmatrix}^{-1} =
+     * \begin{pmatrix} \Lambda_{aa} & \Lambda_{ab} \\
+     *                 \Lambda_{ba} & \Lambda_{bb} \end{pmatrix} = \Lambda
+     * \f$
+     *
+     * @param [in]  A_inv   \f$ \Sigma^{-1}_{aa} \f$
+     * @param [in]  B       \f$ \Sigma_{ab} \f$
+     * @param [in]  C       \f$ \Sigma_{ba} \f$
+     * @param [in]  D       \f$ \Sigma_{bb} \f$
+     * @param [out] L_A     \f$ \Lambda_{aa} \f$
+     * @param [out] L_B     \f$ \Lambda_{ab} \f$
+     * @param [out] L_C     \f$ \Lambda_{ba} \f$
+     * @param [out] L_D     \f$ \Lambda_{bb} \f$
+     * @param [out] L       \f$ \Lambda \f$
+     *
+     * @note TESTED
      */
     template <typename MatrixAInv,
               typename MatrixB,
@@ -561,9 +597,33 @@ public:
 
     /**
      * Blockweise matrix inversion using the Sherman-Morrision-Woodbury
-     * indentity given that A^-1 is already available
-     * | A B |-1  | L_A L_B |
-     * | C D |  = | L_C L_D | = inv
+     * indentity given that \f$\Sigma^{-1}_{aa}\f$ of
+     *
+     * \f$
+     *  \begin{pmatrix} \Sigma_{aa} & \Sigma_{ab} \\
+     *                  \Sigma_{ba} & \Sigma_{bb} \end{pmatrix}^{-1}
+     * \f$
+     *
+     * is already available.
+     *
+     * \f$
+     *  \begin{pmatrix} \Sigma_{aa} & \Sigma_{ab} \\
+     *                  \Sigma_{ba} & \Sigma_{bb} \end{pmatrix}^{-1} =
+     * \begin{pmatrix} \Lambda_{aa} & \Lambda_{ab} \\
+     *                 \Lambda_{ba} & \Lambda_{bb} \end{pmatrix} = \Lambda
+     * \f$
+     *
+     * @param [in]  A_inv   \f$ \Sigma^{-1}_{aa} \f$
+     * @param [in]  B       \f$ \Sigma_{ab} \f$
+     * @param [in]  C       \f$ \Sigma_{ba} \f$
+     * @param [in]  D       \f$ \Sigma_{bb} \f$
+     * @param [out] L_A     \f$ \Lambda_{aa} \f$
+     * @param [out] L_B     \f$ \Lambda_{ab} \f$
+     * @param [out] L_C     \f$ \Lambda_{ba} \f$
+     * @param [out] L_D     \f$ \Lambda_{bb} \f$
+     * @param [out] L       \f$ \Lambda \f$
+     *
+     *  @note TESTED
      */
     template <typename MatrixAInv,
               typename MatrixB,
@@ -582,16 +642,16 @@ public:
                       MatrixLB& L_B,
                       MatrixLC& L_C,
                       MatrixLD& L_D,
-                      ResultMatrix& inv)
+                      ResultMatrix& L)
     {
         SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D);
 
-        inv.resize(L_A.rows() + L_C.rows(), L_A.cols() + L_B.cols());
+        L.resize(L_A.rows() + L_C.rows(), L_A.cols() + L_B.cols());
 
-        inv.block(0,          0,          L_A.rows(), L_A.cols()) = L_A;
-        inv.block(0,          L_A.cols(), L_B.rows(), L_B.cols()) = L_B;
-        inv.block(L_A.rows(), 0,          L_C.rows(), L_C.cols()) = L_C;
-        inv.block(L_A.rows(), L_A.cols(), L_D.rows(), L_D.cols()) = L_D;
+        L.block(0,          0,          L_A.rows(), L_A.cols()) = L_A;
+        L.block(0,          L_A.cols(), L_B.rows(), L_B.cols()) = L_B;
+        L.block(L_A.rows(), 0,          L_C.rows(), L_C.cols()) = L_C;
+        L.block(L_A.rows(), L_A.cols(), L_D.rows(), L_D.cols()) = L_D;
     }
 
 protected:
