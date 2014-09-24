@@ -202,9 +202,9 @@ const double EPSILON = 1.0e-12;
  */
 TEST_F(PartitionedUnscentedTransformTest, firstUTColumn)
 {
-    size_t number_of_points = 2 * state.CohesiveStatesDimension()*5 + 1;
+    size_t number_of_points = 2 * state.a_dimension()*5 + 1;
 
-    Filter::SigmaPoints X(state.CohesiveStatesDimension(), number_of_points);
+    Filter::SigmaPoints X(state.a_dimension(), number_of_points);
     filter.ComputeSigmaPoints(mu_a, cov_aa, 0, X);
 
     EXPECT_TRUE(X.col(0).isApprox(mu_a));
@@ -329,10 +329,10 @@ TEST_F(PartitionedUnscentedTransformTest, partitionCovariance)
 TEST_F(PartitionedUnscentedTransformTest, partitionOffset)
 {
     size_t max_offset = 3;
-    size_t joint_dimension = state.CohesiveStatesDimension() + max_offset;
+    size_t joint_dimension = state.a_dimension() + max_offset;
     size_t number_of_points = 2 * joint_dimension + 1;
 
-    Filter::SigmaPoints X(state.CohesiveStatesDimension(), number_of_points);
+    Filter::SigmaPoints X(state.a_dimension(), number_of_points);
 
     /*
     // this version is not very useful to debug but sufficient to make sure that
@@ -354,7 +354,7 @@ TEST_F(PartitionedUnscentedTransformTest, partitionOffset)
 
         // the segment starting at the offset contain the distinct sigma points
         for (int i = offset + 1;
-             i < offset + 1 + state.CohesiveStatesDimension();
+             i < offset + 1 + state.a_dimension();
              ++i)
         {
             EXPECT_FALSE(X.col(i).isApprox(mu_a, EPSILON));
@@ -362,7 +362,7 @@ TEST_F(PartitionedUnscentedTransformTest, partitionOffset)
         }
 
         // the segment after the offset must be equal to the mean
-        for (int i = offset + 1 + state.CohesiveStatesDimension();
+        for (int i = offset + 1 + state.a_dimension();
              i <= joint_dimension;
              ++i)
         {
