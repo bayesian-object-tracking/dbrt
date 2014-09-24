@@ -102,12 +102,16 @@ public:
             const CohesiveStateProcessModelPtr cohesive_state_process_model,
             const FactorizedStateProcessModelPtr factorized_state_process_model,
             const ObservationModelPtr observation_model,
-            double kappa = 0.7):
+            double kappa = 1.):
         f_a_(cohesive_state_process_model),
         f_b_(factorized_state_process_model),
         h_(observation_model),
         kappa_(kappa)
     {
+
+        alpha_ = 1.2;
+        beta_ = 2.;
+        kappa_ = 0.;
     }
 
     virtual ~FactorizedUnscentedKalmanFilter() { }
@@ -119,7 +123,7 @@ public:
         // 0(b^[i]) is the place holder for the a b^[i]
         ComputeSigmaPointPartitions(
             {
-                {prior_state.state_a_,                prior_state.cov_aa_},
+                {prior_state.a_,                prior_state.cov_aa_},
                 {Eigen::MatrixXd::Zero(Dim(Q_a), 1),  f_a_->NoiseCovariance()},
                 {Eigen::MatrixXd::Zero(Dim(b_i), 1),  Eigen::MatrixXd::Zero(Dim(b_i), Dim(b_i))},
                 {Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance()},
@@ -134,8 +138,8 @@ public:
         /*  X_[a] = f_a->predict(X_[a], X_[Q_bi])  */
 
         // predict the cohesive state segment a
-        Mean(X_[a], predicted_state.state_a_);
-        Normalize(predicted_state.state_a_, X_[a]);
+        Mean(X_[a], predicted_state.a_);
+        Normalize(predicted_state.a_, X_[a]);
         predicted_state.cov_aa_ = X_[a] * X_[a].transpose();
 
         // predict the joint state [a  b_i  y_i]
@@ -180,6 +184,7 @@ public:
                 StateDistribution& posterior_state)
     {
         update_a(predicted_state, y, posterior_state);
+        update_b(predicted_state, y, posterior_state);
     }
 
 
@@ -194,13 +199,14 @@ public:
                   const Eigen::MatrixXd& y,
                   StateDistribution& posterior_state)
     {
-        size_t dim_b = predicted_state.FactorizedStatesCount();
+        size_t dim_b = predicted_state.b_dimension();
 
         Eigen::MatrixXd A(dim_b, Dim(a));
         Eigen::MatrixXd mu_y(dim_b, 1);
         Eigen::MatrixXd cov_yy_given_a_inv(dim_b, 1);
 
-        CovAA cov_aa_inv = predicted_state.cov_aa_.inverse();
+        predicted_state.cov_aa_inverse_ = predicted_state.cov_aa_.inverse();
+        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse_;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
@@ -221,8 +227,8 @@ public:
         // update cohesive state segment
         posterior_state.cov_aa_ = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
 
-        posterior_state.state_a_ =
-                predicted_state.state_a_ +
+        posterior_state.a_ =
+                predicted_state.a_ +
                 posterior_state.cov_aa_ * AT_Cov_yy_given_a * (y - mu_y);
     }
 
@@ -244,7 +250,7 @@ public:
         Eigen::MatrixXd L_ya;
         Eigen::MatrixXd L_yy;
 
-        size_t dim_b = predicted_state.FactorizedStatesCount();
+        size_t dim_b = predicted_state.b_dimension();
 
         Eigen::MatrixXd B;
         Eigen::MatrixXd c;
@@ -254,9 +260,9 @@ public:
         Eigen::MatrixXd cov_b_given_a_y;
         ba_by.resize(Dim(b_i), Dim(a) + Dim(y_i));
         innov.resize(Dim(a) + Dim(y_i), 1);
-        innov.block(0, 0, Dim(a), 1) = -predicted_state.state_a_;
+        innov.block(0, 0, Dim(a), 1) = -predicted_state.a_;
 
-        CovAA cov_aa_inv = predicted_state.cov_aa_.inverse(); // avoid this
+        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse_;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
@@ -272,7 +278,7 @@ public:
 
             B = cov_ab.transpose() * L_aa  +  cov_by * L_ya;
 
-            ba_by.block(0, 0, Dim(b_i), Dim(a)) = cov_ab.transpose();
+            ba_by.block(0, 0,      Dim(b_i), Dim(a)) = cov_ab.transpose();
             ba_by.block(0, Dim(a), Dim(b_i), Dim(y_i)) = cov_by;
 
             K = ba_by * L;
@@ -285,7 +291,7 @@ public:
 
             // update b_[i]
             posterior_state.joint_partitions_[i].b =
-                    B * posterior_state.state_a_ + c;
+                    B * posterior_state.a_ + c;
             posterior_state.joint_partitions_[i].cov_bb_ =
                     cov_b_given_a_y
                     - B * posterior_state.cov_aa_ * B.transpose();
@@ -305,7 +311,7 @@ public:
         {
         case a:     return f_a_->Dimension();
         case Q_a:   return f_a_->NoiseDimension();
-        case b_i:    return f_b_->Dimension();
+        case b_i:   return f_b_->Dimension();
         case Q_bi:  return f_b_->NoiseDimension();
         case y_i:   return 1;
         case R_yi:  return 1;
@@ -332,14 +338,15 @@ public:
     template <typename MeanVector>
     void Mean(const SigmaPoints& sigma_points, MeanVector& mean)
     {
-        double w_0_sqrt;
-        double w_i_sqrt;
-        ComputeWeights(sigma_points.cols(), w_0_sqrt, w_i_sqrt);
+        double w_0;
+        double w_i;
+        ComputeWeights(sigma_points.cols(), w_0, w_i);
 
-        mean = w_0_sqrt * sigma_points.col(0);
-        for (size_t i = 0; i < sigma_points.cols(); ++i)
+        mean = w_0 * sigma_points.col(0);
+
+        for (size_t i = 1; i < sigma_points.cols(); ++i)
         {
-            mean +=  w_i_sqrt * sigma_points.col(i);
+            mean +=  w_i * sigma_points.col(i);
         }
     }
 
@@ -358,6 +365,11 @@ public:
         double w_i_sqrt;
         ComputeWeights(sigma_points.cols(), w_0_sqrt, w_i_sqrt);
 
+        w_0_sqrt += (1 - alpha_ * alpha_ + beta_);
+
+        w_0_sqrt = std::sqrt(w_0_sqrt);
+        w_i_sqrt = std::sqrt(w_i_sqrt);
+
         sigma_points.col(0) = w_0_sqrt * (sigma_points.col(0) - mean);
 
         for (size_t i = 1; i < sigma_points.cols(); ++i)
@@ -375,12 +387,15 @@ public:
      * @param [out] w_i_sqrt    The weight for the remaining sigma points
      */
     void ComputeWeights(size_t number_of_sigma_points,
-                        double& w_0_sqrt,
-                        double& w_i_sqrt)
+                        double& w_0,
+                        double& w_i)
     {
         size_t dimension = (number_of_sigma_points - 1) / 2;
-        w_0_sqrt = std::sqrt(kappa_ / (double(dimension) + kappa_));
-        w_i_sqrt = std::sqrt(1. / (2. * (double(dimension) + kappa_)));
+
+        double lambda = alpha_ * alpha_ * (double(dimension) + kappa_)
+                        - double(dimension);
+        w_0 = lambda / (double(dimension) + lambda);
+        w_i = 1. / (2. * (double(dimension) + lambda));
     }
 
     /**
@@ -439,11 +454,13 @@ public:
                             const size_t offset,
                             SigmaPoints& sigma_points)
     {
-        // asster sigma_points.rows() == mean.rows()
+        // assert sigma_points.rows() == mean.rows()
         size_t joint_dimension = (sigma_points.cols() - 1) / 2;
         CovarianceMatrix covarianceSqr = covariance.llt().matrixL();
 
-        covarianceSqr *= std::sqrt((double(joint_dimension) + kappa_));
+        covarianceSqr *= std::sqrt((double(joint_dimension)
+                                    + alpha_ * alpha_ * (double(joint_dimension) + kappa_)
+                                    - double(joint_dimension)));
 
         sigma_points.setZero();
         sigma_points.col(0) = mean;
@@ -583,6 +600,8 @@ protected:
     ObservationModelPtr h_;
 
     double kappa_;
+    double beta_;
+    double alpha_;
 
     // sigma points
     std::vector<SigmaPoints> X_;
