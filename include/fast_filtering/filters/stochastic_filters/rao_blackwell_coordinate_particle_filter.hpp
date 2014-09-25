@@ -91,9 +91,9 @@ public:
     virtual ~RaoBlackwellCoordinateParticleFilter() {}
 
 public:
-    void Filter(const Observation& observation,
-                const Scalar&  delta_time,
-                const Input&   input)
+    void Filter(const Observation&  observation,
+                const Scalar&       delta_time,
+                const Input&        input)
     {
         INIT_PROFILING;
         observation_model_->SetObservation(observation, delta_time);
