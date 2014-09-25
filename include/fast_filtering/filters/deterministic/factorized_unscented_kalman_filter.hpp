@@ -95,6 +95,9 @@ public:
     typedef typename CohesiveStateProcessModel::State State_a;
     typedef typename FactorizedStateProcessModel::State State_b_i;
 
+    typedef typename internal::Traits<CohesiveStateProcessModel>::Noise Noise_a;
+    typedef typename internal::Traits<FactorizedStateProcessModel>::Noise Noise_b_i;
+
     typedef boost::shared_ptr<CohesiveStateProcessModel> CohesiveStateProcessModelPtr;
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
     typedef boost::shared_ptr<ObservationModel> ObservationModelPtr;
@@ -124,24 +127,29 @@ public:
      *
      * @param [in]  prior_state         State prior distribution
      * @param [out] predicted_state     Predicted state posterior distribution
+     *
+     * @note TESTED
      */
     void predict(const StateDistribution& prior_state,
+                 double delta_time,
                  StateDistribution& predicted_state)
     {
         // compute the sigma point partitions X = [Xa  XQa  0(b^[i])  XQb  XR]
         // 0(b^[i]) is the place holder for the a b^[i]
-        ComputeSigmaPointPartitions(
-            {
-                { prior_state.a_,                      prior_state.cov_aa_ },
-                { Eigen::MatrixXd::Zero(Dim(Q_a),  1), f_a_->NoiseCovariance() },
-                { Eigen::MatrixXd::Zero(Dim(b_i),  1), Eigen::MatrixXd::Zero(Dim(b_i), Dim(b_i)) },
-                { Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance() },
-                { Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance() }
-            },
-            X_);
+        ComputeSigmaPointPartitions
+        ({
+            { prior_state.a_,                      prior_state.cov_aa_ },
+            { Eigen::MatrixXd::Zero(Dim(Q_a),  1), f_a_->NoiseCovariance() },
+            { State_b_i::Zero(Dim(b_i),  1),       CovBB::Zero() },
+            { Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance() },
+            { Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance() }
+         },
+         X_);
 
         // FOR ALL X_[a]
-        // X_[a] = f_a_ -> predict(X_[a], X_[Q_bi]);
+        f_a(X_[a], X_[Q_a], delta_time, X_[a]);
+
+        std::vector<std::pair<double, int> > x = {{2, 3}, {3, 6}};
 
         // predict the cohesive state segment a
         Mean(X_[a], predicted_state.a_);
@@ -157,7 +165,7 @@ public:
                                X_[b_i]);
 
             // FOR ALL X_[b_i] and X_[y_i]
-            //X_[b_i] = f_b_ -> predict(X_[b_i], X_[Q_bi]);
+            f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
             //X_[y_i] = h_   -> predict(X_[a],   X_[Q_bi], X_[R_yi]);
 
             typename StateDistribution::JointPartitions& predicted_partition =
@@ -185,6 +193,8 @@ public:
      * @param [in]  predicted_state     Propagated state
      * @param [in]  y                   Measurement
      * @param [out] posterior_state     Updated posterior state
+     *
+     * @attention NEEDS TO BE TESTED
      */
     void update(const StateDistribution& predicted_state,
                 const Eigen::MatrixXd& y,
@@ -194,13 +204,14 @@ public:
         update_b(predicted_state, y, posterior_state);
     }
 
-
     /**
      * Update the cohesive predicted_state part a
      *
      * @param [in]  predicted_state     Propagated state
      * @param [in]  y                   Measurement
      * @param [out] posterior_state     Updated posterior state
+     *
+     * @attention NEEDS TO BE TESTED
      */
     void update_a(const StateDistribution& predicted_state,
                   const Eigen::MatrixXd& y,
@@ -229,7 +240,8 @@ public:
         A = A * cov_aa_inv;
 
         InvertDiagonalAsVector(cov_yy_given_a_inv, cov_yy_given_a_inv);
-        Eigen::MatrixXd AT_Cov_yy_given_a = A.transpose() * cov_yy_given_a_inv.asDiagonal();
+        Eigen::MatrixXd AT_Cov_yy_given_a =
+                A.transpose() * cov_yy_given_a_inv.asDiagonal();
 
         // update cohesive state segment
         posterior_state.cov_aa_ = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
@@ -246,6 +258,8 @@ public:
      * @param [in]  predicted_state     Propagated state
      * @param [in]  y                   Measurement
      * @param [out] posterior_state     Updated posterior state
+     *
+     * @attention NEEDS TO BE TESTED
      */
     void update_b(const StateDistribution& predicted_state,
                   const Eigen::MatrixXd& y,
@@ -307,6 +321,35 @@ public:
 
 
 public:
+    void f_a(const SigmaPoints& prior_X_a,
+             const SigmaPoints& noise_X_a,
+             double delta_time,
+             SigmaPoints& predicted_X_a)
+    {
+        for (size_t i = 0; i < prior_X_a.cols(); ++i)
+        {
+            f_a_->Condition(delta_time, prior_X_a.col(i));
+            predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
+        }
+    }
+
+    void f_b(const SigmaPoints& prior_X_b_i,
+             const SigmaPoints& noise_X_b_i,
+             double delta_time,
+             SigmaPoints& predicted_X_b_i)
+    {
+        for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
+        {
+            f_b_->Condition(delta_time, prior_X_b_i.col(i));
+            predicted_X_b_i(i) = f_a_->MapStandardGaussian(noise_X_b_i.col(i));
+        }
+    }
+
+    void h()
+    {
+
+    }
+
     /**
      * @brief Dim Returns the dimension of the specified random variable ID
      *
@@ -461,9 +504,11 @@ public:
         size_t joint_dimension = (sigma_points.cols() - 1) / 2;
         CovarianceMatrix covarianceSqr = covariance.llt().matrixL();
 
-        covarianceSqr *= std::sqrt((double(joint_dimension)
-                                    + alpha_ * alpha_ * (double(joint_dimension) + kappa_)
-                                    - double(joint_dimension)));
+        covarianceSqr *=
+                std::sqrt(
+                    (double(joint_dimension)
+                     + alpha_ * alpha_ * (double(joint_dimension) + kappa_)
+                     - double(joint_dimension)));
 
         sigma_points.setZero();
         sigma_points.col(0) = mean;
