@@ -117,11 +117,3 @@ TEST(SquareRootTests, diagonalAsVector)
     EXPECT_TRUE(cov.isApprox(cov_sqrt.cwiseProduct(cov_sqrt), EPSILON));
 }
 
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
-}
-

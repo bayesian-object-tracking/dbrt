@@ -451,12 +451,3 @@ TEST_F(PartitionedUnscentedTransformTest, partitionOffset)
     EXPECT_FALSE(X.col(joint_dimension + 2 + 3).isApprox(mu_a, EPSILON));
     EXPECT_FALSE(X.col(joint_dimension + 3 + 3).isApprox(mu_a, EPSILON));
 }
-
-
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
-}

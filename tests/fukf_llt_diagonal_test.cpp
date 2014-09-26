@@ -1,3 +1,5 @@
+
+
 /*
  * Software License Agreement (BSD License)
  *
@@ -119,12 +121,4 @@ TEST(Diags, isDiagonalSpeedTest) // too slow
              R = C;
         }
     }
-}
-
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
 }
