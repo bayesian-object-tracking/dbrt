@@ -29,10 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FAST_FILTERING_UTILS_RANDOM_SEED_HPP
 
 
-#include <time.h>
+#include <ctime>
 
-#define RANDOM_SEED (unsigned)std::time(0)//1
-
+#define RANDOM_SEED (unsigned)std::time(0) // 1
 
 #endif
 
