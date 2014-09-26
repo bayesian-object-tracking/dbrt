@@ -49,22 +49,30 @@
 
 #include <Eigen/Dense>
 
+#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 #include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
 
+
+
 template <typename State_>
 class ProcessModelStub:
-        ff::StationaryProcessModel<State_, Eigen::Matrix<double, 0, 0> >
+        public ff::StationaryProcessModel<State_>,
+        public ff::GaussianMap<State_, State_>
 {
 public:
     typedef State_ State;
-    typedef Eigen::Matrix<double, 0, 0> Input;
+    typedef State_ Noise;
 
     virtual void Condition(const double& delta_time,
-                           const State& state,
-                           const Input& input)
+                           const State& state)
     {
         state_ = state;
+    }
+
+    virtual State MapStandardGaussian(const Noise& sample) const
+    {
+
     }
 
     virtual State predict(const State& prior, const State& noise)
@@ -77,8 +85,10 @@ public:
         return Eigen::MatrixXd::Identity(state_.rows(), state_.cols()) * 0.08;
     }
 
-    virtual size_t Dimension() { return State::SizeAtCompileTime; }
-    virtual size_t NoiseDimension() { return State::SizeAtCompileTime; }
+    virtual size_t Dimension()
+    {
+        return State::SizeAtCompileTime;
+    }
 protected:
     State state_;
 };
