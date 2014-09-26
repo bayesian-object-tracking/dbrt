@@ -331,7 +331,7 @@ public:
                     B * posterior_state.a_ + c;
             posterior_state.joint_partitions_[i].cov_bb_ =
                     cov_b_given_a_y
-                    - B * posterior_state.cov_aa_ * B.transpose();
+                    + B * posterior_state.cov_aa_ * B.transpose();
         }
     }
 
@@ -345,7 +345,7 @@ public:
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
         {
             f_a_->Condition(delta_time, prior_X_a.col(i));
-            //predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
+            predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
         }
     }
 
