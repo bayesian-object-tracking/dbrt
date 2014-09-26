@@ -47,15 +47,18 @@
 #ifndef FAST_FILTERING_FILTERS_DETERMINISTIC_FACTORIZED_UNSCENTED_KALMAN_FILTER_HPP
 #define FAST_FILTERING_FILTERS_DETERMINISTIC_FACTORIZED_UNSCENTED_KALMAN_FILTER_HPP
 
-
-#include <fast_filtering/distributions/sum_of_deltas.hpp>
-#include <fast_filtering/filters/deterministic/composed_state_distribution.hpp>
-
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
 
 #include <cmath>
+
+#include <fast_filtering/utils/assertions.hpp>
+#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
+#include <fast_filtering/distributions/sum_of_deltas.hpp>
+#include <fast_filtering/filters/deterministic/composed_state_distribution.hpp>
+#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
+
 
 namespace ff
 {
@@ -95,8 +98,8 @@ public:
     typedef typename CohesiveStateProcessModel::State State_a;
     typedef typename FactorizedStateProcessModel::State State_b_i;
 
-    typedef typename internal::Traits<CohesiveStateProcessModel>::Noise Noise_a;
-    typedef typename internal::Traits<FactorizedStateProcessModel>::Noise Noise_b_i;
+    typedef typename CohesiveStateProcessModel::Noise Noise_a;
+    typedef typename FactorizedStateProcessModel::Noise Noise_b_i;
 
     typedef boost::shared_ptr<CohesiveStateProcessModel> CohesiveStateProcessModelPtr;
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
@@ -115,6 +118,19 @@ public:
         h_(observation_model),
         kappa_(kappa)
     {
+        REQUIRE_INTERFACE(
+                    CohesiveStateProcessModel,
+                    StationaryProcessModel<State_a>);
+        REQUIRE_INTERFACE(
+                    CohesiveStateProcessModel,
+                    GaussianMap<State_a, Noise_a>);
+        REQUIRE_INTERFACE(
+                    FactorizedStateProcessModel,
+                    StationaryProcessModel<State_b_i>);
+        REQUIRE_INTERFACE(
+                    FactorizedStateProcessModel,
+                    GaussianMap<State_b_i, Noise_b_i>);
+
         alpha_ = 1.2;
         beta_ = 2.;
         kappa_ = 0.;
@@ -329,7 +345,7 @@ public:
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
         {
             f_a_->Condition(delta_time, prior_X_a.col(i));
-            predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
+            //predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
         }
     }
 
@@ -341,7 +357,7 @@ public:
         for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
         {
             f_b_->Condition(delta_time, prior_X_b_i.col(i));
-            predicted_X_b_i(i) = f_a_->MapStandardGaussian(noise_X_b_i.col(i));
+            //predicted_X_b_i(i) = f_a_->MapStandardGaussian(noise_X_b_i.col(i));
         }
     }
 
