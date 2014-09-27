@@ -106,7 +106,7 @@ public:
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
     typedef boost::shared_ptr<ObservationModel> ObservationModelPtr;
 
-    enum RandomVariableIndex { a = 0, Q_a , b_i, Q_bi, R_yi, y_i = R_yi };
+    enum RandomVariableIndex { a = 0, Q_a , b_i, Q_bi, R_yi, y_i };
 
 public:
     FactorizedUnscentedKalmanFilter(
@@ -151,13 +151,14 @@ public:
                  double delta_time,
                  StateDistribution& predicted_state)
     {
+        true_evaluations = 0;
+        theoretical_evaluations = 0;
+
         INIT_PROFILING;
 
         Eigen::MatrixXd noise_Q_a = Eigen::MatrixXd::Identity(Dim(Q_a), Dim(Q_a)) * 0.02;
         Eigen::MatrixXd noise_Q_bi = Eigen::MatrixXd::Identity(Dim(Q_bi), Dim(Q_bi)) * 0.02;
         Eigen::MatrixXd noise_R_yi = Eigen::MatrixXd::Identity(Dim(R_yi), Dim(R_yi)) * 0.02;
-
-        MEASURE("Created noise matrices");
 
         // compute the sigma point partitions X = [Xa  XQa  0(b^[i])  XQb  XR]
         // 0(b^[i]) is the place holder for the a b^[i]
@@ -171,13 +172,50 @@ public:
          },
          X_);
 
+        std::cout << "Dim(a) = " << Dim(a) << std::endl;
+        std::cout << "Dim(Q_a) = " << Dim(Q_a) << std::endl;
+        std::cout << "Dim(b_i) = " << Dim(b_i) << std::endl;
+        std::cout << "Dim(Q_bi) = " << Dim(Q_bi) << std::endl;
+        std::cout << "Dim(R_yi) = " << Dim(R_yi) << std::endl;
+        std::cout << "sigmas = " << X_[0].cols() << std::endl;
+        std::cout << "Dim(y_i) = " << Dim(y_i) << std::endl;
         MEASURE("ComputeSigmaPointPartitions");
 
         // FOR ALL X_[a]
-        f_a(X_[a], X_[Q_a], delta_time, X_[a]);
-        h_->ResetCache();
-
+        f_a(X_[a], X_[Q_a], delta_time, X_[a]);        
         MEASURE("f_a(X_[a], X_[Q_a], delta_time, X_[a])");
+
+        // predict the joint state [a  b_i  y_i]
+        h_->ClearCache();
+        for (size_t i = 0; i < prior_state.joint_partitions.size(); ++i)
+        {
+            ComputeSigmaPoints(prior_state.joint_partitions[i].b,
+                               prior_state.joint_partitions[i].cov_bb,
+                               Dim(a) + Dim(Q_a),
+                               X_[b_i]);
+
+            f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
+            h(X_[a], X_[b_i], X_[R_yi], Y_);
+
+//            f_b_AND_h(X_[a], X_[b_i], X_[Q_bi], X_[R_yi], delta_time, X_[b_i], Y_);
+
+            typename StateDistribution::JointPartitions& predicted_partition =
+                    predicted_state.joint_partitions[i];
+
+            Mean(X_[b_i], predicted_partition.b);
+            Mean(Y_, predicted_partition.y);
+
+            Normalize(predicted_partition.b, X_[b_i]);
+            Normalize(predicted_partition.y, Y_);
+
+            predicted_partition.cov_ab = X_[a] * X_[b_i].transpose();
+            predicted_partition.cov_ay = X_[a] * Y_.transpose();
+            predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
+            predicted_partition.cov_by = X_[b_i] * Y_.transpose();
+            predicted_partition.cov_yy = Y_ * Y_.transpose();
+
+//            //MEASURE("predicted_partition updated");
+        }
 
         // predict the cohesive state segment a
         Mean(X_[a], predicted_state.a);
@@ -186,45 +224,13 @@ public:
 
         MEASURE("Normalized X_[a]");
 
-        // predict the joint state [a  b_i  y_i]
-        for (size_t i = 0; i < prior_state.joint_partitions.size(); ++i)
-        {
-            //MEASURE("ComputeSigmaPoints X_[b_i]");
-            ComputeSigmaPoints(prior_state.joint_partitions[i].b,
-                               prior_state.joint_partitions[i].cov_bb,
-                               Dim(a) + Dim(Q_a),
-                               X_[b_i]);
-
-            // FOR ALL X_[b_i] and X_[y_i]
-            f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
-            //MEASURE("f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i])");
-
-
-            h(X_[a], X_[b_i], X_[R_yi], X_[y_i]);
-
-            //MEASURE("h(X_[a], X_[b_i], X_[R_yi], X_[y_i])");
-
-            typename StateDistribution::JointPartitions& predicted_partition =
-                    predicted_state.joint_partitions[i];
-
-            Mean(X_[b_i], predicted_partition.b);
-            Mean(X_[y_i], predicted_partition.y);
-
-            Normalize(predicted_partition.b, X_[b_i]);
-            Normalize(predicted_partition.y, X_[y_i]);
-
-            //MEASURE("normalized X_[b_i] and X_[y_i]");
-
-            predicted_partition.cov_ab = X_[a] * X_[b_i].transpose();
-            predicted_partition.cov_ay = X_[a] * X_[y_i].transpose();
-            predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
-            predicted_partition.cov_by = X_[b_i] * X_[y_i].transpose();
-            predicted_partition.cov_yy = X_[y_i] * X_[y_i].transpose();
-
-            //MEASURE("predicted_partition updated");
-        }
-
         MEASURE("Iterated over all joint_partitions[i]");
+        std::cout << "Prediction ended with "
+                  << true_evaluations
+                  << " evaluations out of "
+                  << theoretical_evaluations
+                  << " theoretical evaluations"
+                  << std::endl;
     }
 
     /**
@@ -363,30 +369,157 @@ public:
 
 
 public:
+    size_t true_evaluations;
+    size_t theoretical_evaluations;
+
     void f_a(const SigmaPoints& prior_X_a,
              const SigmaPoints& noise_X_a,
              const double delta_time,
              SigmaPoints& predicted_X_a)
     {
+        Eigen::MatrixXd cache_prior_X_a = Eigen::MatrixXd::Zero(Dim(a), 1);
+        Eigen::MatrixXd cache_noise_X_a = Eigen::MatrixXd::Zero(Dim(Q_a), 1);
+        Eigen::MatrixXd cache_predicted_X_a = Eigen::MatrixXd::Zero(Dim(a), 1);
+        Eigen::MatrixXd zero_noise = Input::Zero(f_a_->NoiseDimension(), 1);
+
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
         {
-            f_a_->Condition(delta_time,
-                            prior_X_a.col(i),
-                            Input::Zero(f_a_->NoiseDimension(), 1));
-            predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
+            theoretical_evaluations++;
+
+            if (i > 0 &&
+                cache_prior_X_a == prior_X_a.col(i) &&
+                cache_noise_X_a == noise_X_a.col(i))
+            {
+                predicted_X_a.col(i) = cache_predicted_X_a;
+                continue;
+            }
+
+            cache_prior_X_a = prior_X_a.col(i);
+            cache_noise_X_a = noise_X_a.col(i);
+
+            f_a_->Condition(delta_time, cache_prior_X_a, zero_noise);
+            cache_predicted_X_a = f_a_->MapStandardGaussian(cache_noise_X_a);
+            predicted_X_a.col(i) = cache_predicted_X_a;
+
+            true_evaluations++;
         }
     }
+
+    void f_b_AND_h(const SigmaPoints& prior_X_a,
+                   const SigmaPoints& prior_X_b_i,
+                   const SigmaPoints& noise_X_b_i,
+                   const SigmaPoints& noise_X_y_i,
+                   const double delta_time,
+                   SigmaPoints& predicted_X_b_i,
+                   SigmaPoints& predicted_X_y_i)
+    {
+        Eigen::MatrixXd cache_prior_X_a = Eigen::MatrixXd::Zero(Dim(a), 1);
+        Eigen::MatrixXd cache_prior_X_b_i = Eigen::MatrixXd::Zero(Dim(b_i), 1);
+        Eigen::MatrixXd cache_noise_X_b_i = Eigen::MatrixXd::Zero(Dim(Q_bi), 1);
+        Eigen::MatrixXd cache_noise_X_y_i = Eigen::MatrixXd::Zero(Dim(R_yi), 1);
+
+        Eigen::MatrixXd cache_predicted_X_y_i = Eigen::MatrixXd::Zero(Dim(y_i), 1);
+        Eigen::MatrixXd cache_predicted_X_b_i = Eigen::MatrixXd::Zero(Dim(b_i), 1);
+
+        predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
+
+        for (size_t i = 0; i < prior_X_a.cols(); ++i)
+        {
+            theoretical_evaluations += 2;
+
+            // predict b_i
+            if (i == 0 ||
+                cache_prior_X_b_i != prior_X_b_i.col(i) ||
+                cache_noise_X_b_i != noise_X_b_i.col(i))
+            {
+                cache_prior_X_b_i = prior_X_b_i.col(i);
+                cache_noise_X_b_i = noise_X_b_i.col(i);
+
+                f_b_->Condition(delta_time, cache_prior_X_b_i);
+                cache_predicted_X_b_i = f_b_->MapStandardGaussian(cache_noise_X_b_i);
+                predicted_X_b_i.col(i) = cache_predicted_X_b_i;
+
+                true_evaluations++;
+            }
+            else
+            {
+                predicted_X_b_i.col(i) = cache_predicted_X_b_i;
+            }
+
+
+            // predict y_i
+            if (i == 0 ||
+                cache_prior_X_a != prior_X_a.col(i) ||
+                cache_prior_X_b_i != prior_X_b_i.col(i) ||
+                cache_noise_X_y_i != noise_X_y_i.col(i))
+            {
+                cache_prior_X_a = prior_X_a.col(i);
+                cache_prior_X_b_i = prior_X_b_i.col(i);
+                cache_noise_X_y_i = noise_X_y_i.col(i);
+
+                h_->Condition(cache_prior_X_a, cache_prior_X_b_i(0, 0), i);
+                cache_predicted_X_y_i(0, 0) = h_->MapStandardGaussian(cache_noise_X_y_i);
+                predicted_X_y_i.col(i) = cache_predicted_X_y_i;
+
+                true_evaluations++;
+            }
+            else
+            {
+                predicted_X_y_i.col(i) = cache_predicted_X_y_i;
+            }
+        }
+    }
+
+    void f_b_AND_h_redundant(const SigmaPoints& prior_X_a,
+                   const SigmaPoints& prior_X_b_i,
+                   const SigmaPoints& noise_X_b_i,
+                   const SigmaPoints& noise_X_y_i,
+                   const double delta_time,
+                   SigmaPoints& predicted_X_b_i,
+                   SigmaPoints& predicted_X_y_i)
+    {
+        predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
+
+        for (size_t i = 0; i < prior_X_a.cols(); ++i)
+        {
+            f_b_->Condition(delta_time, prior_X_b_i.col(i));
+            h_->Condition(prior_X_a.col(i), prior_X_b_i(i, 0), i);
+
+            predicted_X_b_i.col(i) = f_b_->MapStandardGaussian(noise_X_b_i.col(i));
+            predicted_X_y_i.col(i) = h_->MapStandardGaussian(noise_X_y_i.col(i, 0));
+        }
+    }
+
 
     void f_b(const SigmaPoints& prior_X_b_i,
              const SigmaPoints& noise_X_b_i,
              const double delta_time,
              SigmaPoints& predicted_X_b_i)
     {
+        Eigen::MatrixXd cache_prior_X_b_i = Eigen::MatrixXd::Zero(Dim(b_i), 1);
+        Eigen::MatrixXd cache_noise_X_b_i = Eigen::MatrixXd::Zero(Dim(Q_bi), 1);
+        Eigen::MatrixXd cache_predicted_X_b_i = Eigen::MatrixXd::Zero(Dim(b_i), 1);
+
         for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
         {
-            f_b_->Condition(delta_time, prior_X_b_i.col(i));
-            predicted_X_b_i.col(i) = f_b_->MapStandardGaussian(noise_X_b_i.col(i));
-            //predicted_X_b_i.col(i, 0) = 0;
+            theoretical_evaluations++;
+
+            if (i > 0 &&
+                cache_prior_X_b_i == prior_X_b_i.col(i) &&
+                cache_noise_X_b_i == noise_X_b_i.col(i))
+            {
+                predicted_X_b_i.col(i) = cache_predicted_X_b_i;
+                continue;
+            }
+
+            cache_prior_X_b_i = prior_X_b_i.col(i);
+            cache_noise_X_b_i = noise_X_b_i.col(i);
+
+            f_b_->Condition(delta_time, cache_prior_X_b_i);
+            cache_predicted_X_b_i = f_b_->MapStandardGaussian(cache_noise_X_b_i);
+            predicted_X_b_i.col(i) = cache_predicted_X_b_i;
+
+            true_evaluations++;
         }
     }
 
@@ -395,11 +528,35 @@ public:
            const SigmaPoints& noise_X_y_i,
            SigmaPoints& predicted_X_y_i)
     {
-        for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
+        Eigen::MatrixXd cache_prior_X_a = Eigen::MatrixXd::Zero(Dim(a), 1);
+        Eigen::MatrixXd cache_prior_X_b_i = Eigen::MatrixXd::Zero(Dim(b_i), 1);
+        Eigen::MatrixXd cache_noise_X_y_i = Eigen::MatrixXd::Zero(Dim(R_yi), 1);
+        Eigen::MatrixXd cache_predicted_X_y_i = Eigen::MatrixXd::Zero(Dim(y_i), 1);
+
+        predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
+
+        for (size_t i = 0; i < prior_X_a.cols(); ++i)
         {
-            h_->Condition(prior_X_a.col(i), prior_X_b_i(i, 0), i);
-            predicted_X_y_i(i, 0) = h_->MapStandardGaussian(noise_X_y_i.col(i));
-            //predicted_X_y_i(i, 0) = 0;
+            theoretical_evaluations++;
+
+            if (i > 0 &&
+                cache_prior_X_a == prior_X_a.col(i) &&
+                cache_prior_X_b_i == prior_X_b_i.col(i) &&
+                cache_noise_X_y_i == noise_X_y_i.col(i))
+            {
+                predicted_X_y_i.col(i) = cache_predicted_X_y_i;
+                continue;
+            }
+
+            cache_prior_X_a = prior_X_a.col(i);
+            cache_prior_X_b_i = prior_X_b_i.col(i);
+            cache_noise_X_y_i = noise_X_y_i.col(i);
+
+            h_->Condition(cache_prior_X_a, cache_prior_X_b_i(0, 0), i);
+            cache_predicted_X_y_i(0, 0) = h_->MapStandardGaussian(cache_noise_X_y_i);
+            predicted_X_y_i.col(i) = cache_predicted_X_y_i;
+
+            true_evaluations++;
         }
     }
 
@@ -416,8 +573,8 @@ public:
         case Q_a:   return f_a_->NoiseDimension();
         case b_i:   return f_b_->Dimension();
         case Q_bi:  return f_b_->NoiseDimension();
+        case R_yi:  return h_->NoiseDimension();
         case y_i:   return 1;
-        //case R_yi:  return 1;
         }
     }
 
@@ -563,7 +720,7 @@ public:
                      + alpha_ * alpha_ * (double(joint_dimension) + kappa_)
                      - double(joint_dimension)));
 
-        sigma_points.setZero();
+        //sigma_points.setZero();
         sigma_points.col(0) = mean;
 
         MeanVector pointShift;
@@ -763,6 +920,7 @@ protected:
 
     // sigma points
     std::vector<SigmaPoints> X_;
+    SigmaPoints Y_;
 };
 
 }
