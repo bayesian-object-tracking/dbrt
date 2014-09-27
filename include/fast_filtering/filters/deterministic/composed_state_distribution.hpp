@@ -51,11 +51,13 @@
 #include <vector>
 #include <boost/static_assert.hpp>
 
+#include <fast_filtering/utils/traits.hpp>
+
 namespace ff
 {
 
 // Forward declarations
-template <typename CohesiveState, typename FactorizedState, size_t FACTORIZED_STATES>
+template <typename CohesiveState, typename FactorizedState>
 class ComposedStateDistribution;
 
 namespace internal
@@ -64,8 +66,8 @@ namespace internal
  * SumOfDeltas distribution traits specialization
  * \internal
  */
-template <typename CohesiveState, typename FactorizedState, size_t FACTORIZED_STATES>
-struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState, FACTORIZED_STATES> >
+template <typename CohesiveState, typename FactorizedState>
+struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState> >
 {
     typedef typename CohesiveState::Scalar Scalar;
 
@@ -98,16 +100,13 @@ struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState, FACTORIZ
  * \class ComposedStateDistribution
  * \ingroup states
  */
-template <typename CohesiveState,
-          typename FactorizedState,
-          size_t FACTORIZED_STATES = -1>
+template <typename CohesiveState, typename FactorizedState>
 class ComposedStateDistribution
 {
 public:
     typedef internal::Traits<
                 ComposedStateDistribution<CohesiveState,
-                                          FactorizedState,
-                                          FACTORIZED_STATES> > Traits;
+                                          FactorizedState> > Traits;
     typedef typename Traits::Scalar Scalar;
     typedef typename Traits::CovAA CovAA;
     typedef typename Traits::CovAB CovAB;
@@ -135,51 +134,56 @@ public:
      * cohesive state part and a number of factorized states. The total state
      * dimension is \f$\dim(CohesiveState) + FACTORIZED\_STATES *
      * \dim(FactorizedState) \f$.
-     *
-     * @param cohesive_state_dimension      Dimension of the cohesive state part
-     * @param factorized_state_dimension    Dimension of single part of the
-     *                                      factorized state segment
-     * @param factorized_states             Dimension of number of factored
-     *                                      states.
      */
-    ComposedStateDistribution(
-            const size_t& cohesive_state_dimension = CohesiveState::SizeAtCompileTime,
-            const size_t& factorized_state_dimension = FactorizedState::SizeAtCompileTime,
-            const size_t& factorized_states_count = FACTORIZED_STATES):
-        a_dimension_(cohesive_state_dimension),
-        b_i_dimension_(factorized_state_dimension),
-        b_dimension_(factorized_states_count),
-      joint_partitions_(factorized_states_count)
+    ComposedStateDistribution()
     {
-
-    }
+    }    
 
     virtual ~ComposedStateDistribution() { }
 
+    void initialize(const CohesiveState& initial_a,
+                    const size_t factorized_states_count,
+                    const FactorizedState& initial_b_i,
+                    const Scalar sigma_a,
+                    const Scalar sigma_b_i)
+    {
+        a = initial_a;
+        cov_aa = CovAA::Identity(a_dimension(), a_dimension()) * sigma_a;
+
+        joint_partitions.resize(factorized_states_count);
+        for (auto& partition: joint_partitions)
+        {
+            partition.b = initial_b_i;
+            partition.cov_bb = CovBB::Identity(
+                        b_i_dimension(), b_i_dimension()) * sigma_b_i;
+        }
+    }
+
     size_t a_dimension()
     {
-        return a_dimension_;
+        return a.rows();
     }
 
     size_t b_i_dimension()
     {
-        return b_i_dimension_;
+        if (joint_partitions.size() > 0)
+        {
+            return joint_partitions[0].b.rows();
+        }
+
+        return 0;
     }
 
     size_t b_dimension()
     {
-        return b_dimension_;
+        return joint_partitions.size();
     }
 
 public:
-    CohesiveState a_;
-    CovAA cov_aa_;
-    CovAA cov_aa_inverse_;
-    std::vector<JointPartitions> joint_partitions_;
-
-    size_t a_dimension_;
-    size_t b_i_dimension_;
-    size_t b_dimension_;
+    CohesiveState a;
+    CovAA cov_aa;
+    CovAA cov_aa_inverse;
+    std::vector<JointPartitions> joint_partitions;
 };
 
 }
