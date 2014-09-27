@@ -68,7 +68,7 @@ void TestDistributionSampling(Distribution distribution, size_t sample_count = 1
     // for now we assume that it is just a univariate distribution
     std::vector<double> samples;
     for(size_t i = 0; i < sample_count; i++)
-        samples.push_back(distribution.Sample());
+        samples.push_back(distribution.Sample()(0,0));
 
     std::vector<double> evaluation_inputs(sample_count, std::numeric_limits<double>::quiet_NaN());
     double min = hf::bound_value(samples, false);
