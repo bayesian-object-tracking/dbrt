@@ -44,86 +44,32 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_TESTS_STUB_MODELS_HPP
-#define FAST_FILTERING_TESTS_STUB_MODELS_HPP
+#include <gtest/gtest.h>
 
 #include <Eigen/Dense>
 
-#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
-#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-#include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
+#include <cmath>
+#include <iostream>
 
+#include <boost/unordered_map.hpp>
 
+#include <pose_tracking/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
 
-template <typename State_>
-class ProcessModelStub:
-        public ff::StationaryProcessModel<State_>,
-        public ff::GaussianMap<State_, State_>
+TEST(HashMapAndEigen, hasmapsForEigenMatrixXd)
 {
-public:
-    typedef State_ State;
-    typedef State_ Noise;
+    Eigen::MatrixXd someMatrix = Eigen::MatrixXd::Random(15, 1);
+    Eigen::MatrixXd someOtherMatrix = Eigen::MatrixXd::Random(15, 1);
+    Eigen::MatrixXd anotherMatrix = Eigen::MatrixXd::Random(15, 1);
+    Eigen::MatrixXd sameMatrix = someMatrix;
 
-    virtual void Condition(const double& delta_time,
-                           const State& state)
-    {
-        state_ = state;
-    }
+    boost::unordered_map<Eigen::MatrixXd, int, boost::hash<Eigen::MatrixXd> > boolify_eigen_stuff;
 
-    virtual State MapStandardGaussian(const Noise& sample) const
-    {
+    boolify_eigen_stuff[someMatrix] = 654654;
+    boolify_eigen_stuff[someOtherMatrix] = 5;
+    boolify_eigen_stuff[anotherMatrix] = 47;
 
-    }
-
-    virtual State predict(const State& prior, const State& noise)
-    {
-        return prior + noise;
-    }
-
-    virtual Eigen::MatrixXd NoiseCovariance()
-    {
-        return Eigen::MatrixXd::Identity(state_.rows(), state_.cols()) * 0.08;
-    }
-
-    virtual size_t Dimension()
-    {
-        return State::SizeAtCompileTime;
-    }
-protected:
-    State state_;
-};
-
-template <typename State_a, typename State_b_i>
-class ObservationModelStub
-{
-public:
-    typedef Eigen::Matrix<double, 1, 1> Measurement;
-
-
-    virtual Measurement predict(const State_a& a,
-                                const State_b_i& b_i,
-                                const Measurement& noise)
-    {
-        if (a_ != a)
-        {
-            a_ = a;
-        }
-
-        Measurement y_i = noise;
-
-        return y_i;
-    }
-
-    virtual Eigen::MatrixXd NoiseCovariance()
-    {
-        return Eigen::MatrixXd::Identity(1, 1) * 0.023;
-    }
-
-    virtual size_t Dimension() { return 1; }
-    virtual size_t NoiseDimension() { return 1; }
-
-protected:
-    State_a a_;
-};
-
-#endif
+    EXPECT_EQ(boolify_eigen_stuff[someMatrix], 654654);
+    EXPECT_EQ(boolify_eigen_stuff[someOtherMatrix], 5);
+    EXPECT_EQ(boolify_eigen_stuff[anotherMatrix], 47);
+    EXPECT_EQ(boolify_eigen_stuff[sameMatrix], 654654);
+}

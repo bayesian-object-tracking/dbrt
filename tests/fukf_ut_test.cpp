@@ -133,10 +133,3 @@ TEST_F(UnscentedTransformTest, unscentedTransformCovarianceRecovery)
 
     EXPECT_TRUE(cov_aa.isApprox(X[0]*X[0].transpose()));
 }
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
-}

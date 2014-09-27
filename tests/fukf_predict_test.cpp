@@ -114,7 +114,7 @@ TEST_F(FukfTest, predict)
 //        std::cout << partition.cov_bb << std::endl;
     }
 
-    filter.predict(state_prior, state_predicted);
+    filter.predict(state_prior, 0.033, state_predicted);
 
 //    std::cout << state_predicted.a_ << std::endl;
 //    std::cout << state_predicted.cov_aa_ << std::endl;
@@ -129,13 +129,4 @@ TEST_F(FukfTest, predict)
 
     EXPECT_TRUE(state_prior.joint_partitions_[0].b.isApprox(state_predicted.joint_partitions_[0].b));
     EXPECT_TRUE(state_prior.joint_partitions_[0].cov_bb.isApprox(state_predicted.joint_partitions_[0].cov_bb));
-}
-
-
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
 }

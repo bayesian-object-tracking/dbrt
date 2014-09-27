@@ -44,86 +44,11 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_TESTS_STUB_MODELS_HPP
-#define FAST_FILTERING_TESTS_STUB_MODELS_HPP
+#include <gtest/gtest.h>
 
-#include <Eigen/Dense>
-
-#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
-#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-#include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
-
-
-
-template <typename State_>
-class ProcessModelStub:
-        public ff::StationaryProcessModel<State_>,
-        public ff::GaussianMap<State_, State_>
+int main(int argc, char **argv)
 {
-public:
-    typedef State_ State;
-    typedef State_ Noise;
+  testing::InitGoogleTest(&argc, argv);
 
-    virtual void Condition(const double& delta_time,
-                           const State& state)
-    {
-        state_ = state;
-    }
-
-    virtual State MapStandardGaussian(const Noise& sample) const
-    {
-
-    }
-
-    virtual State predict(const State& prior, const State& noise)
-    {
-        return prior + noise;
-    }
-
-    virtual Eigen::MatrixXd NoiseCovariance()
-    {
-        return Eigen::MatrixXd::Identity(state_.rows(), state_.cols()) * 0.08;
-    }
-
-    virtual size_t Dimension()
-    {
-        return State::SizeAtCompileTime;
-    }
-protected:
-    State state_;
-};
-
-template <typename State_a, typename State_b_i>
-class ObservationModelStub
-{
-public:
-    typedef Eigen::Matrix<double, 1, 1> Measurement;
-
-
-    virtual Measurement predict(const State_a& a,
-                                const State_b_i& b_i,
-                                const Measurement& noise)
-    {
-        if (a_ != a)
-        {
-            a_ = a;
-        }
-
-        Measurement y_i = noise;
-
-        return y_i;
-    }
-
-    virtual Eigen::MatrixXd NoiseCovariance()
-    {
-        return Eigen::MatrixXd::Identity(1, 1) * 0.023;
-    }
-
-    virtual size_t Dimension() { return 1; }
-    virtual size_t NoiseDimension() { return 1; }
-
-protected:
-    State_a a_;
-};
-
-#endif
+  return RUN_ALL_TESTS();
+}
