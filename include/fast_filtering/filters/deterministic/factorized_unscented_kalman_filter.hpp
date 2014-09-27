@@ -58,7 +58,7 @@
 #include <fast_filtering/distributions/sum_of_deltas.hpp>
 #include <fast_filtering/filters/deterministic/composed_state_distribution.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-
+#include <fast_filtering/utils/profiling.hpp>
 
 namespace ff
 {
@@ -75,14 +75,13 @@ namespace ff
  */
 template<typename CohesiveStateProcessModel,
          typename FactorizedStateProcessModel,
-         typename ObservationModel,
-         size_t FACTORIZED_STATES = -1>
+         typename ObservationModel>
 class FactorizedUnscentedKalmanFilter
 {
 public:
-    typedef ComposedStateDistribution<typename CohesiveStateProcessModel::State,
-                                      typename FactorizedStateProcessModel::State,
-                                      FACTORIZED_STATES> StateDistribution;
+    typedef ComposedStateDistribution<
+                typename CohesiveStateProcessModel::State,
+                typename FactorizedStateProcessModel::State > StateDistribution;
 
     typedef typename StateDistribution::CovAA CovAA;
     typedef typename StateDistribution::CovBB CovBB;
@@ -95,11 +94,13 @@ public:
                           Eigen::Dynamic,
                           Eigen::Dynamic> SigmaPoints;
 
-    typedef typename CohesiveStateProcessModel::State State_a;
+    typedef typename CohesiveStateProcessModel::State State_a;    
     typedef typename FactorizedStateProcessModel::State State_b_i;
 
     typedef typename CohesiveStateProcessModel::Noise Noise_a;
     typedef typename FactorizedStateProcessModel::Noise Noise_b_i;
+
+    typedef typename CohesiveStateProcessModel::Input Input;
 
     typedef boost::shared_ptr<CohesiveStateProcessModel> CohesiveStateProcessModelPtr;
     typedef boost::shared_ptr<FactorizedStateProcessModel> FactorizedStateProcessModelPtr;
@@ -120,7 +121,7 @@ public:
     {
         REQUIRE_INTERFACE(
                     CohesiveStateProcessModel,
-                    StationaryProcessModel<State_a>);
+                    StationaryProcessModel<State_a, Input>);
         REQUIRE_INTERFACE(
                     CohesiveStateProcessModel,
                     GaussianMap<State_a, Noise_a>);
@@ -150,42 +151,61 @@ public:
                  double delta_time,
                  StateDistribution& predicted_state)
     {
+        INIT_PROFILING;
+
+        Eigen::MatrixXd noise_Q_a = Eigen::MatrixXd::Identity(Dim(Q_a), Dim(Q_a)) * 0.02;
+        Eigen::MatrixXd noise_Q_bi = Eigen::MatrixXd::Identity(Dim(Q_bi), Dim(Q_bi)) * 0.02;
+        Eigen::MatrixXd noise_R_yi = Eigen::MatrixXd::Identity(Dim(R_yi), Dim(R_yi)) * 0.02;
+
+        MEASURE("Created noise matrices");
+
         // compute the sigma point partitions X = [Xa  XQa  0(b^[i])  XQb  XR]
         // 0(b^[i]) is the place holder for the a b^[i]
         ComputeSigmaPointPartitions
         ({
-            { prior_state.a_,                      prior_state.cov_aa_ },
-            { Eigen::MatrixXd::Zero(Dim(Q_a),  1), f_a_->NoiseCovariance() },
-            { State_b_i::Zero(Dim(b_i),  1),       CovBB::Zero() },
-            { Eigen::MatrixXd::Zero(Dim(Q_bi), 1), f_b_->NoiseCovariance() },
-            { Eigen::MatrixXd::Zero(Dim(R_yi), 1), h_->NoiseCovariance() }
+            { prior_state.a,                       prior_state.cov_aa },
+            { Eigen::MatrixXd::Zero(Dim(Q_a),  1), noise_Q_a },
+            { State_b_i::Zero(Dim(b_i),  1),       CovBB::Zero(Dim(b_i), Dim(b_i)) },
+            { Eigen::MatrixXd::Zero(Dim(Q_bi), 1), noise_Q_bi },
+            { Eigen::MatrixXd::Zero(Dim(R_yi), 1), noise_R_yi }
          },
          X_);
 
+        MEASURE("ComputeSigmaPointPartitions");
+
         // FOR ALL X_[a]
         f_a(X_[a], X_[Q_a], delta_time, X_[a]);
+        h_->ResetCache();
 
-        std::vector<std::pair<double, int> > x = {{2, 3}, {3, 6}};
+        MEASURE("f_a(X_[a], X_[Q_a], delta_time, X_[a])");
 
         // predict the cohesive state segment a
-        Mean(X_[a], predicted_state.a_);
-        Normalize(predicted_state.a_, X_[a]);
-        predicted_state.cov_aa_ = X_[a] * X_[a].transpose();
+        Mean(X_[a], predicted_state.a);
+        Normalize(predicted_state.a, X_[a]);
+        predicted_state.cov_aa = X_[a] * X_[a].transpose();
+
+        MEASURE("Normalized X_[a]");
 
         // predict the joint state [a  b_i  y_i]
-        for (size_t i = 0; i < prior_state.joint_partitions_.size(); ++i)
+        for (size_t i = 0; i < prior_state.joint_partitions.size(); ++i)
         {
-            ComputeSigmaPoints(prior_state.joint_partitions_[i].b,
-                               prior_state.joint_partitions_[i].cov_bb,
+            //MEASURE("ComputeSigmaPoints X_[b_i]");
+            ComputeSigmaPoints(prior_state.joint_partitions[i].b,
+                               prior_state.joint_partitions[i].cov_bb,
                                Dim(a) + Dim(Q_a),
                                X_[b_i]);
 
             // FOR ALL X_[b_i] and X_[y_i]
             f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
-            //X_[y_i] = h_   -> predict(X_[a],   X_[Q_bi], X_[R_yi]);
+            //MEASURE("f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i])");
+
+
+            h(X_[a], X_[b_i], X_[R_yi], X_[y_i]);
+
+            //MEASURE("h(X_[a], X_[b_i], X_[R_yi], X_[y_i])");
 
             typename StateDistribution::JointPartitions& predicted_partition =
-                    predicted_state.joint_partitions_[i];
+                    predicted_state.joint_partitions[i];
 
             Mean(X_[b_i], predicted_partition.b);
             Mean(X_[y_i], predicted_partition.y);
@@ -193,12 +213,18 @@ public:
             Normalize(predicted_partition.b, X_[b_i]);
             Normalize(predicted_partition.y, X_[y_i]);
 
+            //MEASURE("normalized X_[b_i] and X_[y_i]");
+
             predicted_partition.cov_ab = X_[a] * X_[b_i].transpose();
             predicted_partition.cov_ay = X_[a] * X_[y_i].transpose();
             predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
             predicted_partition.cov_by = X_[b_i] * X_[y_i].transpose();
             predicted_partition.cov_yy = X_[y_i] * X_[y_i].transpose();
+
+            //MEASURE("predicted_partition updated");
         }
+
+        MEASURE("Iterated over all joint_partitions[i]");
     }
 
     /**
@@ -239,16 +265,16 @@ public:
         Eigen::MatrixXd mu_y(dim_b, 1);
         Eigen::MatrixXd cov_yy_given_a_inv(dim_b, 1);
 
-        predicted_state.cov_aa_inverse_ = predicted_state.cov_aa_.inverse();
-        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse_;
+        predicted_state.cov_aa_inverse = predicted_state.cov_aa.inverse();
+        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
-            CovAY& cov_ay = predicted_state.joint_partitions_[i].cov_ay_;
-            CovYY& cov_yy = predicted_state.joint_partitions_[i].cov_yy_;
+            CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay_;
+            CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy_;
 
             A.block(i, 0, 1, Dim(a)) = cov_ay.transpose();
-            mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions_[i].y;
+            mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions[i].y;
 
             cov_yy_given_a_inv.block(i, 0, 1, 1) =
                     cov_yy - cov_ay.transpose() * cov_aa_inv * cov_ay;
@@ -260,11 +286,11 @@ public:
                 A.transpose() * cov_yy_given_a_inv.asDiagonal();
 
         // update cohesive state segment
-        posterior_state.cov_aa_ = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
+        posterior_state.cov_aa = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
 
-        posterior_state.a_ =
-                predicted_state.a_ +
-                posterior_state.cov_aa_ * AT_Cov_yy_given_a * (y - mu_y);
+        posterior_state.a =
+                predicted_state.a +
+                posterior_state.cov_aa * AT_Cov_yy_given_a * (y - mu_y);
     }
 
     /**
@@ -297,17 +323,17 @@ public:
         Eigen::MatrixXd cov_b_given_a_y;
         ba_by.resize(Dim(b_i), Dim(a) + Dim(y_i));
         innov.resize(Dim(a) + Dim(y_i), 1);
-        innov.block(0, 0, Dim(a), 1) = -predicted_state.a_;
+        innov.block(0, 0, Dim(a), 1) = -predicted_state.a;
 
-        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse_;
+        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
-            CovAY& cov_ay = predicted_state.joint_partitions_[i].cov_ay_;
-            CovAB& cov_ab = predicted_state.joint_partitions_[i].cov_ab_;
-            CovBY& cov_by = predicted_state.joint_partitions_[i].cov_by_;
-            CovBB& cov_bb = predicted_state.joint_partitions_[i].cov_bb_;
-            CovYY& cov_yy = predicted_state.joint_partitions_[i].cov_yy_;
+            CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay_;
+            CovAB& cov_ab = predicted_state.joint_partitions[i].cov_ab_;
+            CovBY& cov_by = predicted_state.joint_partitions[i].cov_by_;
+            CovBB& cov_bb = predicted_state.joint_partitions[i].cov_bb_;
+            CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy_;
 
             SMWInversion(cov_aa_inv, cov_ay, cov_ay.transpose(), cov_yy,
                          L_aa, L_ay, L_ya, L_yy,
@@ -320,18 +346,18 @@ public:
 
             K = ba_by * L;
             innov.block(Dim(a), 0, Dim(y_i), 1) =
-                    y(i, 0) - predicted_state.joint_partitions_[i].y;
+                    y(i, 0) - predicted_state.joint_partitions[i].y;
 
-            c = predicted_state.joint_partitions_[i].b + K * innov;
+            c = predicted_state.joint_partitions[i].b + K * innov;
 
             cov_b_given_a_y = cov_bb - K * ba_by.transpose();
 
             // update b_[i]
-            posterior_state.joint_partitions_[i].b =
-                    B * posterior_state.a_ + c;
-            posterior_state.joint_partitions_[i].cov_bb_ =
+            posterior_state.joint_partitions[i].b =
+                    B * posterior_state.a + c;
+            posterior_state.joint_partitions[i].cov_bb_ =
                     cov_b_given_a_y
-                    + B * posterior_state.cov_aa_ * B.transpose();
+                    + B * posterior_state.cov_aa * B.transpose();
         }
     }
 
@@ -339,31 +365,42 @@ public:
 public:
     void f_a(const SigmaPoints& prior_X_a,
              const SigmaPoints& noise_X_a,
-             double delta_time,
+             const double delta_time,
              SigmaPoints& predicted_X_a)
     {
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
         {
-            f_a_->Condition(delta_time, prior_X_a.col(i));
+            f_a_->Condition(delta_time,
+                            prior_X_a.col(i),
+                            Input::Zero(f_a_->NoiseDimension(), 1));
             predicted_X_a.col(i) = f_a_->MapStandardGaussian(noise_X_a.col(i));
         }
     }
 
     void f_b(const SigmaPoints& prior_X_b_i,
              const SigmaPoints& noise_X_b_i,
-             double delta_time,
+             const double delta_time,
              SigmaPoints& predicted_X_b_i)
     {
         for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
         {
             f_b_->Condition(delta_time, prior_X_b_i.col(i));
-            //predicted_X_b_i(i) = f_a_->MapStandardGaussian(noise_X_b_i.col(i));
+            predicted_X_b_i.col(i) = f_b_->MapStandardGaussian(noise_X_b_i.col(i));
+            //predicted_X_b_i.col(i, 0) = 0;
         }
     }
 
-    void h()
+    void h(const SigmaPoints& prior_X_a,
+           const SigmaPoints& prior_X_b_i,
+           const SigmaPoints& noise_X_y_i,
+           SigmaPoints& predicted_X_y_i)
     {
-
+        for (size_t i = 0; i < prior_X_b_i.cols(); ++i)
+        {
+            h_->Condition(prior_X_a.col(i), prior_X_b_i(i, 0), i);
+            predicted_X_y_i(i, 0) = h_->MapStandardGaussian(noise_X_y_i.col(i));
+            //predicted_X_y_i(i, 0) = 0;
+        }
     }
 
     /**
