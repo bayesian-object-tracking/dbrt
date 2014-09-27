@@ -990,49 +990,125 @@ private:
 class DiscreteSampler
 {
 public:
-	template <typename T> DiscreteSampler(std::vector<T> log_likelihoods)
+    template <typename T> DiscreteSampler(std::vector<T> log_prob)
 	{
 		fibo_.seed(RANDOM_SEED);
 
-		// compute the likelihoods and normalize them ------------------------------------------------------------------------------
-        sorted_indices_ = ff::hf::SortDescend(log_likelihoods);
-		double max = log_likelihoods[sorted_indices_[0]];
-		for(int i = 0; i < int(log_likelihoods.size()); i++)
-			log_likelihoods[i] -= max;
+        // compute the prob and normalize them
+        sorted_indices_ = ff::hf::SortDescend(log_prob);
+        double max = log_prob[sorted_indices_[0]];
+        for(int i = 0; i < int(log_prob.size()); i++)
+            log_prob[i] -= max;
 
-		std::vector<double> likelihoods(log_likelihoods.size());
+        std::vector<double> prob(log_prob.size());
 		double sum = 0;
-		for(int i = 0; i < int(log_likelihoods.size()); i++)
+        for(int i = 0; i < int(log_prob.size()); i++)
 		{
-			likelihoods[i] = exp(log_likelihoods[i]);
-			sum += likelihoods[i];
+            prob[i] = exp(log_prob[i]);
+            sum += prob[i];
 		}
-		for(int i = 0; i < int(likelihoods.size()); i++)
-			likelihoods[i] /= sum;
+        for(int i = 0; i < int(prob.size()); i++)
+            prob[i] /= sum;
 
-		// compute the cumulative likelihood ------------------------------------------------------------------
-		cum_likelihoods_.resize(log_likelihoods.size());
-		cum_likelihoods_[0] = likelihoods[sorted_indices_[0]];
-		for(int i = 1; i < int(log_likelihoods.size()); i++)
-			cum_likelihoods_[i] = cum_likelihoods_[i-1] + likelihoods[sorted_indices_[i]];
+        // compute the cumulative probability
+        cumulative_prob_.resize(log_prob.size());
+        cumulative_prob_[0] = prob[sorted_indices_[0]];
+        for(int i = 1; i < int(log_prob.size()); i++)
+            cumulative_prob_[i] = cumulative_prob_[i-1] + prob[sorted_indices_[i]];
 	}
 
 	~DiscreteSampler() {}
 
     int Sample()
 	{
-		double rand_number = fibo_();
+        double uniform_sample = fibo_();
 		int sample_index = 0;
-		while(rand_number > cum_likelihoods_[sample_index]) sample_index++;
+        while(uniform_sample > cumulative_prob_[sample_index]) sample_index++;
 
 		return sorted_indices_[sample_index];
 	}
 
+
+
+    int MapStandardGaussian(double gaussian_sample) const
+    {
+        // map from a gaussian to a uniform distribution
+        double uniform_sample = 0.5 *
+                (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        int sample_index = 0;
+        while(uniform_sample > cumulative_prob_[sample_index]) sample_index++; //TODO: THIS COULD BE DONE IN LOG TIME
+
+        return sorted_indices_[sample_index];
+    }
+
 private:
 	boost::lagged_fibonacci607 fibo_;
 	std::vector<int> sorted_indices_;
-	std::vector<double> cum_likelihoods_;
+    std::vector<double> cumulative_prob_;
 };
+
+
+
+// the above class should go away
+class DiscreteDistribution
+{
+public:
+    template <typename T> DiscreteDistribution(std::vector<T> log_prob)
+    {
+        uniform_sampler_.seed(RANDOM_SEED);
+
+        // substract max to avoid numerical issues
+        double max = hf::bound_value(log_prob, true);
+        for(int i = 0; i < int(log_prob.size()); i++)
+            log_prob[i] -= max;
+
+        // compute probabilities
+        std::vector<double> prob(log_prob.size());
+        double sum = 0;
+        for(int i = 0; i < int(log_prob.size()); i++)
+        {
+            prob[i] = std::exp(log_prob[i]);
+            sum += prob[i];
+        }
+        for(int i = 0; i < int(prob.size()); i++)
+            prob[i] /= sum;
+
+        // compute the cumulative probability
+        cumulative_prob_.resize(prob.size());
+        cumulative_prob_[0] = prob[0];
+        for(size_t i = 1; i < prob.size(); i++)
+            cumulative_prob_[i] = cumulative_prob_[i-1] + prob[i];
+    }
+
+    ~DiscreteDistribution() {}
+
+    int Sample()
+    {
+        return MapStandardUniform(uniform_sampler_());
+    }
+
+    int MapStandardGaussian(double gaussian_sample) const
+    {
+        double uniform_sample =
+                0.5 * (1.0 + std::erf(gaussian_sample / std::sqrt(2.0)));
+        return MapStandardUniform(uniform_sample);
+    }
+
+    int MapStandardUniform(double uniform_sample) const
+    {
+        std::vector<double>::const_iterator iterator =
+                                 std::lower_bound(cumulative_prob_.begin(),
+                                                  cumulative_prob_.end(),
+                                                  uniform_sample);
+
+        return iterator - cumulative_prob_.begin();
+    }
+
+private:
+    boost::lagged_fibonacci607  uniform_sampler_;
+    std::vector<double>         cumulative_prob_;
+};
+
 
 
 
