@@ -122,7 +122,7 @@ public:
                            const Input&   input)
     {
         gaussian_.Mean(Mean(delta_time, state, input));
-        gaussian_.Covariance(Covariance(delta_time));
+        gaussian_.DiagonalCovariance(Covariance(delta_time));
     }
 
     virtual void Parameters(const Scalar& damping,
@@ -142,6 +142,9 @@ private:
                     const State& state,
                     const Input& input)
     {
+        if(damping_ == 0)
+            return state + delta_time * input;
+
         State state_expectation = (1.0 - exp(-damping_*delta_time)) / damping_ * input +
                                               exp(-damping_*delta_time)  * state;
 
@@ -154,6 +157,9 @@ private:
 
     Operator Covariance(const Scalar& delta_time)
     {
+        if(damping_ == 0)
+            return delta_time * noise_covariance_;
+
         Scalar factor = (1.0 - exp(-2.0*damping_*delta_time))/(2.0*damping_);
         if(!std::isfinite(factor))
             factor = delta_time;

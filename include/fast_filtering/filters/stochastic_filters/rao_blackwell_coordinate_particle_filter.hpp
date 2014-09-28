@@ -95,7 +95,6 @@ public:
                 const Scalar&       delta_time,
                 const Input&        input)
     {
-        INIT_PROFILING;
         observation_model_->SetObservation(observation, delta_time);
 
         loglikes_ = std::vector<Scalar>(samples_.size(), 0);
@@ -104,20 +103,28 @@ public:
 
         for(size_t block_index = 0; block_index < sampling_blocks_.size(); block_index++)
         {
+            INIT_PROFILING;
             for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
             {
                 for(size_t i = 0; i < sampling_blocks_[block_index].size(); i++)
                     noises_[particle_index](sampling_blocks_[block_index][i]) = unit_gaussian_.Sample()(0);
-
+            }
+            MEASURE("sampling");
+            for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
+            {
                 process_model_->Condition(delta_time,
                                           samples_[particle_index],
                                           input);
+            }
+            MEASURE("conditioning");
+            for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
+            {
                 next_samples_[particle_index] = process_model_->MapStandardGaussian(noises_[particle_index]);
             }
+            MEASURE("propagation");
 
             bool update_occlusions = (block_index == sampling_blocks_.size()-1);
             std::cout << "evaluating with " << next_samples_.size() << " samples " << std::endl;
-            RESET;
             std::vector<Scalar> new_loglikes = observation_model_->Loglikes(next_samples_,
                                                                            indices_,
                                                                            update_occlusions);
@@ -127,10 +134,13 @@ public:
                 delta_loglikes[i] = new_loglikes[i] - loglikes_[i];
             loglikes_ = new_loglikes;
             UpdateWeights(delta_loglikes);
+            MEASURE("updating weights");
+
         }
 
         samples_ = next_samples_;
         state_distribution_.SetDeltas(samples_); // not sure whether this is the right place
+
     }
 
     void Resample(const size_t& sample_count)
