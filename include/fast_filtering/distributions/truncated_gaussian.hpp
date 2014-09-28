@@ -74,16 +74,20 @@ public:
                                                         min_(min),
                                                         max_(max)
     {
-        cumulative_min_ = 0.5 +
-                0.5 * std::erf( (min_-mean_) / (sigma_*std::sqrt(2)) );
-        cumulative_max_ = 0.5 +
-                0.5 * std::erf( (max_-mean_) / (sigma_*std::sqrt(2)) );
-
-        normalization_factor_ = 1.0 /
-             (sigma_ * (cumulative_max_-cumulative_min_) * std::sqrt(2.0*M_PI));
+        ComputeAuxiliaryParameters();
     }
 
     virtual ~TruncatedGaussian() { }
+
+    virtual void SetParameters(double mean, double sigma, double min, double max)
+    {
+        mean_ =     mean;
+        sigma_ =    sigma;
+        min_ =      min;
+        max_ =      max;
+
+        ComputeAuxiliaryParameters();
+    }
 
     virtual double Probability(const double& input) const
     {
@@ -110,6 +114,18 @@ public:
         // map onto truncated gaussian
         return mean_ + sigma_ * std::sqrt(2.0) *
                   boost::math::erf_inv(2.0 * truncated_uniform_sample - 1.0);
+    }
+
+private:
+    virtual void ComputeAuxiliaryParameters()
+    {
+        cumulative_min_ = 0.5 +
+                0.5 * std::erf( (min_-mean_) / (sigma_*std::sqrt(2)) );
+        cumulative_max_ = 0.5 +
+                0.5 * std::erf( (max_-mean_) / (sigma_*std::sqrt(2)) );
+
+        normalization_factor_ = 1.0 /
+             (sigma_ * (cumulative_max_-cumulative_min_) * std::sqrt(2.0*M_PI));
     }
 
 private:
