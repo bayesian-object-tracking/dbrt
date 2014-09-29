@@ -160,6 +160,30 @@ public:
             full_rank_ = false;
     }
 
+
+    virtual void DiagonalCovariance(const Operator& covariance)
+    {
+        covariance_ = covariance;
+
+        double determinant = 1;
+        precision_ = Operator::Zero(covariance_.rows(), covariance_.cols());
+        cholesky_factor_ = Operator::Zero(covariance_.rows(), covariance_.cols());
+        full_rank_ = true;
+        for(size_t i = 0; i < covariance_.rows(); i++)
+        {
+            determinant *= covariance(i, i);
+            precision_(i,i) =  1.0 / covariance_(i, i);
+            if(!std::isfinite(precision_(i,i)))
+                full_rank_ = false;
+
+            cholesky_factor_(i,i) = std::sqrt(covariance_(i,i));
+        }
+
+        log_normalizer_ = -0.5 * ( std::log(determinant)
+                                + double(covariance.rows()) * std::log(2.0 * M_PI) );
+    }
+
+
     virtual Vector Mean() const
     {
         return mean_;
