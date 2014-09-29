@@ -195,13 +195,19 @@ public:
                                X_[b_i]);
 
             f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
+            //MEASURE("f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);");
             h(X_[a], X_[b_i], X_[R_yi], i, Y_);
+            //MEASURE("h(X_[a], X_[b_i], X_[R_yi], i, Y_);");
+
+            //std::cout << "X_[a] = " << X_[a] << std::endl<< std::endl<< std::endl;
+            //std::cout << "X_[b_i] = " << X_[b_i] << std::endl<< std::endl<< std::endl;
+            //std::cout << "Y_ = " << Y_ << std::endl<< std::endl<< std::endl;
 
             typename StateDistribution::JointPartitions& predicted_partition =
                     predicted_state.joint_partitions[i];
 
             Mean(X_[b_i], predicted_partition.b);
-            Mean(Y_, predicted_partition.y);
+            Mean(Y_, predicted_partition.y);            
 
             Normalize(predicted_partition.b, X_[b_i]);
             Normalize(predicted_partition.y, Y_);
@@ -211,6 +217,14 @@ public:
             predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
             predicted_partition.cov_by = X_[b_i] * Y_.transpose();
             predicted_partition.cov_yy = Y_ * Y_.transpose();
+
+
+
+//            std::cout << "cov_ab = " << predicted_partition.cov_ab << std::endl;
+//            std::cout << "cov_ay = " << predicted_partition.cov_ay << std::endl;
+//            std::cout << "cov_bb = " << predicted_partition.cov_bb << std::endl;
+//            std::cout << "cov_by = " << predicted_partition.cov_by << std::endl;
+//            std::cout << "cov_yy = " << predicted_partition.cov_yy << std::endl;
         }
         MEASURE("predicted_partitions updated");
 
@@ -220,6 +234,8 @@ public:
         predicted_state.cov_aa = X_[a] * X_[a].transpose();
 
         MEASURE("predicted a");
+
+        std::cout << "predicted_state.a = " << predicted_state.a << std::endl;
     }
 
     /**
@@ -260,13 +276,13 @@ public:
         Eigen::MatrixXd mu_y(dim_b, 1);
         Eigen::MatrixXd cov_yy_given_a_inv(dim_b, 1);
 
-        predicted_state.cov_aa_inverse = predicted_state.cov_aa.inverse();
-        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse;
+        posterior_state.cov_aa_inverse = predicted_state.cov_aa.inverse();
+        CovAA& cov_aa_inv = posterior_state.cov_aa_inverse;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
-            CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay_;
-            CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy_;
+            const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
+            const CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy;
 
             A.block(i, 0, 1, Dim(a)) = cov_ay.transpose();
             mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions[i].y;
@@ -320,15 +336,15 @@ public:
         innov.resize(Dim(a) + Dim(y_i), 1);
         innov.block(0, 0, Dim(a), 1) = -predicted_state.a;
 
-        CovAA& cov_aa_inv = predicted_state.cov_aa_inverse;
+        CovAA& cov_aa_inv = posterior_state.cov_aa_inverse;
 
         for (size_t i = 0; i < dim_b; ++i)
         {
-            CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay_;
-            CovAB& cov_ab = predicted_state.joint_partitions[i].cov_ab_;
-            CovBY& cov_by = predicted_state.joint_partitions[i].cov_by_;
-            CovBB& cov_bb = predicted_state.joint_partitions[i].cov_bb_;
-            CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy_;
+            const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
+            const CovAB& cov_ab = predicted_state.joint_partitions[i].cov_ab;
+            const CovBY& cov_by = predicted_state.joint_partitions[i].cov_by;
+            const CovBB& cov_bb = predicted_state.joint_partitions[i].cov_bb;
+            const CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy;
 
             SMWInversion(cov_aa_inv, cov_ay, cov_ay.transpose(), cov_yy,
                          L_aa, L_ay, L_ya, L_yy,
@@ -341,7 +357,7 @@ public:
 
             K = ba_by * L;
             innov.block(Dim(a), 0, Dim(y_i), 1) =
-                    y(i, 0) - predicted_state.joint_partitions[i].y;
+                    y.row(i) - predicted_state.joint_partitions[i].y;
 
             c = predicted_state.joint_partitions[i].b + K * innov;
 
@@ -350,7 +366,7 @@ public:
             // update b_[i]
             posterior_state.joint_partitions[i].b =
                     B * posterior_state.a + c;
-            posterior_state.joint_partitions[i].cov_bb_ =
+            posterior_state.joint_partitions[i].cov_bb =
                     cov_b_given_a_y
                     + B * posterior_state.cov_aa * B.transpose();
         }
@@ -396,9 +412,16 @@ public:
         predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
 
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
-        {
-            h_->Condition(prior_X_a.col(i), prior_X_b_i(i, 0), i, index);
-            predicted_X_y_i(i, 0)  = h_->MapStandardGaussian(noise_X_y_i.col(i));
+        {            
+            h_->Condition(prior_X_a.col(i), prior_X_b_i(0, i), i, index);
+            predicted_X_y_i(0, i) = h_->MapStandardGaussian(noise_X_y_i.col(i));
+
+//            std::cout << "prior_X_a.col(i): " << prior_X_a.col(i).transpose() << std::endl;
+//            std::cout << "prior_X_b_i(0, i): " << prior_X_b_i(0, i) << std::endl;
+//            std::cout << "noise_X_y_i.col(i): " << noise_X_y_i.col(i).transpose() << std::endl;
+//            std::cout << "predicted_X_y_i(0, i): " << predicted_X_y_i(0, i) << std::endl;
+//            std::cout << "i: " << i << std::endl;
+//            std::cout << "index: " << index << std::endl;
         }
     }
 
@@ -779,7 +802,7 @@ protected:
              SigmaPoints& predicted_X_b_i)
     {
 
-        int N = 4800*5;
+        int N = 4800*30;
 
         std::cout << "number of sigmas " << prior_X_b_i.cols() << std::endl;
         std::cout << "starting test with N = " << N << std::endl;
@@ -792,7 +815,7 @@ protected:
                 f_b_->Condition(delta_time, prior_X_b_i.col(i));
             }
         }
-        MEASURE("h condition");
+        MEASURE("f_b condition");
         f_b_->Condition(delta_time, prior_X_b_i.col(0));
         for (size_t i = 0; i < N; ++i)
         {

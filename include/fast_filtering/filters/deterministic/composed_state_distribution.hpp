@@ -135,7 +135,8 @@ public:
      * dimension is \f$\dim(CohesiveState) + FACTORIZED\_STATES *
      * \dim(FactorizedState) \f$.
      */
-    ComposedStateDistribution()
+    ComposedStateDistribution():
+        a(1)
     {
     }    
 
@@ -159,12 +160,12 @@ public:
         }
     }
 
-    size_t a_dimension()
+    size_t a_dimension() const
     {
         return a.rows();
     }
 
-    size_t b_i_dimension()
+    size_t b_i_dimension() const
     {
         if (joint_partitions.size() > 0)
         {
@@ -174,7 +175,7 @@ public:
         return 0;
     }
 
-    size_t b_dimension()
+    size_t b_dimension() const
     {
         return joint_partitions.size();
     }
