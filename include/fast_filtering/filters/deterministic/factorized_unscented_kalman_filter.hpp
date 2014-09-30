@@ -60,6 +60,9 @@
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 #include <fast_filtering/utils/profiling.hpp>
 
+#include <pose_tracking_interface/utils/image_publisher.hpp>
+#include <pose_tracking_interface/utils/image_visualizer.hpp>
+
 namespace ff
 {
 
@@ -107,6 +110,7 @@ public:
     typedef boost::shared_ptr<ObservationModel> ObservationModelPtr;
 
     enum RandomVariableIndex { a = 0, Q_a , b_i, Q_bi, R_yi, y_i };
+    //enum RandomVariableIndex { a = 0, Q_a , R_yi, y_i };
 
 public:
     FactorizedUnscentedKalmanFilter(
@@ -116,8 +120,11 @@ public:
             double kappa = 1.):
         f_a_(cohesive_state_process_model),
         f_b_(factorized_state_process_model),
-        h_(observation_model),
-        kappa_(kappa)
+        h_(observation_model),        
+        kappa_(kappa),
+        ip_(nh_),
+        rows_(480/8),
+        cols_(640/8)
     {
         REQUIRE_INTERFACE(
                     CohesiveStateProcessModel,
@@ -132,7 +139,7 @@ public:
                     FactorizedStateProcessModel,
                     GaussianMap<State_b_i, Noise_b_i>);
 
-        alpha_ = 1.2;
+        alpha_ = 0.6;
         beta_ = 2.;
         kappa_ = 0.;
     }
@@ -152,13 +159,13 @@ public:
                  StateDistribution& predicted_state)
     {
         true_evaluations = 0;
-        theoretical_evaluations = 0;
+        theoretical_evaluations = 0;        
 
         INIT_PROFILING;
 
-        Eigen::MatrixXd noise_Q_a = Eigen::MatrixXd::Identity(Dim(Q_a), Dim(Q_a)) * 0.02;
-        Eigen::MatrixXd noise_Q_bi = Eigen::MatrixXd::Identity(Dim(Q_bi), Dim(Q_bi)) * 0.02;
-        Eigen::MatrixXd noise_R_yi = Eigen::MatrixXd::Identity(Dim(R_yi), Dim(R_yi)) * 0.02;
+        Eigen::MatrixXd noise_Q_a = Eigen::MatrixXd::Identity(Dim(Q_a), Dim(Q_a));
+        Eigen::MatrixXd noise_Q_bi = Eigen::MatrixXd::Identity(Dim(Q_bi), Dim(Q_bi));
+        Eigen::MatrixXd noise_R_yi = Eigen::MatrixXd::Identity(Dim(R_yi), Dim(R_yi));
 
         // compute the sigma point partitions X = [Xa  XQa  0(b^[i])  XQb  XR]
         // 0(b^[i]) is the place holder for the a b^[i]
@@ -172,18 +179,18 @@ public:
          },
          X_);
 
-        std::cout << "Dim(a) = " << Dim(a) << std::endl;
-        std::cout << "Dim(Q_a) = " << Dim(Q_a) << std::endl;
-        std::cout << "Dim(b_i) = " << Dim(b_i) << std::endl;
-        std::cout << "Dim(Q_bi) = " << Dim(Q_bi) << std::endl;
-        std::cout << "Dim(R_yi) = " << Dim(R_yi) << std::endl;
-        std::cout << "sigmas = " << X_[0].cols() << std::endl;
-        std::cout << "Dim(y_i) = " << Dim(y_i) << std::endl;
         MEASURE("ComputeSigmaPointPartitions");
 
         // FOR ALL X_[a]
-        f_a(X_[a], X_[Q_a], delta_time, X_[a]);        
+        f_a(X_[a], X_[Q_a], delta_time, X_[a]);
+
+        Mean(X_[a], predicted_state.a);
+        X_a_norm_ = X_[a];
+        Normalize(predicted_state.a, X_a_norm_);
+        predicted_state.cov_aa = X_a_norm_ * X_a_norm_.transpose();
         MEASURE("f_a(X_[a], X_[Q_a], delta_time, X_[a])");
+
+
 
         // predict the joint state [a  b_i  y_i]
         h_->ClearCache(X_[a].cols());
@@ -195,13 +202,8 @@ public:
                                X_[b_i]);
 
             f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);
-            //MEASURE("f_b(X_[b_i], X_[Q_bi], delta_time, X_[b_i]);");
             h(X_[a], X_[b_i], X_[R_yi], i, Y_);
-            //MEASURE("h(X_[a], X_[b_i], X_[R_yi], i, Y_);");
-
-            //std::cout << "X_[a] = " << X_[a] << std::endl<< std::endl<< std::endl;
-            //std::cout << "X_[b_i] = " << X_[b_i] << std::endl<< std::endl<< std::endl;
-            //std::cout << "Y_ = " << Y_ << std::endl<< std::endl<< std::endl;
+            //h(X_[a], X_[R_yi], i, Y_);
 
             typename StateDistribution::JointPartitions& predicted_partition =
                     predicted_state.joint_partitions[i];
@@ -212,30 +214,28 @@ public:
             Normalize(predicted_partition.b, X_[b_i]);
             Normalize(predicted_partition.y, Y_);
 
-            predicted_partition.cov_ab = X_[a] * X_[b_i].transpose();
-            predicted_partition.cov_ay = X_[a] * Y_.transpose();
+            predicted_partition.cov_ab = X_a_norm_ * X_[b_i].transpose();
+            predicted_partition.cov_ay = X_a_norm_ * Y_.transpose();
             predicted_partition.cov_bb = X_[b_i] * X_[b_i].transpose();
             predicted_partition.cov_by = X_[b_i] * Y_.transpose();
             predicted_partition.cov_yy = Y_ * Y_.transpose();
 
+//            if (predicted_partition.cov_bb(0,0) <= 0.)
+//            {
+//                std::cout << "predicted_partition.cov_bb = " << predicted_partition.cov_bb <<std::endl;
+//            }
 
-
-//            std::cout << "cov_ab = " << predicted_partition.cov_ab << std::endl;
-//            std::cout << "cov_ay = " << predicted_partition.cov_ay << std::endl;
-//            std::cout << "cov_bb = " << predicted_partition.cov_bb << std::endl;
-//            std::cout << "cov_by = " << predicted_partition.cov_by << std::endl;
-//            std::cout << "cov_yy = " << predicted_partition.cov_yy << std::endl;
+            if (std::isnan(predicted_partition.b(0,0)))
+            {
+                std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL predicted_partition.b NANSSSSSSS predicted" <<std::endl;
+            }
         }
         MEASURE("predicted_partitions updated");
 
         // predict the cohesive state segment a
-        Mean(X_[a], predicted_state.a);
-        Normalize(predicted_state.a, X_[a]);
-        predicted_state.cov_aa = X_[a] * X_[a].transpose();
 
-        MEASURE("predicted a");
-
-        std::cout << "predicted_state.a = " << predicted_state.a << std::endl;
+        std::cout << predicted_state.a << std::endl;
+        std::cout << predicted_state.cov_aa << std::endl;
     }
 
     /**
@@ -255,7 +255,97 @@ public:
     {
         update_a(predicted_state, y, posterior_state);
         update_b(predicted_state, y, posterior_state);
+
+        Eigen::MatrixXd image(rows_*cols_, 1);
+
+        // occlusion
+        for (size_t i = 0; i < rows_*cols_; ++i)
+        {
+            image(i, 0) = posterior_state.joint_partitions[i].b(0, 0);
+        }
+        ip_.publish(image, "fukf/occlusion", rows_, cols_);
+
+        // occlusion
+        for (size_t i = 0; i < rows_*cols_; ++i)
+        {
+            image(i, 0) = posterior_state.joint_partitions[i].cov_b(0, 0);
+        }
+        ip_.publish(image, "fukf/occlusion_cov", rows_, cols_);
+
+        // prediction
+        for (size_t i = 0; i < rows_*cols_; ++i)
+        {
+            image(i, 0) = posterior_state.joint_partitions[i].y(0, 0);
+        }
+        ip_.publish(image, "fukf/prediction", rows_, cols_);
+
+        // prediction_covariance
+        for (size_t i = 0; i < rows_*cols_; ++i)
+        {
+            image(i, 0) = posterior_state.joint_partitions[i].cov_yy(0, 0);
+        }
+        ip_.publish(image, "fukf/prediction_cov", rows_, cols_);
+
+        // measurement
+        for (size_t i = 0; i < rows_*cols_; ++i)
+        {
+            image(i, 0) = (std::isnan(y(i, 0)) ? 0 : y(i, 0));
+        }
+        ip_.publish(y, "fukf/measurement", rows_, cols_);
+
+
+//        for (size_t i = 0; i < rows_*cols_; ++i)
+//        {
+//            image(i, 0) = posterior_state.joint_partitions[i].b(0, 0);
+//        }
+//        ip_.publish(image, "fukf/occlusion", rows_, cols_);
+
+//        vis::ImageVisualizer viz_(rows_, cols_);
+//        vis::ImageVisualizer viz_prediction(rows_, cols_);
+//        vis::ImageVisualizer viz_cov_yy(rows_, cols_);
+
+//        Eigen::MatrixXd image(rows_, cols_);
+
+//        std::cout << "size of posterior_state.joint_partitions = " << posterior_state.joint_partitions.size() << std::endl;
+
+//        for (size_t i = 0; i < rows_; ++i)
+//        {
+//            for (size_t j = 0; j < cols_; ++j)
+//            {
+//                image(i, j) = posterior_state.joint_partitions[i * cols_ + j].b(0, 0);
+//            }
+//        }
+//        viz_.set_image(image);
+//        viz_.show_image("occlusion");
+
+//        std::cout << "showing prediction" << std::endl;
+
+//        for (size_t i = 0; i < rows_; ++i)
+//        {
+//            for (size_t j = 0; j < cols_; ++j)
+//            {
+//                image(i, j) = predicted_state.joint_partitions[i * cols_ + j].y(0, 0);
+//            }
+//        }
+
+//        std::cout << "will show prediction cov." << std::endl;
+
+//        viz_prediction.set_image(image);
+//        viz_prediction.show_image("prediction");
+
+//        std::cout << "showing prediction cov." << std::endl;
+
+//        for (size_t i = 0; i < rows_; ++i)
+//        {
+//            for (size_t j = 0; j < cols_; ++j)
+//            {
+//                image(i, j) = predicted_state.joint_partitions[i * cols_ + j].cov_yy(0, 0);
+//            }
+//        }
+//        viz_cov_yy.set_image(image);
+//        viz_cov_yy.show_image("cov_yy");
     }
+
 
     /**
      * Update the cohesive predicted_state part a
@@ -274,34 +364,78 @@ public:
 
         Eigen::MatrixXd A(dim_b, Dim(a));
         Eigen::MatrixXd mu_y(dim_b, 1);
+//        mu_y_ = Eigen::MatrixXd::Zero(dim_b, 1);
         Eigen::MatrixXd cov_yy_given_a_inv(dim_b, 1);
 
         posterior_state.cov_aa_inverse = predicted_state.cov_aa.inverse();
         CovAA& cov_aa_inv = posterior_state.cov_aa_inverse;
 
+        size_t k = 0;
+        Eigen::MatrixXd valid_y(dim_b, 1);
         for (size_t i = 0; i < dim_b; ++i)
         {
-            const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
-            const CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy;
+            if (!std::isnan(y(i, 0)) &&
+                std::fabs(y(i, 0) - predicted_state.joint_partitions[i].y(0,0)) < 0.2)
+            {
+//                // FOR VISUALIZATION ONLY!
+//                mu_y_(i, 0) predicted_state.joint_partitions[i].y(0, 0);
 
-            A.block(i, 0, 1, Dim(a)) = cov_ay.transpose();
-            mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions[i].y;
 
-            cov_yy_given_a_inv.block(i, 0, 1, 1) =
-                    cov_yy - cov_ay.transpose() * cov_aa_inv * cov_ay;
+                const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
+                CovYY cov_yy = predicted_state.joint_partitions[i].cov_yy;
+
+                A.block(k, 0, 1, Dim(a)) = cov_ay.transpose();
+                mu_y.block(k, 0, 1, 1) = predicted_state.joint_partitions[i].y;
+
+                cov_yy_given_a_inv.block(k, 0, 1, 1) =
+                        cov_yy - cov_ay.transpose() * cov_aa_inv * cov_ay;
+
+                valid_y(k, 0) = y(i, 0);
+
+                if (cov_yy_given_a_inv(k, 0) <= 0.)
+                {
+                    std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL cov_yy_given_a_inv(k, 0): " << cov_yy_given_a_inv(k, 0) <<std::endl;
+                }
+
+                k++;                                                
+            }
+
+//            const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
+//            const CovYY& cov_yy = predicted_state.joint_partitions[i].cov_yy;
+
+//            A.block(i, 0, 1, Dim(a)) = cov_ay.transpose();
+//            mu_y.block(i, 0, 1, 1) = predicted_state.joint_partitions[i].y;
+
+//            cov_yy_given_a_inv.block(i, 0, 1, 1) =
+//                    cov_yy - cov_ay.transpose() * cov_aa_inv * cov_ay;
         }
-        A = A * cov_aa_inv;
 
-        InvertDiagonalAsVector(cov_yy_given_a_inv, cov_yy_given_a_inv);
-        Eigen::MatrixXd AT_Cov_yy_given_a =
-                A.transpose() * cov_yy_given_a_inv.asDiagonal();
+        std::cout << k << "/" << dim_b << " processed" << std::endl;
 
-        // update cohesive state segment
-        posterior_state.cov_aa = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
+        if (k > 0)
+        {
+            A.conservativeResize(k, Eigen::NoChange);
+            mu_y.conservativeResize(k, Eigen::NoChange);
+            cov_yy_given_a_inv.conservativeResize(k, Eigen::NoChange);
+            valid_y.conservativeResize(k, Eigen::NoChange);
 
-        posterior_state.a =
-                predicted_state.a +
-                posterior_state.cov_aa * AT_Cov_yy_given_a * (y - mu_y);
+            A = A * cov_aa_inv;
+
+            InvertDiagonalAsVector(cov_yy_given_a_inv, cov_yy_given_a_inv);
+            Eigen::MatrixXd AT_Cov_yy_given_a =
+                    A.transpose() * cov_yy_given_a_inv.asDiagonal();
+
+            // update cohesive state segment
+            posterior_state.cov_aa = (cov_aa_inv + AT_Cov_yy_given_a * A).inverse();
+
+            posterior_state.a =
+                    predicted_state.a +
+                    posterior_state.cov_aa * (AT_Cov_yy_given_a * (valid_y - mu_y));
+        }
+        else
+        {
+            std::cout << "no valid measurements" << std::endl;
+        }
     }
 
     /**
@@ -340,6 +474,12 @@ public:
 
         for (size_t i = 0; i < dim_b; ++i)
         {
+            if (std::isnan(y(i, 0)) ||
+                std::fabs(y(i, 0) - predicted_state.joint_partitions[i].y(0,0)) > 0.2)
+            {
+                continue;
+            }
+
             const CovAY& cov_ay = predicted_state.joint_partitions[i].cov_ay;
             const CovAB& cov_ab = predicted_state.joint_partitions[i].cov_ab;
             const CovBY& cov_by = predicted_state.joint_partitions[i].cov_by;
@@ -356,6 +496,7 @@ public:
             ba_by.block(0, Dim(a), Dim(b_i), Dim(y_i)) = cov_by;
 
             K = ba_by * L;
+
             innov.block(Dim(a), 0, Dim(y_i), 1) =
                     y.row(i) - predicted_state.joint_partitions[i].y;
 
@@ -369,6 +510,43 @@ public:
             posterior_state.joint_partitions[i].cov_bb =
                     cov_b_given_a_y
                     + B * posterior_state.cov_aa * B.transpose();
+
+
+//            std::cout << "L[" << i << "] = " << L<< std::endl;
+//            std::cout << "ba_by[" << i << "] = " << ba_by<< std::endl;
+//            std::cout << "innov[" << i << "] = " << innov<< std::endl;
+//            std::cout << "cov_b_given_a_y[" << i << "] = " << cov_b_given_a_y<< std::endl;
+//            std::cout << "c[" << i << "] = " << c<< std::endl;
+//            std::cout << "B[" << i << "] = " << B<< std::endl;
+//            std::cout << "cov_bb[" << i << "] = " << posterior_state.joint_partitions[i].cov_bb << std::endl;
+//            std::cout << "b[" << i << "] = " << posterior_state.joint_partitions[i].b << std::endl;
+//            std::cout << "cov_bb[" << i << "] = " << posterior_state.joint_partitions[i].cov_bb << std::endl;
+
+//            if (cov_bb(0, 0) <= 0.)
+//            {
+//                std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL cov_bb: " << cov_bb <<std::endl;
+//            }
+
+//            if (cov_b_given_a_y(0, 0) <= 0.)
+//            {
+//                std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL cov_b_given_a_y: " << cov_b_given_a_y <<std::endl;
+//            }
+
+//            if (posterior_state.joint_partitions[i].cov_bb(0, 0) <= 0.)
+//            {
+//                std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL posterior_state.joint_partitions[i].cov_bb: " << posterior_state.joint_partitions[i].cov_bb <<std::endl;
+//            }
+
+//            if (std::isnan(posterior_state.joint_partitions[i].b(0,0)))
+//            {
+//                std::cout << "FAAAAAAAAAAAIIIIIIIIIIIIIIILLLLLLLLLLLLLL predicted_partition.b NANSSSSSSS updated" <<std::endl;
+//            }
+
+//            std::cout << "------------------------------------------" << std::endl;
+//            std::cout << "------------------------------------------" << std::endl;
+//            std::cout << "------------------------------------------" << std::endl;
+
+
         }
     }
 
@@ -412,18 +590,25 @@ public:
         predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
 
         for (size_t i = 0; i < prior_X_a.cols(); ++i)
-        {            
+        {
             h_->Condition(prior_X_a.col(i), prior_X_b_i(0, i), i, index);
             predicted_X_y_i(0, i) = h_->MapStandardGaussian(noise_X_y_i.col(i));
-
-//            std::cout << "prior_X_a.col(i): " << prior_X_a.col(i).transpose() << std::endl;
-//            std::cout << "prior_X_b_i(0, i): " << prior_X_b_i(0, i) << std::endl;
-//            std::cout << "noise_X_y_i.col(i): " << noise_X_y_i.col(i).transpose() << std::endl;
-//            std::cout << "predicted_X_y_i(0, i): " << predicted_X_y_i(0, i) << std::endl;
-//            std::cout << "i: " << i << std::endl;
-//            std::cout << "index: " << index << std::endl;
         }
     }
+
+//    void h(const SigmaPoints& prior_X_a,
+//           const SigmaPoints& noise_X_y_i,
+//           const size_t index,
+//           SigmaPoints& predicted_X_y_i)
+//    {
+//        predicted_X_y_i.resize(Dim(y_i), prior_X_a.cols());
+
+//        for (size_t i = 0; i < prior_X_a.cols(); ++i)
+//        {
+//            h_->Condition(prior_X_a.col(i), -1.e20, i, index);
+//            predicted_X_y_i(0, i) = h_->MapStandardGaussian(noise_X_y_i.col(i));
+//        }
+//    }
 
     /**
      * @brief Dim Returns the dimension of the specified random variable ID
@@ -786,12 +971,13 @@ protected:
     // sigma points
     std::vector<SigmaPoints> X_;
     SigmaPoints Y_;
+    SigmaPoints X_a_norm_;
 
 
-
-
-
-
+    ros::NodeHandle nh_;
+    ImagePublisher ip_;
+    int rows_;
+    int cols_;
 
 
 protected:
