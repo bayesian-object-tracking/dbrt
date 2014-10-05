@@ -55,12 +55,12 @@ namespace ff
 {
 
 // Forward declarations
-template <typename State, typename Input> class LinearGaussianOservationModel;
+template <typename Observation_, typename State_> class LinearGaussianOservationModel;
 
 namespace internal
 {
-template <typename State, typename Input>
-struct Traits<LinearGaussianOservationModel<State, Input> >
+template <typename Observation_, typename State_>
+struct Traits<LinearGaussianOservationModel<Observation, State> >
 {
     typedef Gaussian<State> GaussianBase;
 
@@ -71,28 +71,23 @@ struct Traits<LinearGaussianOservationModel<State, Input> >
     typedef Eigen::Matrix<Scalar,
                           State::SizeAtCompileTime,
                           State::SizeAtCompileTime> SensorMatrix;
-
-    typedef Eigen::Matrix<Scalar,
-                          State::SizeAtCompileTime,
-                          Input::SizeAtCompileTime> FeedthroughMatrix;
 };
 }
 
 
-template <typename State_, typename Input_ = internal::Empty>
+template <typename Observation_,typename State_>
 class LinearGaussianOservationModel:
-    public internal::Traits<LinearGaussianOservationModel<State_, Input_> >::GaussianBase
+    public internal::Traits<LinearGaussianOservationModel<Observation_, State_> >::GaussianBase
 {
 public:
-    typedef internal::Traits<LinearGaussianOservationModel<State_, Input_> > Traits;
+    typedef internal::Traits<LinearGaussianOservationModel<Observation_, State_> > Traits;
 
-    typedef State_ State;
-    typedef Input_ Input;
+    typedef typename Traits::State State;
+    typedef typename Traits::Observation Observation;
     typedef typename Traits::Noise Noise;
     typedef typename Traits::Scalar Scalar;
     typedef typename Traits::Operator Operator;
     typedef typename Traits::SensorMatrix SensorMatrix;
-    typedef typename Traits::FeedthroughMatrix FeedthroughMatrix;
 
     using Traits::GaussianBase::Mean;
     using Traits::GaussianBase::Covariance;
@@ -101,12 +96,11 @@ public:
 public:
     LinearGaussianOservationModel(
             const Operator& noise_covariance,
-            const size_t dimension = State::SizeAtCompileTime,
-            const size_t observation_dimension = Input::SizeAtCompileTime):
-        Traits::GaussianBase(dimension),
-        observation_dimension_(observation_dimension == Eigen::Dynamic? 0 : observation_dimension),
-        H_(SensorMatrix::Identity(Dimension(), Dimension())),
-        C_(FeedthroughMatrix::Zero(InputDimension(), Dimension())),
+            const size_t observation_dimension = Observation::SizeAtCompileTime,
+            const size_t state_dimension = State::SizeAtCompileTime):
+        Traits::GaussianBase(observation_dimension),
+        state_dimension_(state_dimension == Eigen::Dynamic? 0 : state_dimension),
+        H_(SensorMatrix::Zero(StateDimension(), Dimension())),
         delta_time_(0.)
     {
         Covariance(noise_covariance);
@@ -120,8 +114,7 @@ public:
     }
 
     virtual void Condition(const double& delta_time,
-                           const State& x,
-                           const Input& u = Input())
+                           const State& x)
     {
         delta_time_ = delta_time;
 
@@ -133,41 +126,19 @@ public:
         return H_;
     }
 
-    virtual const FeedthroughMatrix& C() const
-    {
-        return C_;
-    }
-
     virtual void H(const SensorMatrix& sensor_matrix)
     {
         H_ = sensor_matrix;
     }
 
-    virtual void C(const FeedthroughMatrix& feedthrough_matrix)
-    {
-        C_ = feedthrough_matrix;
-    }
-
-
-    virtual size_t ObservationDimension() const
-    {
-        return observation_dimension_;
-    }
-
     virtual size_t StateDimension() const
     {
-
-    }
-
-    virtual size_t InputDimension() const
-    {
-        return observation_dimension_;
+        return state_dimension_;
     }
 
 protected:
-    size_t observation_dimension_;
+    size_t state_dimension_;
     SensorMatrix H_;
-    FeedthroughMatrix C_;
     double delta_time_;
 };
 
