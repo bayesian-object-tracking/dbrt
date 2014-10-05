@@ -73,28 +73,56 @@ struct Traits<ComposedStateDistribution<CohesiveState, FactorizedState> >
 
     typedef Eigen::Matrix<Scalar,
                           CohesiveState::SizeAtCompileTime,
-                          CohesiveState::SizeAtCompileTime> CovAA;
+                          CohesiveState::SizeAtCompileTime> Cov_aa;
 
     typedef Eigen::Matrix<Scalar,
                           CohesiveState::SizeAtCompileTime,
-                          FactorizedState::SizeAtCompileTime> CovAB;
+                          FactorizedState::SizeAtCompileTime> Cov_ab;
 
     typedef Eigen::Matrix<Scalar,
                           CohesiveState::SizeAtCompileTime,
-                          1> CovAY;
+                          1> Cov_ay;
 
     typedef Eigen::Matrix<Scalar,
                           FactorizedState::SizeAtCompileTime,
-                          FactorizedState::SizeAtCompileTime> CovBB;
+                          FactorizedState::SizeAtCompileTime> Cov_bb;
 
     typedef Eigen::Matrix<Scalar,
                           FactorizedState::SizeAtCompileTime,
-                          1> CovBY;
+                          1> Cov_by;
 
     typedef Eigen::Matrix<Scalar, 1, 1> Y;
-    typedef Eigen::Matrix<Scalar, 1, 1> CovYY;
+    typedef Eigen::Matrix<Scalar, 1, 1> Cov_yy;
 };
 }
+
+
+//template <typename CohesiveStateDistribution,
+//          typename FactorizedStateDistribution>
+//class FactorizedStateDistribution
+//{
+//public:
+//    enum
+//    {
+//        a,
+//        b_i
+//    };
+
+//    CohesiveStateDistribution distribution_a;
+//    std::vector<FactorizedStateDistribution> distribution_b;
+//};
+
+//class FactorizedJointStateDistribution:
+//        public FactorizedStateDistribution
+//{
+//public:
+//    enum
+//    {
+
+//    };
+//};
+
+
 
 /**
  * \class ComposedStateDistribution
@@ -105,27 +133,28 @@ class ComposedStateDistribution
 {
 public:
     typedef internal::Traits<
-                ComposedStateDistribution<CohesiveState,
+                ComposedStateDistribution<
+                CohesiveState,
                                           FactorizedState> > Traits;
     typedef typename Traits::Scalar Scalar;
-    typedef typename Traits::CovAA CovAA;
-    typedef typename Traits::CovAB CovAB;
-    typedef typename Traits::CovAY CovAY;
-    typedef typename Traits::CovBB CovBB;
-    typedef typename Traits::CovBY CovBY;
-    typedef typename Traits::CovYY CovYY;
+    typedef typename Traits::Cov_aa Cov_aa;
+    typedef typename Traits::Cov_ab Cov_ab;
+    typedef typename Traits::Cov_ay Cov_ay;
+    typedef typename Traits::Cov_bb Cov_bb;
+    typedef typename Traits::Cov_by Cov_by;
+    typedef typename Traits::Cov_yy Cov_yy;
     typedef typename Traits::Y Y;
 
     struct JointPartitions
     {
-        FactorizedState b;
-        Y y;
+        FactorizedState mean_b;
+        Y mean_y;
 
-        CovAB cov_ab;
-        CovAY cov_ay;
-        CovBB cov_bb;
-        CovBY cov_by;
-        CovYY cov_yy;
+        Cov_ab cov_ab;
+        Cov_ay cov_ay;
+        Cov_bb cov_bb;
+        Cov_by cov_by;
+        Cov_yy cov_yy;
     };
 
 public:
@@ -135,8 +164,7 @@ public:
      * dimension is \f$\dim(CohesiveState) + FACTORIZED\_STATES *
      * \dim(FactorizedState) \f$.
      */
-    ComposedStateDistribution():
-        a(1)
+    ComposedStateDistribution()
     {
     }    
 
@@ -148,28 +176,28 @@ public:
                     const Scalar sigma_a,
                     const Scalar sigma_b_i)
     {
-        a = initial_a;
-        cov_aa = CovAA::Identity(a_dimension(), a_dimension()) * sigma_a;
+        mean_a = initial_a;
+        cov_aa = Cov_aa::Identity(a_dimension(), a_dimension()) * sigma_a;
 
         joint_partitions.resize(factorized_states_count);
         for (auto& partition: joint_partitions)
         {
-            partition.b = initial_b_i;
-            partition.cov_bb = CovBB::Identity(
-                        b_i_dimension(), b_i_dimension()) * sigma_b_i;
+            partition.mean_b = initial_b_i;
+            partition.cov_bb = Cov_bb::Identity(b_i_dimension(),
+                                                b_i_dimension()) * sigma_b_i;
         }
     }
 
     size_t a_dimension() const
     {
-        return a.rows();
+        return mean_a.rows();
     }
 
     size_t b_i_dimension() const
     {
         if (joint_partitions.size() > 0)
         {
-            return joint_partitions[0].b.rows();
+            return joint_partitions[0].mean_b.rows();
         }
 
         return 0;
@@ -181,9 +209,9 @@ public:
     }
 
 public:
-    CohesiveState a;
-    CovAA cov_aa;
-    CovAA cov_aa_inverse;
+    CohesiveState mean_a;
+    Cov_aa cov_aa;
+    Cov_aa cov_aa_inverse;
     std::vector<JointPartitions> joint_partitions;
 };
 
