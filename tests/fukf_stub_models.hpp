@@ -63,67 +63,62 @@ class ProcessModelStub:
 public:
     typedef State_ State;
     typedef State_ Noise;
+    typedef typename State::Scalar Scalar;
+    typedef typename ff::StationaryProcessModel<State_>::Input Input;
 
     virtual void Condition(const double& delta_time,
-                           const State& state)
+                           const State& state,
+                           const Input& input = Input())
     {
         state_ = state;
     }
 
     virtual State MapStandardGaussian(const Noise& sample) const
     {
-
-    }
-
-    virtual State predict(const State& prior, const State& noise)
-    {
-        return prior + noise;
+        return state_;
     }
 
     virtual Eigen::MatrixXd NoiseCovariance()
     {
-        return Eigen::MatrixXd::Identity(state_.rows(), state_.cols()) * 0.08;
+        return Eigen::MatrixXd::Identity(state_.rows(), state_.cols());
     }
 
     virtual size_t Dimension()
     {
-        return State::SizeAtCompileTime;
+        return state_.rows();
     }
+
 protected:
     State state_;
 };
 
 template <typename State_a, typename State_b_i>
-class ObservationModelStub
+class ObservationModelStub:
+        public ff::GaussianMap<double, Eigen::Matrix<double, 1, 1> >
 {
 public:
-    typedef Eigen::Matrix<double, 1, 1> Measurement;
+    typedef double Measurement;
+    typedef Eigen::Matrix<double, 1, 1> Noise;
 
-
-    virtual Measurement predict(const State_a& a,
-                                const State_b_i& b_i,
-                                const Measurement& noise)
+    virtual Measurement MapStandardGaussian(const Noise& sample) const
     {
-        if (a_ != a)
-        {
-            a_ = a;
-        }
-
-        Measurement y_i = noise;
-
-        return y_i;
+        return occlusion_ + sample(0,0);
     }
 
-    virtual Eigen::MatrixXd NoiseCovariance()
+    virtual void Condition(const State_a& state,
+                           const double& occlusion,
+                           size_t state_index,
+                           size_t pixel_index)
     {
-        return Eigen::MatrixXd::Identity(1, 1) * 0.023;
+        a_ = state;
+        occlusion_ = occlusion;
     }
 
     virtual size_t Dimension() { return 1; }
-    virtual size_t NoiseDimension() { return 1; }
 
 protected:
     State_a a_;
+    double occlusion_;
 };
 
 #endif

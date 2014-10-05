@@ -49,21 +49,46 @@
 
 #include <Eigen/Dense>
 
+#include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 #include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
 
-template <typename State_>
-class ProcessModelDummy:
-        public ff::StationaryProcessModel<State_>,
-        public ff::GaussianMap<State_, State_>
+template <typename State_> class ProcessModelDummy;
+
+namespace ff
 {
-public:
+namespace internal
+{
+template <typename State_> struct Traits<ProcessModelDummy<State_> >
+{
     typedef State_ State;
     typedef State_ Noise;
+    typedef typename State::Scalar Scalar;
+    typedef typename StationaryProcessModel<State_>::Input Input;
+
+    typedef StationaryProcessModel<State_> ProcessModelBase;
+    typedef GaussianMap<State_, State_> GaussianMapBase;
+};
+}
+}
+
+template <typename State_>
+class ProcessModelDummy:
+        public ff::internal::Traits<ProcessModelDummy<State_> >::ProcessModelBase,
+        public ff::internal::Traits<ProcessModelDummy<State_> >::GaussianMapBase
+{
+public:
+    typedef ff::internal::Traits<ProcessModelDummy<State_> > Traits;
+
+    typedef typename Traits::Scalar Scalar;
+    typedef typename Traits::State  State;
+    typedef typename Traits::Noise  Noise;
+    typedef typename Traits::Input  Input;
 
     virtual void Condition(const double& delta_time,
-                           const State& state)
+                           const State& state,
+                           const Input& input)
     {
 
     }
