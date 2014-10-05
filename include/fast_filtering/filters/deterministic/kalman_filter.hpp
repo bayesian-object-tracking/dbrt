@@ -65,10 +65,16 @@ public:
     typedef boost::shared_ptr<ProcessModel> ProcessModelPtr;
     typedef boost::shared_ptr<ObservationModel> ObserationModelPtr;
 
+    typedef typename ProcessModel::Scalar Scalar;
     typedef typename ProcessModel::State State;
     typedef typename ProcessModel::Input Input;
     typedef typename ProcessModel::State State;
+    typedef typename ProcessModel::DynamicsMatrix DynamicsMatrix;
+    typedef typename ProcessModel::Operator DynamicsCovariance;
+
     typedef typename ObservationModel::Observation Observation;
+    typedef typename ObservationModel::SensorMatrix SensorMatrix;
+    typedef typename ObservationModel::Operator SensorCovariance;
 
     typedef Gaussian<State> StateDistribution;
 
@@ -84,14 +90,29 @@ public:
                  const StateDistribution& prior,
                  StateDistribution& predicted)
     {
-        process_model_->Condition(delta_time, prior.Mean());
-        predicted.Mean(process_model_->MapStandardGaussian);
+        const DynamicsMatrix& A = process_model_->A();
+        const DynamicsCovariance Q = delta_time * process_model_->Covariance();
+
+        predicted.Mean(A * prior.Mean());
+        predicted.Covariance(A * prior.Covariance() * A.transpose() + Q);
     }
 
     void Update(const StateDistribution& predicted,
+                const Observation& y,
                 StateDistribution& posterior)
     {
+        typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 
+        const SensorMatrix& H = observation_model_->H();
+        const SensorMatrix R = observation_model_->Covariance();
+
+        const Matrix S = H * predicted.Covariance() * H.transpose() + R;
+        const Matrix K = predicted.Covariance() * H.transpose() * S.inverse();
+
+        posterior.Mean(
+                    predicted.Mean() + K * (y - H * predicted.Mean()));
+        posterior.Covariance(
+                    predicted.Covariance() - K * H * predicted.Covariance());
     }
 
 
