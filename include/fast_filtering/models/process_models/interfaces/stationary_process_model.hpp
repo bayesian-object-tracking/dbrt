@@ -53,27 +53,32 @@
 namespace ff
 {
 
-template <typename State, typename Input = internal::Empty>
+template <typename State_, typename Input_ = internal::Empty>
 class StationaryProcessModel
 {
+public:
+    typedef State_ State;
+    typedef Input_ Input;
+
 public:
     virtual ~StationaryProcessModel() { }
 
     virtual void Condition(const double& delta_time,
                            const State& state,
-                           const Input& input) = 0;
+                           const Input& input = internal::Empty() ) = 0;
 };
 
 
-template <typename State>
-class StationaryProcessModel<State, internal::Empty>
-{
-public:
-    virtual ~StationaryProcessModel() { }
+// FIXME not useful!
+//template <typename State>
+//class StationaryProcessModel<State, internal::Empty>
+//{
+//public:
+//    virtual ~StationaryProcessModel() { }
 
-    virtual void Condition(const double& delta_time,
-                           const State& state) = 0;
-};
+//    virtual void Condition(const double& delta_time,
+//                           const State& state) = 0;
+//};
 
 
 }
