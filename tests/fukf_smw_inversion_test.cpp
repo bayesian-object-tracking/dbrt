@@ -59,15 +59,17 @@
 
 #include "fukf_dummy_models.hpp"
 
-const double EPSILON = 1.0e-12;
-
 typedef Eigen::Matrix<double, 3, 1> State;
 
 typedef ff::FactorizedUnscentedKalmanFilter<
                 ProcessModelDummy<State>,
                 ProcessModelDummy<State>,
-                ObservationModelDummy<State>,
-                1> Filter;
+                ObservationModelDummy<State> > Filter;
+
+const size_t INV_DIMENSION = 14;
+const size_t SUBSAMPLING_FACTOR = 8;
+const size_t OBSERVATION_DIMENSION = (640*480)/(SUBSAMPLING_FACTOR*SUBSAMPLING_FACTOR);
+const size_t INVERSION_ITERATIONS = OBSERVATION_DIMENSION * 30;
 
 TEST(InversionTests, SMWInversion)
 {
@@ -94,17 +96,12 @@ TEST(InversionTests, SMWInversion)
     Eigen::MatrixXd A_inv = A.inverse();
     filter.SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D, cov_smw_inv);
 
-    EXPECT_TRUE(cov_smw_inv.isApprox(cov_inv, EPSILON));
+    EXPECT_TRUE(cov_smw_inv.isApprox(cov_inv));
 }
-
-size_t INVERSION_DIMENSION = 14;
-size_t SUBSAMPLING_FACTOR = 8;
-size_t OBSERVATION_DIMENSION = (640*480)/(SUBSAMPLING_FACTOR*SUBSAMPLING_FACTOR);
-size_t INVERSION_ITERATIONS = OBSERVATION_DIMENSION * 30;
 
 TEST(InversionTests, fullMatrixInversionSpeed)
 {
-    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INVERSION_DIMENSION, INVERSION_DIMENSION);
+    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INV_DIMENSION, INV_DIMENSION);
     cov = cov * cov.transpose();
 
     Eigen::MatrixXd cov_inv;
@@ -130,24 +127,24 @@ TEST(InversionTests, SMWMatrixInversionSpeed)
                   boost::make_shared<ProcessModelDummy<State> >(),
                   boost::make_shared<ObservationModelDummy<State> >());
 
-    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INVERSION_DIMENSION, INVERSION_DIMENSION);
+    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INV_DIMENSION, INV_DIMENSION);
     cov = cov * cov.transpose();
 
-    Eigen::MatrixXd A = cov.block(0, 0, INVERSION_DIMENSION-1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd B = cov.block(0, INVERSION_DIMENSION-1, INVERSION_DIMENSION-1, 1);
-    Eigen::MatrixXd C = cov.block(INVERSION_DIMENSION-1, 0, 1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd D = cov.block(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1, 1, 1);
+    Eigen::MatrixXd A = cov.block(0, 0, INV_DIMENSION-1, INV_DIMENSION-1);
+    Eigen::MatrixXd B = cov.block(0, INV_DIMENSION-1, INV_DIMENSION-1, 1);
+    Eigen::MatrixXd C = cov.block(INV_DIMENSION-1, 0, 1, INV_DIMENSION-1);
+    Eigen::MatrixXd D = cov.block(INV_DIMENSION-1, INV_DIMENSION-1, 1, 1);
     Eigen::MatrixXd A_inv = A.inverse();
 
-    Eigen::MatrixXd L_A = Eigen::MatrixXd(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd L_B = Eigen::MatrixXd(INVERSION_DIMENSION-1, 1);
-    Eigen::MatrixXd L_C = Eigen::MatrixXd(1, INVERSION_DIMENSION-1);
+    Eigen::MatrixXd L_A = Eigen::MatrixXd(INV_DIMENSION-1, INV_DIMENSION-1);
+    Eigen::MatrixXd L_B = Eigen::MatrixXd(INV_DIMENSION-1, 1);
+    Eigen::MatrixXd L_C = Eigen::MatrixXd(1, INV_DIMENSION-1);
     Eigen::MatrixXd L_D = Eigen::MatrixXd(1, 1);
 
     Eigen::MatrixXd cov_smw_inv;
     std::clock_t start = std::clock();
     size_t number_of_inversions = 0;
-    while ( (( std::clock() - start ) / (double) CLOCKS_PER_SEC) < 1.0 )
+    while ( ((std::clock() - start) / (double) CLOCKS_PER_SEC) < 1.0 )
     {
         filter.SMWInversion(A_inv, B, C, D, L_A, L_B, L_C, L_D, cov_smw_inv);
         number_of_inversions++;
@@ -165,18 +162,18 @@ TEST(InversionTests, SMWBlockMatrixInversionSpeed)
                   boost::make_shared<ProcessModelDummy<State> >(),
                   boost::make_shared<ObservationModelDummy<State> >());
 
-    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INVERSION_DIMENSION, INVERSION_DIMENSION);
+    Eigen::MatrixXd cov = Eigen::MatrixXd::Random(INV_DIMENSION, INV_DIMENSION);
     cov = cov * cov.transpose();
 
-    Eigen::MatrixXd A = cov.block(0, 0, INVERSION_DIMENSION-1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd B = cov.block(0, INVERSION_DIMENSION-1, INVERSION_DIMENSION-1, 1);
-    Eigen::MatrixXd C = cov.block(INVERSION_DIMENSION-1, 0, 1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd D = cov.block(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1, 1, 1);
+    Eigen::MatrixXd A = cov.block(0, 0, INV_DIMENSION-1, INV_DIMENSION-1);
+    Eigen::MatrixXd B = cov.block(0, INV_DIMENSION-1, INV_DIMENSION-1, 1);
+    Eigen::MatrixXd C = cov.block(INV_DIMENSION-1, 0, 1, INV_DIMENSION-1);
+    Eigen::MatrixXd D = cov.block(INV_DIMENSION-1, INV_DIMENSION-1, 1, 1);
     Eigen::MatrixXd A_inv = A.inverse();
 
-    Eigen::MatrixXd L_A = Eigen::MatrixXd(INVERSION_DIMENSION-1, INVERSION_DIMENSION-1);
-    Eigen::MatrixXd L_B = Eigen::MatrixXd(INVERSION_DIMENSION-1, 1);
-    Eigen::MatrixXd L_C = Eigen::MatrixXd(1, INVERSION_DIMENSION-1);
+    Eigen::MatrixXd L_A = Eigen::MatrixXd(INV_DIMENSION-1, INV_DIMENSION-1);
+    Eigen::MatrixXd L_B = Eigen::MatrixXd(INV_DIMENSION-1, 1);
+    Eigen::MatrixXd L_C = Eigen::MatrixXd(1, INV_DIMENSION-1);
     Eigen::MatrixXd L_D = Eigen::MatrixXd(1, 1);
 
     std::clock_t start = std::clock();

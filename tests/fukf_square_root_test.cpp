@@ -66,8 +66,7 @@ typedef Eigen::Matrix<double, 3, 1> State;
 typedef ff::FactorizedUnscentedKalmanFilter<
                 ProcessModelDummy<State>,
                 ProcessModelDummy<State>,
-                ObservationModelDummy<State>,
-                1> Filter;
+                ObservationModelDummy<State> > Filter;
 
 const size_t DIMENSION = 10;
 

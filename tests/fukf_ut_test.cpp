@@ -64,6 +64,7 @@ class UnscentedTransformTest:
 {
 public:
     typedef Eigen::Matrix<double, 3, 1> State;
+
     typedef ff::FactorizedUnscentedKalmanFilter<
                     ProcessModelDummy<State>,
                     ProcessModelDummy<State>,
@@ -99,7 +100,7 @@ TEST_F(UnscentedTransformTest, unscentedTransformMeanRecovery)
     State a_recovered;
     State mean;
 
-    Filter::StateDistribution::CovAA cov_aa;
+    Filter::StateDistribution::Cov_aa cov_aa;
     cov_aa.setIdentity();
 
     filter.ComputeSigmaPointPartitions({{a, cov_aa}}, X);
@@ -122,7 +123,7 @@ TEST_F(UnscentedTransformTest, unscentedTransformCovarianceRecovery)
 {
     std::vector<Filter::SigmaPoints> X;
     State a = State::Ones() * 9;
-    Filter::StateDistribution::CovAA cov_aa;
+    Filter::StateDistribution::Cov_aa cov_aa;
     cov_aa.setIdentity();
     State mean;
 

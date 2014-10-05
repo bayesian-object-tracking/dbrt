@@ -146,53 +146,53 @@ TEST(IndexLookup, lookup_only)
 }
 
 
-TEST(IndexLookup, indexed_cache)
-{
-    ff::IndexedCache<Eigen::MatrixXd, Eigen::MatrixXd> cache;
-    cache.reserve(dimension);
+//TEST(IndexLookup, indexed_cache)
+//{
+//    ff::IndexedCache<Eigen::MatrixXd, Eigen::MatrixXd> cache;
+//    cache.reserve(dimension);
 
-    std::vector<Eigen::MatrixXd> points;
-    for (size_t i = 0; i < dimension; ++i)
-    {
-        points.push_back(Eigen::MatrixXd::Random(10,1));
-    }
+//    std::vector<Eigen::MatrixXd> points;
+//    for (size_t i = 0; i < dimension; ++i)
+//    {
+//        points.push_back(Eigen::MatrixXd::Random(10,1));
+//    }
 
-    points[10] = points[1];
-    points[22] = points[3];
-    points[30] = points[3];
-    points[31] = points[3];
-    points[32] = points[3];
-    points[34] = points[3];
+//    points[10] = points[1];
+//    points[22] = points[3];
+//    points[30] = points[3];
+//    points[31] = points[3];
+//    points[32] = points[3];
+//    points[34] = points[3];
 
-    Eigen::MatrixXd temp;
+//    Eigen::MatrixXd temp;
 
-    for (size_t i = 0; i < iterations; ++i)
-    {
-        for (size_t j = 0; j < dimension; ++j)
-        {
-//            if (cache.hit(points[j], j))
+//    for (size_t i = 0; i < iterations; ++i)
+//    {
+//        for (size_t j = 0; j < dimension; ++j)
+//        {
+////            if (cache.hit(points[j], j))
+////            {
+////                temp = cache.data(j);
+////            }
+////            else
+////            {
+////                std::cout << "CREATINGGGGGGGGGGGGGGGGGGGg" << std::endl;
+
+////                cache.data(j) = expensive_function();
+////                cache.update(points[j], j);
+////            }
+
+//            if (i == 0)
 //            {
+//                cache.data(j) = expensive_function();
+//                cache.update(points[j], j);
 //                temp = cache.data(j);
 //            }
 //            else
 //            {
-//                std::cout << "CREATINGGGGGGGGGGGGGGGGGGGg" << std::endl;
-
-//                cache.data(j) = expensive_function();
-//                cache.update(points[j], j);
+//                temp = cache.data(j);
 //            }
-
-            if (i == 0)
-            {
-                cache.data(j) = expensive_function();
-                cache.update(points[j], j);
-                temp = cache.data(j);
-            }
-            else
-            {
-                temp = cache.data(j);
-            }
-        }
-    }
-}
+//        }
+//    }
+//}
 

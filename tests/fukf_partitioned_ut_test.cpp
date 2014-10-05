@@ -68,16 +68,19 @@ class PartitionedUnscentedTransformTest:
 {
 public:
     typedef Eigen::Matrix<double, 3, 1> State;
+
+    typedef ProcessModelDummy<State>     ProcessModel;
+    typedef ObservationModelDummy<State> ObservationModel;
+
     typedef ff::FactorizedUnscentedKalmanFilter<
-                    ProcessModelDummy<State>,
-                    ProcessModelDummy<State>,
-                    ObservationModelDummy<State>,
-                    1> Filter;
+                    ProcessModel,
+                    ProcessModel,
+                    ObservationModel > Filter;
 
     PartitionedUnscentedTransformTest():
-        filter(Filter(boost::make_shared<ProcessModelDummy<State> >(),
-                      boost::make_shared<ProcessModelDummy<State> >(),
-                      boost::make_shared<ObservationModelDummy<State> >()))
+        filter(Filter(boost::make_shared<ProcessModel>(),
+                      boost::make_shared<ProcessModel>(),
+                      boost::make_shared<ObservationModel>()))
     {
 
     }
@@ -185,15 +188,15 @@ protected:
     State mu_b2;
     Filter::StateDistribution::Y mu_y;
 
-    Filter::StateDistribution::CovAA cov_aa;
-    Filter::StateDistribution::CovBB cov_bb;
-    Filter::StateDistribution::CovBB cov_bb2;
-    Filter::StateDistribution::CovYY cov_yy;
+    Filter::StateDistribution::Cov_aa cov_aa;
+    Filter::StateDistribution::Cov_bb cov_bb;
+    Filter::StateDistribution::Cov_bb cov_bb2;
+    Filter::StateDistribution::Cov_yy cov_yy;
 
-    Filter::StateDistribution::CovAA Qa;
-    Filter::StateDistribution::CovBB Qb;
-    Filter::StateDistribution::CovBB Qb2;
-    Filter::StateDistribution::CovYY R;
+    Filter::StateDistribution::Cov_aa Qa;
+    Filter::StateDistribution::Cov_bb Qb;
+    Filter::StateDistribution::Cov_bb Qb2;
+    Filter::StateDistribution::Cov_yy R;
 };
 
 const double EPSILON = 1.0e-12;
