@@ -64,16 +64,31 @@ template <typename Vector>
 class StandardGaussian: public Sampling<Vector>
 {
 public:
-    StandardGaussian(const int& dimension = Vector::SizeAtCompileTime):
+    explicit StandardGaussian(const int dimension = Vector::SizeAtCompileTime):
         dimension_ (dimension == Eigen::Dynamic ? 0 : dimension),
         generator_(RANDOM_SEED),
         gaussian_distribution_(0.0, 1.0),
         gaussian_generator_(generator_, gaussian_distribution_)
     {
+        //static_assert_dynamic_sized(Vector);
+
         // make sure that vector is derived from eigen
-        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
+        static_assert_base(Vector, Eigen::Matrix<typename Vector::Scalar,
                                                    Vector::SizeAtCompileTime, 1>);
     }
+
+//    StandardGaussian():
+//        dimension_ (Vector::SizeAtCompileTime),
+//        generator_(RANDOM_SEED),
+//        gaussian_distribution_(0.0, 1.0),
+//        gaussian_generator_(generator_, gaussian_distribution_)
+//    {
+//        //static_assert_const_sized(Vector);
+
+//        // make sure that vector is derived from eigen
+//        static_assert_base(Vector, Eigen::Matrix<typename Vector::Scalar,
+//                                                   Vector::SizeAtCompileTime, 1>);
+//    }
 
     virtual ~StandardGaussian() { }
 

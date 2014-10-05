@@ -132,7 +132,7 @@ public:
         velocity_distribution_(degree_of_freedom),
         position_distribution_(degree_of_freedom)
     {
-        REQUIRE_INTERFACE(State, Eigen::Matrix<Scalar, STATE_DIMENSION, 1>);
+        static_assert_base(State, Eigen::Matrix<Scalar, STATE_DIMENSION, 1>);
 
         BOOST_STATIC_ASSERT_MSG(
                 STATE_DIMENSION % 2 == 0 || STATE_DIMENSION == Eigen::Dynamic,

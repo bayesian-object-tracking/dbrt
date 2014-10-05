@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef FAST_FILTERING_UTILS_ASSERTIONS_HPP
 #define FAST_FILTERING_UTILS_ASSERTIONS_HPP
 
+#include <assert.h>
 #include <boost/mpl/assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 
@@ -46,9 +47,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * Note: The macro requires <em>derived_type</em> to be a single worded type. In
  *       case of a template specialization, use a typedef.
  */
-#define REQUIRE_INTERFACE(derived_type, ...)\
-    BOOST_STATIC_ASSERT_MSG(( \
+#define static_assert_base(derived_type, ...)\
+    static_assert(( \
             boost::is_base_of<__VA_ARGS__, derived_type>::value), \
-            #derived_type " must implement " #__VA_ARGS__ " interface.");
+            #derived_type " must derive from " #__VA_ARGS__);
+
+#define static_assert_dynamic_sized(matrix)\
+    static_assert(matrix::SizeAtCompileTime == Eigen::Dynamic,\
+                  "Calling a fixed-size function on a dynamic-size one.");
+
+#define static_assert_const_sized(matrix)\
+    static_assert(matrix::SizeAtCompileTime != Eigen::Dynamic,\
+                  "Calling a dynamic size function on a fixed-size one.");
 
 #endif

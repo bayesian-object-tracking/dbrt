@@ -72,9 +72,19 @@ public:
     explicit GaussianMap(const unsigned& noise_dimension = Noise::SizeAtCompileTime):
         standard_gaussian_(noise_dimension)
     {
-        // make sure that noise is derived from eigen
-        REQUIRE_INTERFACE(Noise, Eigen::Matrix<typename Noise::Scalar, Noise::SizeAtCompileTime, 1>);
+        //static_assert_dynamic_sized(Noise);
+        static_assert_base(Noise,
+                           Eigen::Matrix<typename Noise::Scalar,
+                                         Noise::SizeAtCompileTime, 1>);
     }
+
+//    GaussianMap()
+//    {
+//        //static_assert_const_sized(Noise);
+//        static_assert_base(Noise,
+//                           Eigen::Matrix<typename Noise::Scalar,
+//                                         Noise::SizeAtCompileTime, 1>);
+//    }
 
     virtual ~GaussianMap() { }
 

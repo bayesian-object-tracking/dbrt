@@ -36,6 +36,25 @@ void TestDistribution(Distribution distribution, size_t sample_count = 100000, s
     boost::filesystem::create_directory(path);
     std::ofstream file;
 
+    double mean = 0;
+    double variance = 0;
+
+    for (auto& sample: samples)
+    {
+        mean += sample;
+    }
+    mean /= double(samples.size());
+
+    for (auto& sample: samples)
+    {
+        variance += (sample-mean) * (sample-mean);
+    }
+    variance /= double(samples.size()-1);
+
+    // write samples to file
+    file.open((path / "gaussian.txt").c_str(), std::ios::out);
+    file << mean << " " << variance << std::endl;
+    file.close();
 
     // write samples to file
     file.open((path / "samples.txt").c_str(), std::ios::out);
