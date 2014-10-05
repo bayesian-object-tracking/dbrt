@@ -55,16 +55,17 @@ namespace ff
 {
 
 // Forward declarations
-template <typename State, typename Input> class LinearGaussianProcessModel;
+template <typename State> class LinearGaussianProcessModel;
 
 namespace internal
 {
-template <typename State, typename Input>
-struct Traits<LinearGaussianProcessModel<State, Input> >
+template <typename State>
+struct Traits<LinearGaussianProcessModel<State> >
 {
     typedef Gaussian<State> GaussianBase;
-    typedef StationaryProcessModel<State, Input> ProcessModelBase;
+    typedef StationaryProcessModel<State> ProcessModelBase;
 
+    typedef typename ProcessModelBase::Input Input;
     typedef typename internal::Traits<GaussianBase>::Scalar Scalar;
     typedef typename internal::Traits<GaussianBase>::Operator Operator;
     typedef typename internal::Traits<GaussianBase>::Noise Noise;
@@ -72,29 +73,24 @@ struct Traits<LinearGaussianProcessModel<State, Input> >
     typedef Eigen::Matrix<Scalar,
                           State::SizeAtCompileTime,
                           State::SizeAtCompileTime> DynamicsMatrix;
-
-    typedef Eigen::Matrix<Scalar,
-                          State::SizeAtCompileTime,
-                          Input::SizeAtCompileTime> InputMatrix;
 };
 }
 
 
-template <typename State_, typename Input_ = internal::Empty>
+template <typename State_>
 class LinearGaussianProcessModel:
-    public internal::Traits<LinearGaussianProcessModel<State_, Input_> >::ProcessModelBase,
-    public internal::Traits<LinearGaussianProcessModel<State_, Input_> >::GaussianBase
+    public internal::Traits<LinearGaussianProcessModel<State_> >::ProcessModelBase,
+    public internal::Traits<LinearGaussianProcessModel<State_> >::GaussianBase
 {
 public:
-    typedef internal::Traits<LinearGaussianProcessModel<State_, Input_> > Traits;
+    typedef internal::Traits<LinearGaussianProcessModel<State_> > Traits;
 
     typedef State_ State;
-    typedef Input_ Input;
+    typedef typename Traits::Input Input;
     typedef typename Traits::Noise Noise;
     typedef typename Traits::Scalar Scalar;
     typedef typename Traits::Operator Operator;
     typedef typename Traits::DynamicsMatrix DynamicsMatrix;
-    typedef typename Traits::InputMatrix InputMatrix;
 
     using Traits::GaussianBase::Mean;
     using Traits::GaussianBase::Covariance;
@@ -103,12 +99,9 @@ public:
 public:
     LinearGaussianProcessModel(
             const Operator& noise_covariance,
-            const size_t dimension = State::SizeAtCompileTime,
-            const size_t input_dimension = Input::SizeAtCompileTime):
+            const size_t dimension = State::SizeAtCompileTime):
         Traits::GaussianBase(dimension),
-        input_dimension_(input_dimension == Eigen::Dynamic? 0 : input_dimension),
         A_(DynamicsMatrix::Identity(Dimension(), Dimension())),
-        B_(InputMatrix::Zero(InputDimension(), Dimension())),
         delta_time_(0.)
     {
         Covariance(noise_covariance);
@@ -135,30 +128,14 @@ public:
         return A_;
     }
 
-    virtual const InputMatrix& B() const
-    {
-        return B_;
-    }
-
     virtual void A(const DynamicsMatrix& dynamics_matrix)
     {
         A_ = dynamics_matrix;
     }
 
-    virtual void B(const InputMatrix& input_matrix)
-    {
-        B_ = input_matrix;
-    }
-
-    virtual size_t InputDimension() const
-    {
-        return input_dimension_;
-    }
-
 protected:
     size_t input_dimension_;
     DynamicsMatrix A_;
-    InputMatrix B_;
     double delta_time_;    
 };
 
