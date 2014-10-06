@@ -63,12 +63,11 @@ class KalmanFilter
 {
 public:
     typedef boost::shared_ptr<ProcessModel> ProcessModelPtr;
-    typedef boost::shared_ptr<ObservationModel> ObserationModelPtr;
+    typedef boost::shared_ptr<ObservationModel> ObservationModelPtr;
 
     typedef typename ProcessModel::Scalar Scalar;
     typedef typename ProcessModel::State State;
     typedef typename ProcessModel::Input Input;
-    typedef typename ProcessModel::State State;
     typedef typename ProcessModel::DynamicsMatrix DynamicsMatrix;
     typedef typename ProcessModel::Operator DynamicsCovariance;
 
@@ -80,11 +79,13 @@ public:
 
 public:
     KalmanFilter(const ProcessModelPtr& process_model,
-                 const ProcessModelPtr& observation_model):
+                 const ObservationModelPtr& observation_model):
         process_model_(process_model),
         observation_model_(observation_model)
     {
     }
+
+    virtual ~KalmanFilter() { }
 
     void Predict(const double delta_time,
                  const StateDistribution& prior,
@@ -92,7 +93,6 @@ public:
     {
         const DynamicsMatrix& A = process_model_->A();
         const DynamicsCovariance Q = delta_time * process_model_->Covariance();
-
         predicted.Mean(A * prior.Mean());
         predicted.Covariance(A * prior.Covariance() * A.transpose() + Q);
     }
@@ -115,10 +115,9 @@ public:
                     predicted.Covariance() - K * H * predicted.Covariance());
     }
 
-
 protected:
     ProcessModelPtr process_model_;
-    ObserationModelPtr observation_model_;
+    ObservationModelPtr observation_model_;
 };
 
 }
