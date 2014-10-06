@@ -60,20 +60,19 @@ template <typename Observation_, typename State_> class LinearGaussianOservation
 namespace internal
 {
 template <typename Observation_, typename State_>
-struct Traits<LinearGaussianOservationModel<Observation, State> >
+struct Traits<LinearGaussianOservationModel<Observation_, State_> >
 {
-    typedef Gaussian<State> GaussianBase;
-
+    typedef Observation_ Observation;
+    typedef State_ State;
+    typedef Gaussian<Observation_> GaussianBase;
     typedef typename internal::Traits<GaussianBase>::Scalar Scalar;
     typedef typename internal::Traits<GaussianBase>::Operator Operator;
     typedef typename internal::Traits<GaussianBase>::Noise Noise;
-
     typedef Eigen::Matrix<Scalar,
-                          State::SizeAtCompileTime,
+                          Observation::SizeAtCompileTime,
                           State::SizeAtCompileTime> SensorMatrix;
 };
 }
-
 
 template <typename Observation_,typename State_>
 class LinearGaussianOservationModel:
@@ -100,15 +99,15 @@ public:
             const size_t state_dimension = State::SizeAtCompileTime):
         Traits::GaussianBase(observation_dimension),
         state_dimension_(state_dimension == Eigen::Dynamic? 0 : state_dimension),
-        H_(SensorMatrix::Zero(StateDimension(), Dimension())),
-        delta_time_(0.)
+        H_(SensorMatrix::Zero(Dimension(), StateDimension())),
+        delta_time_(1.)
     {
         Covariance(noise_covariance);
     }
 
     ~LinearGaussianOservationModel() { }
 
-    virtual State MapStandardGaussian(const Noise& sample) const
+    virtual Observation MapStandardGaussian(const Noise& sample) const
     {
         return Mean() + delta_time_ * this->cholesky_factor_ * sample;
     }

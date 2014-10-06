@@ -111,8 +111,8 @@ public:
         //static_assert_dynamic_sized(Vector);
 
 //        static_assert_base(Vector, Eigen::Matrix<Scalar, Eigen::Dynamic, 1>);
-                static_assert_base(Vector,
-                                   Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
+        static_assert_base(Vector,
+                           Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
         mean_.resize(Dimension(), 1);
         covariance_.resize(Dimension(), Dimension());
