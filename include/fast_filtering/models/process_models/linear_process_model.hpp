@@ -102,7 +102,7 @@ public:
             const size_t dimension = State::SizeAtCompileTime):
         Traits::GaussianBase(dimension),
         A_(DynamicsMatrix::Identity(Dimension(), Dimension())),
-        delta_time_(0.)
+        delta_time_(1.)
     {
         Covariance(noise_covariance);
     }
@@ -134,7 +134,6 @@ public:
     }
 
 protected:
-    size_t input_dimension_;
     DynamicsMatrix A_;
     double delta_time_;    
 };
