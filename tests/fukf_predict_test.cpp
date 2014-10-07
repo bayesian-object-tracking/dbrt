@@ -65,7 +65,7 @@ class FukfTest:
 {
 public:
     typedef Eigen::Matrix<double, 3, 1> State_a;
-    typedef Eigen::Matrix<double, 1, 1> State_b_i;
+    typedef Eigen::Matrix<double, 11, 1> State_b_i;
 
     typedef ProcessModelStub<State_a> ProcessModel_a;
     typedef ProcessModelStub<State_b_i> ProcessModel_b_i;
@@ -76,8 +76,7 @@ public:
     typedef ff::FactorizedUnscentedKalmanFilter<
                     ProcessModel_a,
                     ProcessModel_b_i,
-                    ObservationModel_y_i,
-                    1> Filter;
+                    ObservationModel_y_i> Filter;
 
     FukfTest():
         filter(Filter(boost::make_shared<ProcessModel_a>(),
@@ -91,42 +90,27 @@ protected:
     Filter filter;
 };
 
-const double EPSILON = 1.0e-12;
-
 TEST_F(FukfTest, predict)
 {
     Filter::StateDistribution state_prior;
     Filter::StateDistribution state_predicted;
-    state_prior.a_ = State_a::Random();
-    state_prior.cov_aa_ = Filter::StateDistribution::CovAA::Random();
-    state_prior.cov_aa_ *= state_prior.cov_aa_.transpose();
+    state_prior.mean_a= State_a::Random();
+    state_prior.cov_aa = Filter::StateDistribution::Cov_aa::Identity();
 
-//    std::cout << state_prior.a_ << std::endl;
-//    std::cout << state_prior.cov_aa_ << std::endl;
-    for (auto& partition: state_prior.joint_partitions_)
+    state_prior.joint_partitions.resize(State_b_i::SizeAtCompileTime);
+
+    for (auto& partition: state_prior.joint_partitions)
     {
-        partition.y = Measurement_y_i::Random();
-        partition.b = State_b_i::Random();
-        partition.cov_bb = Filter::StateDistribution::CovBB::Random();
-        partition.cov_bb *= partition.cov_bb.transpose();
-
-//        std::cout << partition.b << std::endl;
-//        std::cout << partition.cov_bb << std::endl;
+        partition.mean_y(0,0) = Eigen::MatrixXd::Random(1,1)(0,0);
+        partition.mean_b = State_b_i::Random();
+        partition.cov_bb = Filter::StateDistribution::Cov_bb::Identity();
     }
 
     filter.predict(state_prior, 0.033, state_predicted);
 
-//    std::cout << state_predicted.a_ << std::endl;
-//    std::cout << state_predicted.cov_aa_ << std::endl;
-//    for (auto& partition: state_predicted.joint_partitions_)
-//    {
-//        std::cout << partition.b << std::endl;
-//        std::cout << partition.cov_bb << std::endl;
-//    }
+    EXPECT_TRUE(state_prior.mean_a.isApprox(state_predicted.mean_a));
+    EXPECT_TRUE(state_prior.cov_aa.isApprox(state_predicted.cov_aa));
 
-    EXPECT_TRUE(state_prior.a_.isApprox(state_predicted.a_));
-    EXPECT_TRUE(state_prior.cov_aa_.isApprox(state_predicted.cov_aa_));
-
-    EXPECT_TRUE(state_prior.joint_partitions_[0].b.isApprox(state_predicted.joint_partitions_[0].b));
-    EXPECT_TRUE(state_prior.joint_partitions_[0].cov_bb.isApprox(state_predicted.joint_partitions_[0].cov_bb));
+    EXPECT_TRUE(state_prior.joint_partitions[0].mean_b.isApprox(state_predicted.joint_partitions[0].mean_b));
+    EXPECT_TRUE(state_prior.joint_partitions[0].cov_bb.isApprox(state_predicted.joint_partitions[0].cov_bb));
 }

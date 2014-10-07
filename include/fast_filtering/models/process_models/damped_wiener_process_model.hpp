@@ -107,7 +107,7 @@ public:
         gaussian_(dimension)
     {
         // check that state is derived from eigen
-        REQUIRE_INTERFACE(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
+        static_assert_base(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
     }
 
     virtual ~DampedWienerProcessModel() { }

@@ -44,77 +44,100 @@
  * Max-Planck-Institute for Intelligent Systems, University of Southern California
  */
 
-#ifndef FAST_FILTERING_TESTS_DUMMY_MODELS_HPP
-#define FAST_FILTERING_TESTS_DUMMY_MODELS_HPP
-
-#include <Eigen/Dense>
+#ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_LIBEAR_GAUSSIAN_PROCESS_MODEL_HPP
+#define FAST_FILTERING_MODELS_PROCESS_MODELS_LIBEAR_GAUSSIAN_PROCESS_MODEL_HPP
 
 #include <fast_filtering/utils/traits.hpp>
-#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
+#include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-#include <fast_filtering/filters/deterministic/factorized_unscented_kalman_filter.hpp>
-
-template <typename State_> class ProcessModelDummy;
 
 namespace ff
 {
+
+// Forward declarations
+template <typename State> class LinearGaussianProcessModel;
+
 namespace internal
 {
-template <typename State_> struct Traits<ProcessModelDummy<State_> >
+template <typename State>
+struct Traits<LinearGaussianProcessModel<State> >
 {
-    typedef State_ State;
-    typedef State_ Noise;
-    typedef typename State::Scalar Scalar;
-    typedef typename StationaryProcessModel<State_>::Input Input;
+    typedef Gaussian<State> GaussianBase;
+    typedef StationaryProcessModel<State> ProcessModelBase;
 
-    typedef StationaryProcessModel<State_> ProcessModelBase;
-    typedef GaussianMap<State_, State_> GaussianMapBase;
+    typedef typename ProcessModelBase::Input Input;
+    typedef typename internal::Traits<GaussianBase>::Scalar Scalar;
+    typedef typename internal::Traits<GaussianBase>::Operator Operator;
+    typedef typename internal::Traits<GaussianBase>::Noise Noise;
+
+    typedef Eigen::Matrix<Scalar,
+                          State::SizeAtCompileTime,
+                          State::SizeAtCompileTime> DynamicsMatrix;
 };
 }
-}
+
 
 template <typename State_>
-class ProcessModelDummy:
-        public ff::internal::Traits<ProcessModelDummy<State_> >::ProcessModelBase,
-        public ff::internal::Traits<ProcessModelDummy<State_> >::GaussianMapBase
+class LinearGaussianProcessModel:
+    public internal::Traits<LinearGaussianProcessModel<State_> >::ProcessModelBase,
+    public internal::Traits<LinearGaussianProcessModel<State_> >::GaussianBase
 {
 public:
-    typedef ff::internal::Traits<ProcessModelDummy<State_> > Traits;
+    typedef internal::Traits<LinearGaussianProcessModel<State_> > Traits;
 
+    typedef State_ State;
+    typedef typename Traits::Input Input;
+    typedef typename Traits::Noise Noise;
     typedef typename Traits::Scalar Scalar;
-    typedef typename Traits::State  State;
-    typedef typename Traits::Noise  Noise;
-    typedef typename Traits::Input  Input;
+    typedef typename Traits::Operator Operator;
+    typedef typename Traits::DynamicsMatrix DynamicsMatrix;
 
-    virtual void Condition(const double& delta_time,
-                           const State& state,
-                           const Input& input)
+    using Traits::GaussianBase::Mean;
+    using Traits::GaussianBase::Covariance;
+    using Traits::GaussianBase::Dimension;
+
+public:
+    LinearGaussianProcessModel(
+            const Operator& noise_covariance,
+            const size_t dimension = State::SizeAtCompileTime):
+        Traits::GaussianBase(dimension),
+        A_(DynamicsMatrix::Identity(Dimension(), Dimension())),
+        delta_time_(1.)
     {
-
+        Covariance(noise_covariance);
     }
+
+    ~LinearGaussianProcessModel() { }
 
     virtual State MapStandardGaussian(const Noise& sample) const
     {
-
+        return Mean() + delta_time_ * this->cholesky_factor_ * sample;
     }
 
-    virtual size_t Dimension()
+    virtual void Condition(const double& delta_time,
+                           const State& x,
+                           const Input& u = Input())
     {
-        return State::SizeAtCompileTime;
+        delta_time_ = delta_time;
+
+        Mean(A_ * x);
     }
+
+    virtual const DynamicsMatrix& A() const
+    {
+        return A_;
+    }
+
+    virtual void A(const DynamicsMatrix& dynamics_matrix)
+    {
+        A_ = dynamics_matrix;
+    }
+
+protected:
+    DynamicsMatrix A_;
+    double delta_time_;    
 };
 
-template <typename State>
-class ObservationModelDummy
-{
-public:
-    virtual void predict(const State& state)
-    {
-        // foo
-    }
-
-    virtual size_t Dimension() { return 1; }
-    virtual size_t NoiseDimension() { return 1; }
-};
+}
 
 #endif

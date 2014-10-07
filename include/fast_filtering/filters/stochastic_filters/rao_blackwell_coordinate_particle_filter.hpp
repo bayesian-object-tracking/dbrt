@@ -73,15 +73,15 @@ public:
         process_model_(process_model),
         max_kl_divergence_(max_kl_divergence)
     {
-        REQUIRE_INTERFACE(
+        static_assert_base(
             ProcessModel,
             StationaryProcessModel<State, Input>);
 
-        REQUIRE_INTERFACE(
+        static_assert_base(
             ProcessModel,
             GaussianMap<State, Noise>);
 
-        REQUIRE_INTERFACE(
+        static_assert_base(
             ObservationModel,
             RaoBlackwellObservationModel<State, Observation>);
 

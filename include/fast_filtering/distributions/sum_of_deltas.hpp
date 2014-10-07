@@ -103,7 +103,7 @@ public:
 public:
     explicit SumOfDeltas(const unsigned& dimension = Vector::SizeAtCompileTime)
     {
-        REQUIRE_INTERFACE(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
+        static_assert_base(Vector, Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
         deltas_ = Deltas(1, Vector::Zero(dimension == Eigen::Dynamic ? 0 : dimension));
         weights_ = Weights::Ones(1);

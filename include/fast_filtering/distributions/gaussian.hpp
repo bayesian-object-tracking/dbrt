@@ -68,9 +68,10 @@ namespace internal
  * Gaussian distribution traits specialization
  * \internal
  */
-template <typename Vector>
-struct Traits<Gaussian<Vector> >
+template <typename Vector_>
+struct Traits<Gaussian<Vector_> >
 {
+    typedef Vector_ Vector;
     typedef typename Vector::Scalar Scalar;
     typedef Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>  Noise;
 
@@ -89,15 +90,16 @@ struct Traits<Gaussian<Vector> >
  * \class Gaussian
  * \ingroup distributions
  */
-template <typename Vector>
+template <typename Vector_>
 class Gaussian:
-        public internal::Traits<Gaussian<Vector> >::MomentsBase,
-        public internal::Traits<Gaussian<Vector> >::EvaluationBase,
-        public internal::Traits<Gaussian<Vector> >::GaussianMapBase
+        public internal::Traits<Gaussian<Vector_> >::MomentsBase,
+        public internal::Traits<Gaussian<Vector_> >::EvaluationBase,
+        public internal::Traits<Gaussian<Vector_> >::GaussianMapBase
 {
 public:
-    typedef internal::Traits<Gaussian<Vector> > Traits;
+    typedef internal::Traits<Gaussian<Vector_> > Traits;
 
+    typedef typename Traits::Vector     Vector;
     typedef typename Traits::Scalar     Scalar;
     typedef typename Traits::Operator   Operator;
     typedef typename Traits::Noise      Noise;
@@ -106,17 +108,36 @@ public:
     explicit Gaussian(const unsigned& dimension = Vector::SizeAtCompileTime):
         Traits::GaussianMapBase(dimension)
     {
-        // make sure that vector is derived from eigen
-        REQUIRE_INTERFACE(Vector, Eigen::Matrix<typename Vector::Scalar,
-                                                   Vector::SizeAtCompileTime, 1>);
+        //static_assert_dynamic_sized(Vector);
+
+//        static_assert_base(Vector, Eigen::Matrix<Scalar, Eigen::Dynamic, 1>);
+        static_assert_base(Vector,
+                           Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
         mean_.resize(Dimension(), 1);
         covariance_.resize(Dimension(), Dimension());
         precision_.resize(Dimension(), Dimension());
         cholesky_factor_.resize(Dimension(), Dimension());
 
-        SetUnit();
+        SetStandard();
     }
+
+//    Gaussian()
+//    {
+//        //static_assert_const_sized(Vector);
+
+//        // make sure that vector is derived from eigen
+//        static_assert_base(Vector,
+//                           Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
+
+//        mean_.resize(Dimension(), 1);
+//        covariance_.resize(Dimension(), Dimension());
+//        precision_.resize(Dimension(), Dimension());
+//        cholesky_factor_.resize(Dimension(), Dimension());
+
+//        SetStandard();
+//    }
+
 
     virtual ~Gaussian() { }
 
@@ -125,7 +146,7 @@ public:
         return mean_ + cholesky_factor_ * sample;
     }
 
-    virtual void SetUnit()
+    virtual void SetStandard()
     {
         full_rank_ = true;
         Mean(Vector::Zero(Dimension()));
@@ -208,7 +229,7 @@ public:
     }
 
 
-private:
+protected:
     Vector mean_;
     Operator covariance_;
     bool full_rank_;

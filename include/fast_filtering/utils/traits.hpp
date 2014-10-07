@@ -46,6 +46,8 @@
 #ifndef FAST_FILTERING_UTILS_TRAITS_HPP
 #define FAST_FILTERING_UTILS_TRAITS_HPP
 
+#include <Eigen/Dense>
+
 namespace ff
 {
 
@@ -57,8 +59,11 @@ namespace internal
  */
 template <typename T> struct Traits { };
 
-struct Empty { };
+//struct Empty { };
+typedef Eigen::Matrix<double, 0, 0> Empty;
 }
+
+using internal::Traits;
 
 }
 
