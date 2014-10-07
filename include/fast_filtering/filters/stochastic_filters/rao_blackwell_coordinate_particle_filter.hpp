@@ -124,7 +124,6 @@ public:
             MEASURE("propagation");
 
             bool update_occlusions = (block_index == sampling_blocks_.size()-1);
-            std::cout << "evaluating with " << next_samples_.size() << " samples " << std::endl;
             std::vector<Scalar> new_loglikes = observation_model_->Loglikes(next_samples_,
                                                                            indices_,
                                                                            update_occlusions);
@@ -199,7 +198,6 @@ private:
             kl_divergence -= information;
         }
 
-        std::cout << "kl divergence: " << kl_divergence << " max divergence: " << max_kl_divergence_ << std::endl;
         if(kl_divergence > max_kl_divergence_)
             Resample(samples_.size());
     }
