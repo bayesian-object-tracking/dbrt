@@ -178,8 +178,6 @@ file(GLOB_RECURSE tracking_interface_headers include/${PROJECT_NAME_TRACKING_INT
 
 
 set(tracking_sources
-    src/${PROJECT_NAME_TRACKING}/utils/xxhash.c
-    src/${PROJECT_NAME_TRACKING}/utils/hash_mapping.cpp
     src/${PROJECT_NAME_TRACKING}/utils/rigid_body_renderer.cpp
 )
 

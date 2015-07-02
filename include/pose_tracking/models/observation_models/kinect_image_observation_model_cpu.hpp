@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <pose_tracking/states/free_floating_rigid_bodies_state.hpp>
-#include <fast_filtering/models/observation_models/interfaces/rao_blackwell_observation_model.hpp>
+#include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
 
 #include <pose_tracking/utils/rigid_body_renderer.hpp>
 #include <pose_tracking/models/observation_models/kinect_pixel_observation_model.hpp>
