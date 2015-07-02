@@ -50,7 +50,7 @@
 #include <Eigen/Dense>
 
 #include <fl/util/assertions.hpp>
-#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
+#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 #include <fl/distribution/gaussian.hpp>
 

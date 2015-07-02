@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Core>
 
 #include <fl/util/assertions.hpp>
-#include <fast_filtering/utils/traits.hpp>
+#include <pose_tracking/utils/traits.hpp>
 #include <pose_tracking/states/free_floating_rigid_bodies_state.hpp>
 #include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
 

@@ -47,7 +47,7 @@
 #ifndef FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 #define FAST_FILTERING_MODELS_PROCESS_MODELS_INTERFACES_STATIONARY_PROCESS_MODEL_HPP
 
-#include <fast_filtering/utils/traits.hpp>
+#include <pose_tracking/utils/traits.hpp>
 
 
 namespace ff

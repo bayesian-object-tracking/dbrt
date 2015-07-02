@@ -18,7 +18,7 @@
 #include <iostream>
 #include <cuda_gl_interop.h>
 
-#include <fast_filtering/utils/profiling.hpp>
+#include <pose_tracking/utils/profiling.hpp>
 
 namespace ff
 {

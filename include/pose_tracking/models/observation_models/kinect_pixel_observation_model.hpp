@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#include <fast_filtering/distributions/truncated_gaussian.hpp>
 
 //TODO: THESE INCLUDES ARE JUST TEMPORARY
-//#include <fast_filtering/utils/distribution_test.hpp>
+//#include <pose_tracking/utils/distribution_test.hpp>
 #include <iostream>
 
 namespace ff

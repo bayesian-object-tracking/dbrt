@@ -37,14 +37,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Core>
 
 #include <fl/util/assertions.hpp>
-#include <fast_filtering/utils/profiling.hpp>
-#include <fast_filtering/utils/traits.hpp>
-#include <fast_filtering/utils/helper_functions.hpp>
+#include <pose_tracking/utils/profiling.hpp>
+#include <pose_tracking/utils/traits.hpp>
+#include <pose_tracking/utils/helper_functions.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 //#include <fast_filtering/distributions/sum_of_deltas.hpp>
 //#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
-#include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
+#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 
 #include <fl/distribution/gaussian.hpp>
 
