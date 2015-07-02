@@ -105,8 +105,8 @@ public:
     typedef typename Traits::Noise      Noise;
 
 public:
-    explicit Gaussian(const unsigned& dimension = Vector::SizeAtCompileTime):
-        Traits::GaussianMapBase(dimension)
+    explicit Gaussian(const unsigned& new_dimension = Vector::SizeAtCompileTime):
+        Traits::GaussianMapBase(new_dimension)
     {
         //static_assert_dynamic_sized(Vector);
 
@@ -114,12 +114,12 @@ public:
         static_assert_base(Vector,
                            Eigen::Matrix<Scalar, Vector::SizeAtCompileTime, 1>);
 
-        mean_.resize(Dimension(), 1);
-        covariance_.resize(Dimension(), Dimension());
-        precision_.resize(Dimension(), Dimension());
-        cholesky_factor_.resize(Dimension(), Dimension());
+        mean_.resize(dimension(), 1);
+        covariance_.resize(dimension(), dimension());
+        precision_.resize(dimension(), dimension());
+        cholesky_factor_.resize(dimension(), dimension());
 
-        SetStandard();
+        set_standard();
     }
 
 //    Gaussian()
@@ -146,21 +146,21 @@ public:
         return mean_ + cholesky_factor_ * sample;
     }
 
-    virtual void SetStandard()
+    virtual void set_standard()
     {
         full_rank_ = true;
-        Mean(Vector::Zero(Dimension()));
-        Covariance(Operator::Identity(Dimension(), Dimension()));
+        mean(Vector::Zero(dimension()));
+        covariance(Operator::Identity(dimension(), dimension()));
     }
 
-    virtual void Mean(const Vector& mean)
+    virtual void mean(const Vector& new_mean)
     {
-        mean_ = mean;
+        mean_ = new_mean;
     }
 
-    virtual void Covariance(const Operator& covariance)
+    virtual void covariance(const Operator& new_covariance)
     {
-        covariance_ = covariance;
+        covariance_ = new_covariance;
 
         // we assume that the input matrix is positive semidefinite
         Eigen::LDLT<Operator> ldlt;
@@ -171,18 +171,18 @@ public:
             D_sqrt(i) = std::sqrt(std::fabs(D_sqrt(i)));
         cholesky_factor_ = ldlt.transpositionsP().transpose()*L*D_sqrt.asDiagonal();
 
-        if(covariance.colPivHouseholderQr().rank() == covariance.rows())
+        if(new_covariance.colPivHouseholderQr().rank() == new_covariance.rows())
         {
             full_rank_ = true;
             precision_ = covariance_.inverse();
-            log_normalizer_ = -0.5 * ( log(covariance_.determinant()) + double(covariance.rows()) * log(2.0 * M_PI) );
+            log_normalizer_ = -0.5 * ( log(covariance_.determinant()) + double(new_covariance.rows()) * log(2.0 * M_PI) );
         }
         else
             full_rank_ = false;
     }
 
 
-    virtual void DiagonalCovariance(const Operator& covariance)
+    virtual void diagonal_covariance(const Operator& covariance)
     {
         covariance_ = covariance;
 
@@ -205,12 +205,12 @@ public:
     }
 
 
-    virtual Vector Mean() const
+    virtual Vector mean() const
     {
         return mean_;
     }
 
-    virtual Operator Covariance() const
+    virtual Operator covariance() const
     {
         return covariance_;
     }
@@ -223,7 +223,7 @@ public:
             return -std::numeric_limits<Scalar>::infinity();
     }
 
-    virtual int Dimension() const
+    virtual int dimension() const
     {
         return this->standard_variate_dimension(); // all dimensions are the same
     }

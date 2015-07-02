@@ -59,16 +59,16 @@ class Moments:
 public:
     virtual ~Moments() {}
 
-    virtual Vector Mean() const = 0;
-    virtual Operator Covariance() const = 0;
+    virtual Vector mean() const = 0;
+    virtual Operator covariance() const = 0;
 
     virtual Vector   ApproximateMean()
     {
-        return Mean();
+        return mean();
     }
     virtual Operator ApproximateCovariance()
     {
-        return Covariance();
+        return covariance();
     }
 };
 

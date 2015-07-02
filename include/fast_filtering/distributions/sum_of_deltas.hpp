@@ -129,23 +129,23 @@ public:
         weights = weights_;
     }
 
-    virtual Vector Mean() const
+    virtual Vector mean() const
     {
-        Vector mean(Vector::Zero(Dimension()));
+        Vector new_mean(Vector::Zero(Dimension()));
         for(size_t i = 0; i < deltas_.size(); i++)
-            mean += weights_[i] * deltas_[i];
+            new_mean += weights_[i] * deltas_[i];
 
-        return mean;
+        return new_mean;
     }
 
-    virtual Operator Covariance() const
+    virtual Operator covariance() const
     {
-        Vector mean = Mean();
-        Operator covariance(Operator::Zero(Dimension(), Dimension()));
+        Vector new_mean = mean();
+        Operator new_covariance(Operator::Zero(Dimension(), Dimension()));
         for(size_t i = 0; i < deltas_.size(); i++)
-            covariance += weights_[i] * (deltas_[i]-mean) * (deltas_[i]-mean).transpose();
+            new_covariance += weights_[i] * (deltas_[i]-new_mean) * (deltas_[i]-new_mean).transpose();
 
-        return covariance;
+        return new_covariance;
     }
 
     virtual int Dimension() const

@@ -121,8 +121,8 @@ public:
                            const State&  state,
                            const Input&   input)
     {
-        gaussian_.Mean(Mean(delta_time, state, input));
-        gaussian_.DiagonalCovariance(Covariance(delta_time));
+        gaussian_.mean(Mean(delta_time, state, input));
+        gaussian_.diagonal_covariance(Covariance(delta_time));
     }
 
     virtual void Parameters(const Scalar& damping,
@@ -140,7 +140,7 @@ public:
 
     virtual int NoiseDimension() const
     {
-        return gaussian_.Dimension();
+        return gaussian_.dimension();
     }
 
 

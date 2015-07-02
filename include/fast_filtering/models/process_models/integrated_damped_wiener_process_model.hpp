@@ -154,11 +154,11 @@ public:
                            const State&  state,
                            const Input&   input)
     {
-        position_distribution_.Mean(Mean(state.topRows(InputDimension()), // position
+        position_distribution_.mean(Mean(state.topRows(InputDimension()), // position
                                                 state.bottomRows(InputDimension()), // velocity
                                                 input, // acceleration
                                                 delta_time));
-        position_distribution_.Covariance(Covariance(delta_time));
+        position_distribution_.covariance(Covariance(delta_time));
 
         velocity_distribution_.Condition(delta_time, state.bottomRows(InputDimension()), input);
     }
