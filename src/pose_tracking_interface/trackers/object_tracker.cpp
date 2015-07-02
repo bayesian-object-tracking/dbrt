@@ -35,10 +35,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <fast_filtering/distributions/uniform_distribution.hpp>
-#include <pose_tracking/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
-#include <pose_tracking/models/observation_models/approximate_kinect_pixel_observation_model.hpp>
+//#include <pose_tracking/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
+//#include <pose_tracking/models/observation_models/approximate_kinect_pixel_observation_model.hpp>
 
-#include <pose_tracking/models/process_models/continuous_occlusion_process_model.hpp>
+//#include <pose_tracking/models/process_models/continuous_occlusion_process_model.hpp>
 
 #include <fast_filtering/utils/distribution_test.hpp>
 
