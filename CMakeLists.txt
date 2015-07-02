@@ -19,6 +19,7 @@ find_package(catkin REQUIRED
     message_filters
     robot_state_pub
     image_transport
+    fl
 )
 
 find_package(Doxygen)
@@ -156,6 +157,7 @@ catkin_package(
         message_filters
         robot_state_pub
         image_transport
+        fl
     DEPENDS
         OpenCV
         eigen

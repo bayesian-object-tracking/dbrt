@@ -87,17 +87,6 @@ public:
           max_depth_(max_depth)
     {
 
-//        UniformDistribution uniform(3.3, 10.5);
-//        ExponentialDistribution exponential(2.5);
-//        TruncatedGaussian gaussian(3.0, 1.0, 4.0, 5.0);
-
-//        std::cout << "testing distribution " << std::endl;
-//        TestDistribution(gaussian);
-//        std::cout << "done testing " << std::endl;
-
-//        exit(-1);
-
-
     }
 
     virtual ~KinectPixelObservationModel() {}
