@@ -141,7 +141,7 @@ public:
 
     virtual ~Gaussian() { }
 
-    virtual Vector MapStandardGaussian(const Noise& sample) const
+    virtual Vector map_standard_normal(const Noise& sample) const
     {
         return mean_ + cholesky_factor_ * sample;
     }
@@ -225,7 +225,7 @@ public:
 
     virtual int Dimension() const
     {
-        return this->NoiseDimension(); // all dimensions are the same
+        return this->standard_variate_dimension(); // all dimensions are the same
     }
 
 

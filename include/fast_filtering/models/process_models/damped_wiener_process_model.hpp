@@ -114,7 +114,7 @@ public:
 
     virtual State MapStandardGaussian(const Noise& sample) const
     {
-        return gaussian_.MapStandardGaussian(sample);
+        return gaussian_.map_standard_normal(sample);
     }
 
     virtual void Condition(const Scalar&  delta_time,

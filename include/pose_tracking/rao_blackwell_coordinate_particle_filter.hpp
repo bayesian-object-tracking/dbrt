@@ -107,7 +107,7 @@ public:
             for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
             {
                 for(size_t i = 0; i < sampling_blocks_[block_index].size(); i++)
-                    noises_[particle_index](sampling_blocks_[block_index][i]) = unit_gaussian_.Sample()(0);
+                    noises_[particle_index](sampling_blocks_[block_index][i]) = unit_gaussian_.sample()(0);
             }
             MEASURE("sampling");
             for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)

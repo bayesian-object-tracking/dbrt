@@ -92,7 +92,7 @@ public:
 
     virtual ~StandardGaussian() { }
 
-    virtual Vector Sample()
+    virtual Vector sample()
     {
         Vector gaussian_sample(Dimension());
         for (int i = 0; i < Dimension(); i++)
@@ -127,7 +127,7 @@ public:
 
     virtual ~StandardGaussian() { }
 
-    virtual double Sample()
+    virtual double sample()
     {
         return gaussian_generator_();
     }

@@ -88,14 +88,14 @@ public:
 
     virtual ~GaussianMap() { }
 
-    virtual Vector MapStandardGaussian(const Noise& sample) const = 0;
+    virtual Vector map_standard_normal(const Noise& sample) const = 0;
 
-    virtual Vector Sample()
+    virtual Vector sample()
     {
-        return MapStandardGaussian(standard_gaussian_.Sample());
+        return map_standard_normal(standard_gaussian_.sample());
     }
 
-    virtual int NoiseDimension() const
+    virtual int standard_variate_dimension() const
     {
         return standard_gaussian_.Dimension();
     }
@@ -112,14 +112,14 @@ class GaussianMap<Vector, double>:
 public:
     virtual ~GaussianMap() { }
 
-    virtual Vector MapStandardGaussian(const double& sample) const = 0;
+    virtual Vector map_standard_normal(const double& sample) const = 0;
 
-    virtual Vector Sample()
+    virtual Vector sample()
     {
-        return MapStandardGaussian(standard_gaussian_.Sample());
+        return map_standard_normal(standard_gaussian_.sample());
     }
 
-    virtual int NoiseDimension() const
+    virtual int standard_variate_dimension() const
     {
         return 1;
     }
@@ -137,14 +137,14 @@ class GaussianMap<Vector, internal::Empty>:
 public:
     virtual ~GaussianMap() { }
 
-    virtual Vector MapStandardGaussian() const = 0;
+    virtual Vector map_standard_normal() const = 0;
 
-    virtual Vector Sample()
+    virtual Vector sample()
     {
-        return MapStandardGaussian();
+        return map_standard_normal();
     }
 
-    virtual int NoiseDimension() const
+    virtual int standard_variate_dimension() const
     {
         return 0;
     }

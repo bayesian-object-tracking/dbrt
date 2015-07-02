@@ -92,7 +92,7 @@ public:
         return std::log(Probability(input));
     }
 
-    virtual double MapStandardGaussian(const double& gaussian_sample) const
+    virtual double map_standard_normal(const double& gaussian_sample) const
     {
         // map from a gaussian to a uniform distribution
         double uniform_sample = 0.5 *
@@ -103,7 +103,7 @@ public:
     }
 
 
-    virtual double MapStandardGaussian(const double& gaussian_sample,
+    virtual double map_standard_normal(const double& gaussian_sample,
                                        const double& max) const
     {
         double exp_lambda_max = std::exp(-lambda_*max);

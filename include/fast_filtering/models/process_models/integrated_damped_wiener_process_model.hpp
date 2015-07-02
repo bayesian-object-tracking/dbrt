@@ -144,7 +144,7 @@ public:
     virtual State MapStandardGaussian(const Noise& sample) const
     {
         State state(StateDimension());
-        state.topRows(InputDimension())     = position_distribution_.MapStandardGaussian(sample);
+        state.topRows(InputDimension())     = position_distribution_.map_standard_normal(sample);
         state.bottomRows(InputDimension())  = velocity_distribution_.MapStandardGaussian(sample);
         return state;
     }

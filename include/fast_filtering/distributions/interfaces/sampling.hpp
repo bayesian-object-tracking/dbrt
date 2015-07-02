@@ -57,7 +57,7 @@ class Sampling
 public:
     virtual ~Sampling() {}
 
-    virtual Vector Sample() = 0;
+    virtual Vector sample() = 0;
 };
 
 }

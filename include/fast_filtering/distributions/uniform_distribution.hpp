@@ -91,7 +91,7 @@ public:
         return log_density_;
     }
 
-    virtual double MapStandardGaussian(const double& gaussian_sample) const
+    virtual double map_standard_normal(const double& gaussian_sample) const
     {
         // map from a gaussian to a uniform distribution
         double standard_uniform_sample =
