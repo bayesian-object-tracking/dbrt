@@ -65,7 +65,8 @@
 #include <boost/assert.hpp>
 
 #include <fast_filtering/utils/helper_functions.hpp>
-#include <fast_filtering/distributions/gaussian.hpp>
+//#include <fast_filtering/distributions/gaussian.hpp>
+#include <fl/distribution/gaussian.hpp>
 
 #include <pose_tracking_interface/utils/pcl_interface.hpp>
 #include <pose_tracking_interface/utils/cloud_visualizer.hpp>
@@ -635,7 +636,7 @@ SampleTableClusters(const std::vector<Eigen::Matrix<Scalar,3,1> >& points,
     // create gaussian for sampling
     Scalar standard_deviation_translation = 0.03;
     Scalar standard_deviation_rotation = 100.0;
-    ff::Gaussian<Eigen::Matrix<Scalar, 1, 1> > unit_gaussian;
+    fl::Gaussian<Eigen::Matrix<Scalar, 1, 1> > unit_gaussian;
     unit_gaussian.set_standard();
 
     for(size_t cluster_index = 0; cluster_index < clusters.size(); cluster_index++)

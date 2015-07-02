@@ -52,9 +52,9 @@
 // state_filtering
 #include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
-#include <fast_filtering/distributions/gaussian.hpp>
+//#include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/process_models/damped_wiener_process_model.hpp>
-
+#include <fl/distribution/gaussian.hpp>
 
 //TODO: THIS IS A LINEAR GAUSSIAN PROCESS, THIS CLASS SHOULD DISAPPEAR
 
@@ -90,7 +90,7 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
 
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> WienerProcessState;
     typedef DampedWienerProcessModel<WienerProcessState>     DampedWienerProcessType;
-    typedef Gaussian<Noise>                             GaussianType;
+    typedef fl::Gaussian<Noise>                             GaussianType;
 
     typedef typename GaussianType::SecondMoment      Operator;
 };

@@ -51,7 +51,7 @@
 
 #include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
-#include <fast_filtering/distributions/gaussian.hpp>
+//#include <fast_filtering/distributions/gaussian.hpp>
 #include <fl/distribution/gaussian.hpp>
 
 namespace ff
@@ -74,7 +74,7 @@ struct Traits<DampedWienerProcessModel<State_> >
     typedef Eigen::Matrix<Scalar, State::SizeAtCompileTime, 1>  Input;
     typedef Eigen::Matrix<Scalar, State::SizeAtCompileTime, 1>  Noise;
 
-    typedef Gaussian<Noise>                 GaussianType;
+    typedef fl::Gaussian<Noise>                 GaussianType;
     typedef typename GaussianType::SecondMoment SecondMoment;
 
     typedef StationaryProcessModel<State, Input>   ProcessModelBase;
