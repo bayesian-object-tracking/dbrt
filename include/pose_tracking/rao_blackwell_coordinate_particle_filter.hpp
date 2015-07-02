@@ -42,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fast_filtering/utils/helper_functions.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 //#include <fast_filtering/distributions/sum_of_deltas.hpp>
-#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
+//#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 

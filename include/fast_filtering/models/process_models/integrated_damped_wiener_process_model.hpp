@@ -51,7 +51,7 @@
 
 // state_filtering
 #include <fl/util/assertions.hpp>
-#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
+//#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/process_models/damped_wiener_process_model.hpp>
 #include <fl/distribution/gaussian.hpp>

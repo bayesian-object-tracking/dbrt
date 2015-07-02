@@ -25,6 +25,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
+#include <boost/filesystem.hpp>
+
 #include <sensor_msgs/PointCloud2.h>
 
 #include <fast_filtering/utils/profiling.hpp>
