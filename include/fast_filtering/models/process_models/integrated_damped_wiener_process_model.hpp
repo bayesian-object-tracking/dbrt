@@ -50,7 +50,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 
 // state_filtering
-#include <fast_filtering/utils/assertions.hpp>
+#include <fl/util/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 #include <fast_filtering/models/process_models/damped_wiener_process_model.hpp>

@@ -54,7 +54,7 @@
 #include <vector>
 
 // state_filtering
-#include <fast_filtering/utils/assertions.hpp>
+#include <fl/util/assertions.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/moments.hpp>
 

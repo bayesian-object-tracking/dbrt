@@ -53,7 +53,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
 
-#include <fast_filtering/utils/assertions.hpp>
+#include <fl/util/assertions.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/distributions/interfaces/sampling.hpp>
 #include <fast_filtering/distributions/standard_gaussian.hpp>

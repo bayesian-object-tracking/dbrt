@@ -54,7 +54,7 @@
 #include <boost/random/variate_generator.hpp>
 
 #include <fl/util/random.hpp>
-#include <fast_filtering/utils/assertions.hpp>
+#include <fl/util/assertions.hpp>
 #include <fast_filtering/distributions/interfaces/sampling.hpp>
 
 namespace ff

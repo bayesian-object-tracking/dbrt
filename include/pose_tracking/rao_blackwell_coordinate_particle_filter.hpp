@@ -36,17 +36,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Eigen/Core>
 
-#include <fast_filtering/utils/assertions.hpp>
+#include <fl/util/assertions.hpp>
 #include <fast_filtering/utils/profiling.hpp>
 #include <fast_filtering/utils/traits.hpp>
 #include <fast_filtering/utils/helper_functions.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
-#include <fast_filtering/distributions/sum_of_deltas.hpp>
+//#include <fast_filtering/distributions/sum_of_deltas.hpp>
 #include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 
 #include <fl/distribution/gaussian.hpp>
+
+
+#include <fl/distribution/discrete_distribution.hpp>
+
 namespace ff
 {
 
@@ -62,7 +66,9 @@ public:
     typedef typename ObservationModel::Observation Observation;
 
     // state distribution
-    typedef SumOfDeltas<State> StateDistributionType;
+//    typedef SumOfDeltas<State> StateDistributionType;
+
+    typedef fl::DiscreteDistribution<State> Belief;
 
 public:
     RaoBlackwellCoordinateParticleFilter(
@@ -135,7 +141,14 @@ public:
         }
 
         samples_ = next_samples_;
-        state_distribution_.SetDeltas(samples_); // not sure whether this is the right place
+
+
+
+        belief_.set_uniform(samples_.size());
+        for(int i = 0; i < belief_.size(); i++)
+            belief_.location(i) = samples_[i];
+
+//        belief_.SetDeltas(samples_); // not sure whether this is the right place
 
     }
 
@@ -167,7 +180,15 @@ public:
 
         log_weights_        = std::vector<Scalar>(samples_.size(), 0.);
 
-        state_distribution_.SetDeltas(samples_); // not sure whether this is the right place
+
+
+
+        belief_.set_uniform(samples_.size());
+        for(int i = 0; i < belief_.size(); i++)
+            belief_.location(i) = samples_[i];
+
+
+//        belief_.SetDeltas(samples_); // not sure whether this is the right place
     }
 
 private:
@@ -232,14 +253,14 @@ public:
         return samples_;
     }
 
-    StateDistributionType& StateDistribution()
+    Belief& StateDistribution()
     {
-        return state_distribution_;
+        return belief_;
     }
 
 private:
     // internal state TODO: THIS COULD BE MADE MORE COMPACT!!
-    StateDistributionType state_distribution_;
+    Belief belief_;
 
     std::vector<State > samples_;
     std::vector<size_t> indices_;
