@@ -109,18 +109,12 @@ public:
                 for(size_t i = 0; i < sampling_blocks_[block_index].size(); i++)
                     noises_[particle_index](sampling_blocks_[block_index][i]) = unit_gaussian_.Sample()(0);
             }
-            /// \todo: THIS IS WEIRD!! THE CONDITION SHOULD BE IN THE SAME LOOP
-            /// AS THE MAPPING!!
             MEASURE("sampling");
             for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
             {
                 process_model_->Condition(delta_time,
                                           samples_[particle_index],
                                           input);
-            }
-            MEASURE("conditioning");
-            for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
-            {
                 next_samples_[particle_index] = process_model_->MapStandardGaussian(noises_[particle_index]);
             }
             MEASURE("propagation");
