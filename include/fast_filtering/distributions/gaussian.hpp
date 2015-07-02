@@ -101,7 +101,7 @@ public:
 
     typedef typename Traits::Vector     Vector;
     typedef typename Traits::Scalar     Scalar;
-    typedef typename Traits::Operator   Operator;
+    typedef typename Traits::Operator   SecondMoment;
     typedef typename Traits::Noise      Noise;
 
 public:
@@ -150,7 +150,7 @@ public:
     {
         full_rank_ = true;
         mean(Vector::Zero(dimension()));
-        covariance(Operator::Identity(dimension(), dimension()));
+        covariance(SecondMoment::Identity(dimension(), dimension()));
     }
 
     virtual void mean(const Vector& new_mean)
@@ -158,14 +158,14 @@ public:
         mean_ = new_mean;
     }
 
-    virtual void covariance(const Operator& new_covariance)
+    virtual void covariance(const SecondMoment& new_covariance)
     {
         covariance_ = new_covariance;
 
         // we assume that the input matrix is positive semidefinite
-        Eigen::LDLT<Operator> ldlt;
+        Eigen::LDLT<SecondMoment> ldlt;
         ldlt.compute(covariance_);
-        Operator L = ldlt.matrixL();
+        SecondMoment L = ldlt.matrixL();
         Vector D_sqrt = ldlt.vectorD();
         for(size_t i = 0; i < D_sqrt.rows(); i++)
             D_sqrt(i) = std::sqrt(std::fabs(D_sqrt(i)));
@@ -182,13 +182,13 @@ public:
     }
 
 
-    virtual void diagonal_covariance(const Operator& covariance)
+    virtual void diagonal_covariance(const SecondMoment& covariance)
     {
         covariance_ = covariance;
 
         double determinant = 1;
-        precision_ = Operator::Zero(covariance_.rows(), covariance_.cols());
-        cholesky_factor_ = Operator::Zero(covariance_.rows(), covariance_.cols());
+        precision_ = SecondMoment::Zero(covariance_.rows(), covariance_.cols());
+        cholesky_factor_ = SecondMoment::Zero(covariance_.rows(), covariance_.cols());
         full_rank_ = true;
         for(size_t i = 0; i < covariance_.rows(); i++)
         {
@@ -210,7 +210,7 @@ public:
         return mean_;
     }
 
-    virtual Operator covariance() const
+    virtual SecondMoment covariance() const
     {
         return covariance_;
     }
@@ -231,10 +231,10 @@ public:
 
 protected:
     Vector mean_;
-    Operator covariance_;
+    SecondMoment covariance_;
     bool full_rank_;
-    Operator precision_;
-    Operator cholesky_factor_;
+    SecondMoment precision_;
+    SecondMoment cholesky_factor_;
     Scalar log_normalizer_;
 };
 

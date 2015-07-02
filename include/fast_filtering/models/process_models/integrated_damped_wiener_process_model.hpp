@@ -92,7 +92,7 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
     typedef DampedWienerProcessModel<WienerProcessState>     DampedWienerProcessType;
     typedef Gaussian<Noise>                             GaussianType;
 
-    typedef typename GaussianType::Operator      Operator;
+    typedef typename GaussianType::SecondMoment      Operator;
 };
 }
 

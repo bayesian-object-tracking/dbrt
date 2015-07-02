@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/lexical_cast.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
 
-#include <fast_filtering/utils/random_seed.hpp>
+#include <fl/util/random.hpp>
 
 
 

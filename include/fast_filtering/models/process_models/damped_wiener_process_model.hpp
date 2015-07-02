@@ -52,6 +52,7 @@
 #include <fast_filtering/utils/assertions.hpp>
 #include <fast_filtering/models/process_models/interfaces/stationary_process_model.hpp>
 #include <fast_filtering/distributions/gaussian.hpp>
+#include <fl/distribution/gaussian.hpp>
 
 namespace ff
 {
@@ -74,7 +75,7 @@ struct Traits<DampedWienerProcessModel<State_> >
     typedef Eigen::Matrix<Scalar, State::SizeAtCompileTime, 1>  Noise;
 
     typedef Gaussian<Noise>                 GaussianType;
-    typedef typename GaussianType::Operator Operator;
+    typedef typename GaussianType::SecondMoment SecondMoment;
 
     typedef StationaryProcessModel<State, Input>   ProcessModelBase;
 //    typedef GaussianMap<State, Noise>         GaussianMapBase;
@@ -96,7 +97,7 @@ public:
     typedef internal::Traits<DampedWienerProcessModel<State> > Traits;
 
     typedef typename Traits::Scalar         Scalar;
-    typedef typename Traits::Operator       Operator;
+    typedef typename Traits::SecondMoment       SecondMoment;
     typedef typename Traits::Input          Input;
     typedef typename Traits::Noise          Noise;
     typedef typename Traits::GaussianType   GaussianType;
@@ -126,7 +127,7 @@ public:
     }
 
     virtual void Parameters(const Scalar& damping,
-                            const Operator& noise_covariance)
+                            const SecondMoment& noise_covariance)
     {
         damping_ = damping;
         noise_covariance_ = noise_covariance;
@@ -162,7 +163,7 @@ private:
         return state_expectation;
     }
 
-    Operator Covariance(const Scalar& delta_time)
+    SecondMoment Covariance(const Scalar& delta_time)
     {
         if(damping_ == 0)
             return delta_time * noise_covariance_;
@@ -180,7 +181,7 @@ private:
 
     // parameters
     Scalar damping_;
-    Operator noise_covariance_;
+    SecondMoment noise_covariance_;
 
     // euler-mascheroni constant
     static constexpr Scalar gamma_ = 0.57721566490153286060651209008240243104215933593992;
