@@ -86,7 +86,7 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Noise;
 
     typedef StationaryProcessModel<State, Input>    ProcessModelBase;
-    typedef GaussianMap<State, Noise>     GaussianMapBase;
+//    typedef GaussianMap<State, Noise>     GaussianMapBase;
 
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> WienerProcessState;
     typedef DampedWienerProcessModel<WienerProcessState>     DampedWienerProcessType;
@@ -104,8 +104,8 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
  */
 template <typename State_>
 class IntegratedDampedWienerProcessModel:
-        public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::ProcessModelBase,
-        public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::GaussianMapBase
+        public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::ProcessModelBase
+//        ,public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<IntegratedDampedWienerProcessModel<State_> > Traits;
@@ -128,7 +128,7 @@ public:
 public:
     IntegratedDampedWienerProcessModel(
             const unsigned& degree_of_freedom = DEGREE_OF_FREEDOM):
-        Traits::GaussianMapBase(degree_of_freedom),
+//        Traits::GaussianMapBase(degree_of_freedom),
         velocity_distribution_(degree_of_freedom),
         position_distribution_(degree_of_freedom)
     {
@@ -182,6 +182,11 @@ public:
     virtual unsigned StateDimension() const
     {
         return this->NoiseDimension() * 2;
+    }
+
+    virtual unsigned NoiseDimension() const
+    {
+        return velocity_distribution_.Dimension();
     }
 
 private:

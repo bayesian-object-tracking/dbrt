@@ -77,7 +77,7 @@ struct Traits<DampedWienerProcessModel<State_> >
     typedef typename GaussianType::Operator Operator;
 
     typedef StationaryProcessModel<State, Input>   ProcessModelBase;
-    typedef GaussianMap<State, Noise>         GaussianMapBase;
+//    typedef GaussianMap<State, Noise>         GaussianMapBase;
 };
 }
 
@@ -89,8 +89,8 @@ struct Traits<DampedWienerProcessModel<State_> >
  */
 template <typename State>
 class DampedWienerProcessModel:
-        public internal::Traits<DampedWienerProcessModel<State> >::ProcessModelBase,
-        public internal::Traits<DampedWienerProcessModel<State> >::GaussianMapBase
+        public internal::Traits<DampedWienerProcessModel<State> >::ProcessModelBase
+//        ,public internal::Traits<DampedWienerProcessModel<State> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<DampedWienerProcessModel<State> > Traits;
@@ -103,7 +103,7 @@ public:
 
 public:
     explicit DampedWienerProcessModel(const unsigned& dimension = State::SizeAtCompileTime):
-        Traits::GaussianMapBase(dimension),
+//        Traits::GaussianMapBase(dimension),
         gaussian_(dimension)
     {
         // check that state is derived from eigen
@@ -134,8 +134,15 @@ public:
 
     virtual unsigned Dimension() const
     {
-        return this->NoiseDimension(); // all dimensions are the same
+        return NoiseDimension(); // all dimensions are the same
     }
+
+
+    virtual int NoiseDimension() const
+    {
+        return gaussian_.Dimension();
+    }
+
 
 private:
     State Mean(const Scalar& delta_time,

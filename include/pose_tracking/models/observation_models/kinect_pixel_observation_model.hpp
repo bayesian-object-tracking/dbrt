@@ -57,7 +57,7 @@ struct Traits<KinectPixelObservationModel>
 {
     typedef double Scalar;
     typedef double Observation;
-    typedef Evaluation<Observation, Scalar>   EvaluationBase;
+//    typedef Evaluation<Observation, Scalar>   EvaluationBase;
 };
 }
 
@@ -68,8 +68,8 @@ struct Traits<KinectPixelObservationModel>
  * \ingroup distributions
  * \ingroup observation_models
  */
-class KinectPixelObservationModel:
-        public internal::Traits<KinectPixelObservationModel>::EvaluationBase
+class KinectPixelObservationModel
+//        :public internal::Traits<KinectPixelObservationModel>::EvaluationBase
 {
 public:
     typedef typename internal::Traits<KinectPixelObservationModel>::Scalar Scalar;

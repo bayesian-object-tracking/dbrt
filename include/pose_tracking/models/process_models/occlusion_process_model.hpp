@@ -42,8 +42,8 @@ namespace ff
  * \ingroup process_models
  */
 class OcclusionProcessModel:
-        public StationaryProcessModel<double>,
-        public GaussianMap<double>
+        public StationaryProcessModel<double>
+//        ,public GaussianMap<double>
 {
 public:
 	// the prob of source being object given source was object one sec ago,

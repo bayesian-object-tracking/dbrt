@@ -87,7 +87,7 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
     typedef IntegratedDampedWienerProcessModel<ObjectState>     Process;
 
     typedef StationaryProcessModel<State, Input>    ProcessModelBase;
-    typedef GaussianMap<State, Noise>          GaussianMapBase;
+//    typedef GaussianMap<State, Noise>          GaussianMapBase;
 };
 }
 
@@ -99,8 +99,8 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
  */
 template <typename State_, int OBJECTS = -1>
 class BrownianObjectMotionModel:
-        public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::ProcessModelBase,
-        public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::GaussianMapBase
+        public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::ProcessModelBase
+//        ,public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> > Traits;
@@ -119,8 +119,8 @@ public:
 
 public:
     BrownianObjectMotionModel(const unsigned& count_objects = OBJECTS):
-        Traits::GaussianMapBase(
-            count_objects == Eigen::Dynamic ? Eigen::Dynamic : count_objects * DIMENSION_PER_OBJECT),
+//        Traits::GaussianMapBase(
+//            count_objects == Eigen::Dynamic ? Eigen::Dynamic : count_objects * DIMENSION_PER_OBJECT),
         state_(count_objects)
     {
         static_assert_base(State, FreeFloatingRigidBodiesState<OBJECTS>);
@@ -202,6 +202,12 @@ public:
     virtual unsigned InputDimension() const
     {
         return this->NoiseDimension();
+    }
+
+
+    virtual unsigned NoiseDimension() const
+    {
+        return state_.body_count() * DIMENSION_PER_OBJECT;
     }
 
     virtual size_t Dimension()
