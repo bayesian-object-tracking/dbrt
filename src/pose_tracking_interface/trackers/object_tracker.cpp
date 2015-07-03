@@ -91,6 +91,7 @@ void MultiObjectTracker::Initialize(
     double model_sigma; ri::ReadParameter("model_sigma", model_sigma, node_handle_);
     double sigma_factor; ri::ReadParameter("sigma_factor", sigma_factor, node_handle_);
 
+    double delta_time = 0.033;
 
     std::cout << "sampling blocks: " << std::endl;
     ff::hf::PrintVector(sampling_blocks);
@@ -110,21 +111,7 @@ void MultiObjectTracker::Initialize(
         object_triangle_indices[i] = *file_reader.get_indices();
     }
 
-//    vis::CloudVisualizer vis;
-//    for(size_t i = 0; i < 100; i++)
-//    {
-//        size_t index = rand() % initial_states.size();
-//        ff::FreeFloatingRigidBodiesState<> state (initial_states[index]);
 
-
-//        vis.add_cloud(object_vertices[0],
-//                      state.rotation_matrix(),
-//                      state.position());
-//    }
-
-//    vis.add_cloud(ff::hf::Image2Points(image, camera_matrix));
-
-//    vis.show();
 
 
     boost::shared_ptr<State> rigid_bodies_state(new ff::FreeFloatingRigidBodiesState<>(object_names_.size()));
@@ -132,72 +119,6 @@ void MultiObjectTracker::Initialize(
                                                                       object_vertices,
                                                                       object_triangle_indices,
                                                                       rigid_bodies_state));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    ff::ApproximateKinectPixelObservationModel<State> pixel_observation_model(
-//                object_renderer,
-//                camera_matrix,
-//                image.rows(),
-//                image.cols(),
-//                0.5,
-//                0.003,
-//                0.001424,
-//                1.0,
-//                6.0,
-//                0.0,
-//                2.0,
-//                10000,
-//                1000);
-//    pixel_observation_model.Condition(1, 0);
-
-
-
-//    ff::ContinuousOcclusionProcessModel occlusion_process(p_occluded_visible,
-//                                                          p_occluded_occluded,
-//                                                          0.2);
-//    ff::ContinuousOcclusionProcessModel::State occlusion;
-
-//    size_t N = 1000000;
-//    INIT_PROFILING;
-//    for(size_t i = 0; i < N; i++)
-//    {
-//        occlusion_process.Condition(1.0, occlusion);
-//        occlusion(0,0) += 0.00001;
-//    }
-//    MEASURE("conditioning");
-//    occlusion_process.Condition(1.0, occlusion);
-//    for(size_t i = 0; i < N; i++)
-//    {
-//        occlusion = occlusion_process.MapStandardGaussian(ff::ContinuousOcclusionProcessModel::State(0.12));
-//    }
-//    MEASURE("mapping");
-
-
-
-
-//    std::cout << "testing distribution " << std::endl;
-//    occlusion(0,0) = -1000.0;
-//    occlusion_process.Condition(1.0, occlusion);
-//    ff::TestDistributionSampling(occlusion_process, 100000);
-////    ff::TestDistribution(pixel_observation_model, 1000000);
-//    std::cout << "done testing " << std::endl;
-
-//    exit(-1);
-
-
-
 
 
 
@@ -294,7 +215,7 @@ void MultiObjectTracker::Initialize(
     Eigen::MatrixXd linear_acceleration_covariance = Eigen::MatrixXd::Identity(3, 3) * pow(double(linear_acceleration_sigma), 2);
     Eigen::MatrixXd angular_acceleration_covariance = Eigen::MatrixXd::Identity(3, 3) * pow(double(angular_acceleration_sigma), 2);
 
-    boost::shared_ptr<ProcessModel> process(new ProcessModel(object_names_.size()));
+    boost::shared_ptr<ProcessModel> process(new ProcessModel(delta_time, object_names_.size()));
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         process->Parameters(i, object_renderer->object_center(i).cast<double>(),
@@ -364,6 +285,8 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
         last_measurement_time_ = ros_image.header.stamp.toSec();
     Scalar delta_time = ros_image.header.stamp.toSec() - last_measurement_time_;
 
+
+    std::cout << "actual delta time " << delta_time << std::endl;
     // convert image
     Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_); // convert to m
 

@@ -48,10 +48,10 @@
 #ifndef POSE_TRACKING_MODELS_PROCESS_MODELS_BROWNIAN_OBJECT_MOTION_MODEL_HPP
 #define POSE_TRACKING_MODELS_PROCESS_MODELS_BROWNIAN_OBJECT_MOTION_MODEL_HPP
 
-#include <pose_tracking/utils/helper_functions.hpp>
 #include <fl/util/assertions.hpp>
+
+#include <pose_tracking/utils/helper_functions.hpp>
 #include <pose_tracking/states/free_floating_rigid_bodies_state.hpp>
-//#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 #include <pose_tracking/models/process_models/damped_wiener_process_model.hpp>
 #include <pose_tracking/models/process_models/integrated_damped_wiener_process_model.hpp>
 
@@ -85,9 +85,6 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
     typedef Eigen::Quaternion<Scalar>                      Quaternion;
     typedef Eigen::Matrix<Scalar, DIMENSION_PER_OBJECT, 1> ObjectState;
     typedef IntegratedDampedWienerProcessModel<ObjectState>     Process;
-
-//    typedef StationaryProcessModel<State, Input>    ProcessModelBase;
-//    typedef GaussianMap<State, Noise>          GaussianMapBase;
 };
 }
 
@@ -99,8 +96,6 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
  */
 template <typename State_, int OBJECTS = -1>
 class BrownianObjectMotionModel
-//        :   public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::ProcessModelBase
-//        ,public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> > Traits;
@@ -118,17 +113,24 @@ public:
     };
 
 public:
-    BrownianObjectMotionModel(const unsigned& count_objects = OBJECTS):
-//        Traits::GaussianMapBase(
-//            count_objects == Eigen::Dynamic ? Eigen::Dynamic : count_objects * DIMENSION_PER_OBJECT),
-        state_(count_objects)
+    BrownianObjectMotionModel(const double& delta_time,
+                              const unsigned& count_objects = OBJECTS):
+        state_(count_objects),
+        delta_time_(delta_time)
     {
         static_assert_base(State, FreeFloatingRigidBodiesState<OBJECTS>);
 
         quaternion_map_.resize(count_objects);
         rotation_center_.resize(count_objects);
-        linear_process_.resize(count_objects);
-        angular_process_.resize(count_objects);
+
+        for(size_t i = 0; i < count_objects; i++)
+        {
+            linear_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT));
+            angular_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT));
+        }
+
+//        linear_process_.resize(count_objects);
+//        angular_process_.resize(count_objects);
     }
 
     virtual ~BrownianObjectMotionModel() { }
@@ -156,6 +158,24 @@ public:
 
         return new_state;
     }
+
+    virtual void set_delta_time(const double& delta_time)
+    {
+        delta_time_ = delta_time;
+    }
+
+
+    virtual State state(const State& prev_state,
+                        const Noise& noise,
+                        const Input& input) const
+    {
+
+    }
+
+
+
+
+
 
     virtual void Condition(const Scalar& delta_time,
                            const State&  state,
@@ -188,7 +208,38 @@ public:
         }
     }
 
-    virtual void Parameters(const size_t&                           object_index,
+
+
+
+//    virtual void Condition(const State&  state,
+//                           const Input&  control)
+//    {
+//        state_ = state;
+//        for(size_t i = 0; i < state_.body_count(); i++)
+//        {
+//            quaternion_map_[i] = ff::hf::QuaternionMatrix(state_.quaternion(i).coeffs());
+
+//            // transform the state, which is the pose and velocity with respect to to the origin,
+//            // into internal representation, which is the position and velocity of the center
+//            // and the orientation and angular velocity around the center
+//            state_.position(i)        += state_.rotation_matrix(i)*rotation_center_[i];
+//            state_.linear_velocity(i) += state_.angular_velocity(i).cross(state_.position(i));
+
+//            Eigen::Matrix<Scalar, 6, 1> linear_state;
+//            linear_state.topRows(3) = Eigen::Vector3d::Zero();
+//            linear_state.bottomRows(3) = state_.linear_velocity(i);
+//            linear_process_[i].Condition(linear_state,
+//                                         control.template middleRows<3>(i*DIMENSION_PER_OBJECT));
+
+//            Eigen::Matrix<Scalar, 6, 1> angular_state;
+//            angular_state.topRows(3) = Eigen::Vector3d::Zero();
+//            angular_state.bottomRows(3) = state_.angular_velocity(i);
+//            angular_process_[i].Condition(angular_state,
+//                                          control.template middleRows<3>(i*DIMENSION_PER_OBJECT + 3));
+//        }
+//    }
+
+    virtual void Parameters(const size_t&                       object_index,
                             const Eigen::Matrix<Scalar, 3, 1>&  rotation_center,
                             const Scalar&                       damping,
                             const typename Process::Operator&   linear_acceleration_covariance,
@@ -227,6 +278,8 @@ private:
     // processes
     std::vector<Process>   linear_process_;
     std::vector<Process>   angular_process_;
+
+    double delta_time_;
 };
 
 }

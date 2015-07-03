@@ -97,6 +97,8 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     double tail_weight; ri::ReadParameter("tail_weight", tail_weight, node_handle_);
     double model_sigma; ri::ReadParameter("model_sigma", model_sigma, node_handle_);
     double sigma_factor; ri::ReadParameter("sigma_factor", sigma_factor, node_handle_);
+    double delta_time = 0.033;
+
     std::vector<std::vector<size_t> > sampling_blocks;
     ri::ReadParameter("sampling_blocks", sampling_blocks, node_handle_);
     std::vector<double> joint_sigmas;
@@ -265,7 +267,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
              << " while the state dimension is " << dimension_ << std::endl;
         exit(-1);
     }
-    boost::shared_ptr<ProcessModel> process(new ProcessModel(dimension_));
+    boost::shared_ptr<ProcessModel> process(new ProcessModel(delta_time, dimension_));
     Eigen::MatrixXd joint_covariance = Eigen::MatrixXd::Zero(dimension_, dimension_);
     for(size_t i = 0; i < dimension_; i++)
         joint_covariance(i, i) = pow(joint_sigmas[i], 2);

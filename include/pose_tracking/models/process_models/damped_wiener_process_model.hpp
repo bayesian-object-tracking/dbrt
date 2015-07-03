@@ -103,9 +103,15 @@ public:
     typedef typename Traits::GaussianType   GaussianType;
 
 public:
-    explicit DampedWienerProcessModel(const unsigned& dimension = State::SizeAtCompileTime):
-//        Traits::GaussianMapBase(dimension),
-        gaussian_(dimension)
+
+    /// \todo uncomment default argument
+    explicit DampedWienerProcessModel(
+            const double& delta_time,
+            const unsigned& dimension /*= State::SizeAtCompileTime*/):
+
+        gaussian_(dimension),
+        delta_time_(delta_time)
+
     {
         // check that state is derived from eigen
         static_assert_base(State, Eigen::Matrix<typename State::Scalar, State::SizeAtCompileTime, 1>);
@@ -118,6 +124,14 @@ public:
         return gaussian_.map_standard_normal(sample);
     }
 
+//    virtual void Condition(const State&  state,
+//                           const Input&   input)
+//    {
+//        gaussian_.mean(Mean(delta_time_, state, input));
+//        gaussian_.diagonal_covariance(Covariance(delta_time_));
+//    }
+
+
     virtual void Condition(const Scalar&  delta_time,
                            const State&  state,
                            const Input&   input)
@@ -125,6 +139,7 @@ public:
         gaussian_.mean(Mean(delta_time, state, input));
         gaussian_.diagonal_covariance(Covariance(delta_time));
     }
+
 
     virtual void Parameters(const Scalar& damping,
                             const SecondMoment& noise_covariance)
@@ -176,6 +191,9 @@ private:
     }
 
 private:
+    double delta_time_;
+
+
     // conditional
     GaussianType gaussian_;
 

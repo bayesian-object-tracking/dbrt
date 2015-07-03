@@ -104,8 +104,6 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
  */
 template <typename State_>
 class IntegratedDampedWienerProcessModel
-//        : public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::ProcessModelBase
-//        ,public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::GaussianMapBase
 {
 public:
     typedef internal::Traits<IntegratedDampedWienerProcessModel<State_> > Traits;
@@ -126,12 +124,16 @@ public:
     };
 
 public:
+    /// \todo uncomment default argument
+
     IntegratedDampedWienerProcessModel(
-            const unsigned& degree_of_freedom = DEGREE_OF_FREEDOM):
-//        Traits::GaussianMapBase(degree_of_freedom),
-        velocity_distribution_(degree_of_freedom),
-        position_distribution_(degree_of_freedom)
+            const double& delta_time,
+            const unsigned& degree_of_freedom/* = DEGREE_OF_FREEDOM*/):
+        velocity_distribution_(delta_time, degree_of_freedom),
+        position_distribution_(degree_of_freedom),
+        delta_time_(delta_time)
     {
+        std::cout << "delta_time " << delta_time_ << std::endl;
         static_assert_base(State, Eigen::Matrix<Scalar, STATE_DIMENSION, 1>);
 
         BOOST_STATIC_ASSERT_MSG(
@@ -150,6 +152,19 @@ public:
     }
 
 
+//    virtual void Condition(const State& state,
+//                           const Input& input)
+//    {
+//        position_distribution_.mean(Mean(state.topRows(InputDimension()), // position
+//                                                state.bottomRows(InputDimension()), // velocity
+//                                                input, // acceleration
+//                                                delta_time_));
+//        position_distribution_.covariance(Covariance(delta_time_));
+
+//        velocity_distribution_.Condition(state.bottomRows(InputDimension()), input);
+//    }
+
+
     virtual void Condition(const Scalar&  delta_time,
                            const State&  state,
                            const Input&   input)
@@ -162,6 +177,10 @@ public:
 
         velocity_distribution_.Condition(delta_time, state.bottomRows(InputDimension()), input);
     }
+
+
+
+
 
     virtual void Parameters(
             const double& damping,
@@ -234,6 +253,8 @@ private:
     // parameters
     Scalar damping_;
     Operator acceleration_covariance_;
+
+    double delta_time_;
 
     // euler-mascheroni constant
     static constexpr Scalar gamma_ = 0.57721566490153286060651209008240243104215933593992;
