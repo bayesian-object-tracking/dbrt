@@ -87,7 +87,6 @@ public:
 
 public:
     void Filter(const Observation&  observation,
-                const Scalar&       delta_time,
                 const Input&        input)
     {
         observation_model_->SetObservation(observation);

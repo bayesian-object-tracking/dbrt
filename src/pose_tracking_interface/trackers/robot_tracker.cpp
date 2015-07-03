@@ -282,7 +282,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     // we evaluate the initial particles and resample -------------------------------------------------------------------------------
     std::cout << "evaluating initial particles cpu ..." << std::endl;
     filter_->Samples(initial_samples);
-    filter_->Filter(image, 0.0, Input::Zero(dimension_));
+    filter_->Filter(image, Input::Zero(dimension_));
     filter_->Resample(evaluation_count_/sampling_blocks.size());
 }
 
@@ -317,7 +317,7 @@ void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
     // filter
     {
     INIT_PROFILING;
-    filter_->Filter(image, delta_time, Eigen::VectorXd::Zero(dimension_));
+    filter_->Filter(image, Eigen::VectorXd::Zero(dimension_));
     MEASURE("-----------------> total time for filtering");
     }
 
@@ -426,7 +426,7 @@ Eigen::VectorXd RobotTracker::FilterAndReturn(const sensor_msgs::Image& ros_imag
     // filter
     {
     INIT_PROFILING;
-    filter_->Filter(image, delta_time, Eigen::VectorXd::Zero(dimension_));
+    filter_->Filter(image, Eigen::VectorXd::Zero(dimension_));
     MEASURE("-----------------> total time for filtering");
     }
 

@@ -260,7 +260,7 @@ void MultiObjectTracker::Initialize(
                 multi_body_samples[state_index] = full_initial_state;
             }
             filter_->Samples(multi_body_samples);
-            filter_->Filter(image, 0.0, ProcessModel::Input::Zero(object_names_.size()*6));
+            filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
             filter_->Resample(multi_body_samples.size());
 
             multi_body_samples = filter_->Samples();
@@ -273,7 +273,7 @@ void MultiObjectTracker::Initialize(
             multi_body_samples[i] = initial_states[i];
 
         filter_->Samples(multi_body_samples);
-        filter_->Filter(image, 0.0, ProcessModel::Input::Zero(object_names_.size()*6));
+        filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
    }
     filter_->Resample(evaluation_count/sampling_blocks.size());
     filter_->SamplingBlocks(sampling_blocks);
@@ -294,7 +294,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     // filter
     INIT_PROFILING;
-    filter_->Filter(image, delta_time, ProcessModel::Input::Zero(object_names_.size()*6));
+    filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
 
 
