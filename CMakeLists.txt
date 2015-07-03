@@ -145,6 +145,7 @@ catkin_package(
         include
     LIBRARIES
         dbot_cuda
+        dbot_gpu
         dbot
         pose_tracking_interface
     CATKIN_DEPENDS
