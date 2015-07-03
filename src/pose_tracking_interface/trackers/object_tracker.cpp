@@ -153,7 +153,8 @@ void MultiObjectTracker::Initialize(
                                         object_renderer,
                                         kinect_pixel_observation_model,
                                         occlusion_process,
-                                        initial_occlusion_prob));
+                                        initial_occlusion_prob,
+                                        delta_time));
     }
     else
     {
@@ -165,7 +166,8 @@ void MultiObjectTracker::Initialize(
                                                  image.rows(),
                                                  image.cols(),
                                                  max_sample_count,
-                                                 initial_occlusion_prob));
+                                                 initial_occlusion_prob,
+                                                 delta_time));
 
         std::string vertex_shader_path =
                 ros::package::getPath("state_filtering")

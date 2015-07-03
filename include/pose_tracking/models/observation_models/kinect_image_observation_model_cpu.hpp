@@ -94,7 +94,8 @@ public:
             const ObjectRendererPtr object_renderer,
             const PixelObservationModelPtr observation_model,
             const OcclusionProcessModelPtr occlusion_process_model,
-            const float& initial_occlusion):
+            const float& initial_occlusion,
+            const double& delta_time):
         camera_matrix_(camera_matrix),
         n_rows_(n_rows),
         n_cols_(n_cols),
@@ -103,7 +104,8 @@ public:
         object_model_(object_renderer),
         observation_model_(observation_model),
         occlusion_process_model_(occlusion_process_model),
-        observation_time_(0)
+        observation_time_(0),
+        Base(delta_time)
     {
         static_assert_base(State, RigidBodiesState<OBJECTS>);
 
@@ -185,7 +187,7 @@ public:
         return loglikes;
     }
 
-    void SetObservation(const Observation& image, const double& delta_time)
+    void SetObservation(const Observation& image)
     {
         std::vector<float> std_measurement(image.size());
 
@@ -193,7 +195,7 @@ public:
             for(size_t col = 0; col < image.cols(); col++)
                 std_measurement[row*image.cols() + col] = image(row, col);
 
-        SetObservation(std_measurement, delta_time);
+        SetObservation(std_measurement, this->delta_time_);
     }
 
     virtual void Reset()

@@ -69,7 +69,8 @@ public:
                      const size_t& n_rows,
                      const size_t& n_cols,
                      const size_t& max_sample_count,
-                     const Scalar& initial_occlusion_prob):
+                     const Scalar& initial_occlusion_prob,
+                     const double& delta_time):
             camera_matrix_(camera_matrix),
             n_rows_(n_rows),
             n_cols_(n_cols),
@@ -81,7 +82,8 @@ public:
             observations_set_(false),
             resource_registered_(false),
             nr_calls_set_observation_(0),
-            observation_time_(0)
+            observation_time_(0),
+            Traits::ObservationModelBase(delta_time)
     {
         visibility_probs_.resize(n_rows_ * n_cols_);
     }
@@ -273,14 +275,14 @@ public:
     }
 
 
-    void SetObservation(const Observation& image, const double& delta_time){
+    void SetObservation(const Observation& image){
         std::vector<float> std_measurement(image.size());
 
         for(size_t row = 0; row < image.rows(); row++)
             for(size_t col = 0; col < image.cols(); col++)
                 std_measurement[row*image.cols() + col] = image(row, col);
 
-        SetObservation(std_measurement, delta_time);
+        SetObservation(std_measurement, this->delta_time_);
     }
 
     virtual void Reset()

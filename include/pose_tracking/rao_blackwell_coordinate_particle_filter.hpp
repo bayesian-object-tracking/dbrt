@@ -80,18 +80,6 @@ public:
         process_model_(process_model),
         max_kl_divergence_(max_kl_divergence)
     {
-//        static_assert_base(
-//            ProcessModel,
-//            StationaryProcessModel<State, Input>);
-
-//        static_assert_base(
-//            ProcessModel,
-//            GaussianMap<State, Noise>);
-
-//        static_assert_base(
-//            ObservationModel,
-//            RaoBlackwellObservationModel<State, Observation>);
-
         SamplingBlocks(sampling_blocks);
     }
 
@@ -102,7 +90,7 @@ public:
                 const Scalar&       delta_time,
                 const Input&        input)
     {
-        observation_model_->SetObservation(observation, delta_time);
+        observation_model_->SetObservation(observation);
 
         loglikes_ = std::vector<Scalar>(samples_.size(), 0);
         noises_ = std::vector<Noise>(samples_.size(), Noise::Zero(process_model_->NoiseDimension()));

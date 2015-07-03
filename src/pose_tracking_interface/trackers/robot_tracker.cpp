@@ -198,7 +198,8 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                                                 robot_renderer_,
                                                 kinect_pixel_observation_model,
                                                 occlusion_process_model,
-                                                initial_occlusion_prob));
+                                                initial_occlusion_prob,
+                                                delta_time));
     }
     else
     {
@@ -210,7 +211,8 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                                           image.rows(),
                                           image.cols(),
                                           max_sample_count,
-                                          initial_occlusion_prob));
+                                          initial_occlusion_prob,
+                                          delta_time));
 
 
 

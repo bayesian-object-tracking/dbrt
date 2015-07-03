@@ -49,17 +49,24 @@ public:
     typedef Observation_ Observation;
 
 public:
+    RaoBlackwellObservationModel(const double& delta_time):
+    delta_time_(delta_time)
+    {}
+
     virtual ~RaoBlackwellObservationModel() { }
 
     virtual std::vector<double> Loglikes(const std::vector<State>& states,
                                          std::vector<size_t>& indices,
                                          const bool& update = false) = 0;
 
-    virtual void SetObservation(const Observation& image,
-                                const double& delta_time) = 0;
+    virtual void SetObservation(const Observation& image) = 0;
 
     // reset the latent variables
     virtual void Reset() = 0;
+
+
+protected:
+    double delta_time_;
 };
 
 }
