@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sensor_msgs/PointCloud2.h>
 
-#include <pose_tracking/states/free_floating_rigid_bodies_state.hpp>
+#include <dbot/states/free_floating_rigid_bodies_state.hpp>
 
 namespace pi
 {

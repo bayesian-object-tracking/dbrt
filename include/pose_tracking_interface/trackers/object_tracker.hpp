@@ -39,11 +39,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 
-#include <pose_tracking/rao_blackwell_coordinate_particle_filter.hpp>
-#include <pose_tracking/models/process_models/brownian_object_motion_model.hpp>
-#include <pose_tracking/models/observation_models/kinect_image_observation_model_cpu.hpp>
+#include <dbot/rao_blackwell_coordinate_particle_filter.hpp>
+#include <dbot/models/process_models/brownian_object_motion_model.hpp>
+#include <dbot/models/observation_models/kinect_image_observation_model_cpu.hpp>
 #ifdef BUILD_GPU
-#include <pose_tracking/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
+#include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
 #endif
 
 class MultiObjectTracker

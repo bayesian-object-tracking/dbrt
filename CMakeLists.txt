@@ -144,8 +144,8 @@ catkin_package(
     INCLUDE_DIRS
         include
     LIBRARIES
-        pose_tracking_cuda
-        pose_tracking
+        dbot_cuda
+        dbot
         pose_tracking_interface
     CATKIN_DEPENDS
         roscpp
@@ -171,7 +171,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} )
 
 set(PROJECT_NAME_FILTERING "fast_filtering")
-set(PROJECT_NAME_TRACKING "pose_tracking")
+set(PROJECT_NAME_TRACKING "dbot")
 set(PROJECT_NAME_TRACKING_INTERFACE "pose_tracking_interface")
 
 file(GLOB_RECURSE filtering_headers include/${PROJECT_NAME_FILTERING}/*.hpp include/${PROJECT_NAME_FILTERING}/*.h)

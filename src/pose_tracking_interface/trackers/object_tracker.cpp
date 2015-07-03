@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 #include <ros/package.h>
 
-#include <pose_tracking/utils/profiling.hpp>
+#include <dbot/utils/profiling.hpp>
 
 #include <pose_tracking_interface/trackers/object_tracker.hpp>
 #include <pose_tracking_interface/utils/ros_interface.hpp>
@@ -35,12 +35,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 //#include <fast_filtering/distributions/uniform_distribution.hpp>
-//#include <pose_tracking/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
-//#include <pose_tracking/models/observation_models/approximate_kinect_pixel_observation_model.hpp>
+//#include <dbot/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
+//#include <dbot/models/observation_models/approximate_kinect_pixel_observation_model.hpp>
 
-//#include <pose_tracking/models/process_models/continuous_occlusion_process_model.hpp>
+//#include <dbot/models/process_models/continuous_occlusion_process_model.hpp>
 
-//#include <pose_tracking/utils/distribution_test.hpp>
+//#include <dbot/utils/distribution_test.hpp>
 
 #include <pose_tracking_interface/utils/cloud_visualizer.hpp>
 
@@ -171,13 +171,13 @@ void MultiObjectTracker::Initialize(
 
         std::string vertex_shader_path =
                 ros::package::getPath("state_filtering")
-                + "/src/pose_tracking/models/observation_models/"
+                + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "VertexShader.vertexshader";
 
         std::string fragment_shader_path =
                 ros::package::getPath("state_filtering")
-                + "/src/pose_tracking/models/observation_models/"
+                + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";
 

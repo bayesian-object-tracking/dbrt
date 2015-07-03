@@ -26,42 +26,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#ifndef POSE_TRACKING_INTERFACE_UTILS_OBJECT_FILE_READER_HPP
-#define POSE_TRACKING_INTERFACE_UTILS_OBJECT_FILE_READER_HPP
+#ifndef FAST_FILTERING_MODELS_OBSERVATION_MODELS_INTERFACES_RAO_BLACKWELL_OBSERVATION_MODEL_HPP
+#define FAST_FILTERING_MODELS_OBSERVATION_MODELS_INTERFACES_RAO_BLACKWELL_OBSERVATION_MODEL_HPP
 
-// #include <dbot/pose_tracking.hpp>
-
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <Eigen/Core>
-#include <list>
 #include <vector>
-#include <list>
+#include <dbot/utils/traits.hpp>
 
-class ObjectFileReader
+
+namespace ff
+{
+
+/**
+ * Rao-Blackwellized particle filter observation model interface
+ *
+ * \ingroup observation_models
+ */
+template<typename State_, typename Observation_>
+class RaoBlackwellObservationModel
 {
 public:
-	ObjectFileReader();
-	~ObjectFileReader(){}
+    typedef State_       State;
+    typedef Observation_ Observation;
 
-	void set_filename(std::string filename);
-	void Read();
-	void Process(float max_side_length);
+public:
+    RaoBlackwellObservationModel(const double& delta_time):
+    delta_time_(delta_time)
+    {}
 
-	boost::shared_ptr<std::vector<Eigen::Vector3d> > get_vertices();
-	boost::shared_ptr<std::vector<std::vector<int> > > get_indices();
+    virtual ~RaoBlackwellObservationModel() { }
+
+    virtual std::vector<double> Loglikes(const std::vector<State>& states,
+                                         std::vector<size_t>& indices,
+                                         const bool& update = false) = 0;
+
+    virtual void SetObservation(const Observation& image) = 0;
+
+    // reset the latent variables
+    virtual void Reset() = 0;
 
 
-	boost::shared_ptr<std::vector<Eigen::Vector3d> > get_centers();
-	boost::shared_ptr<std::vector<float> > get_areas();
-
-private:
-	std::string filename_;
-	boost::shared_ptr<std::vector<Eigen::Vector3d> > vertices_;
-	boost::shared_ptr<std::vector<std::vector<int> > > indices_;
-
-	boost::shared_ptr<std::vector<Eigen::Vector3d> > centers_;
-	boost::shared_ptr<std::vector<float> > areas_;
+protected:
+    double delta_time_;
 };
 
+}
 #endif
