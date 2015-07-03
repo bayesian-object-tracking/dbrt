@@ -44,7 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#include <fast_filtering/distributions/sum_of_deltas.hpp>
 //#include <fast_filtering/distributions/interfaces/gaussian_map.hpp>
 #include <pose_tracking/models/observation_models/rao_blackwell_observation_model.hpp>
-#include <pose_tracking/models/process_models/stationary_process_model.hpp>
+//#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 
 #include <fl/distribution/gaussian.hpp>
 

@@ -51,7 +51,7 @@
 #include <pose_tracking/utils/helper_functions.hpp>
 #include <fl/util/assertions.hpp>
 #include <pose_tracking/states/free_floating_rigid_bodies_state.hpp>
-#include <pose_tracking/models/process_models/stationary_process_model.hpp>
+//#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 #include <pose_tracking/models/process_models/damped_wiener_process_model.hpp>
 #include <pose_tracking/models/process_models/integrated_damped_wiener_process_model.hpp>
 
@@ -86,7 +86,7 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
     typedef Eigen::Matrix<Scalar, DIMENSION_PER_OBJECT, 1> ObjectState;
     typedef IntegratedDampedWienerProcessModel<ObjectState>     Process;
 
-    typedef StationaryProcessModel<State, Input>    ProcessModelBase;
+//    typedef StationaryProcessModel<State, Input>    ProcessModelBase;
 //    typedef GaussianMap<State, Noise>          GaussianMapBase;
 };
 }
@@ -98,8 +98,8 @@ struct Traits<BrownianObjectMotionModel<State_, OBJECTS> >
  * \ingroup process_models
  */
 template <typename State_, int OBJECTS = -1>
-class BrownianObjectMotionModel:
-        public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::ProcessModelBase
+class BrownianObjectMotionModel
+//        :   public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::ProcessModelBase
 //        ,public internal::Traits<BrownianObjectMotionModel<State_, OBJECTS> >::GaussianMapBase
 {
 public:

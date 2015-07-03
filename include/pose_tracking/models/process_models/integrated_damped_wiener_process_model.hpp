@@ -85,7 +85,7 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Input;
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> Noise;
 
-    typedef StationaryProcessModel<State, Input>    ProcessModelBase;
+//    typedef StationaryProcessModel<State, Input>    ProcessModelBase;
 //    typedef GaussianMap<State, Noise>     GaussianMapBase;
 
     typedef Eigen::Matrix<Scalar, DEGREE_OF_FREEDOM, 1> WienerProcessState;
@@ -103,8 +103,8 @@ struct Traits<IntegratedDampedWienerProcessModel<State_> >
  * \ingroup process_models
  */
 template <typename State_>
-class IntegratedDampedWienerProcessModel:
-        public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::ProcessModelBase
+class IntegratedDampedWienerProcessModel
+//        : public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::ProcessModelBase
 //        ,public internal::Traits<IntegratedDampedWienerProcessModel<State_> >::GaussianMapBase
 {
 public:

@@ -50,7 +50,7 @@
 #include <Eigen/Dense>
 
 #include <fl/util/assertions.hpp>
-#include <pose_tracking/models/process_models/stationary_process_model.hpp>
+//#include <pose_tracking/models/process_models/stationary_process_model.hpp>
 //#include <fast_filtering/distributions/gaussian.hpp>
 #include <fl/distribution/gaussian.hpp>
 
@@ -77,7 +77,7 @@ struct Traits<DampedWienerProcessModel<State_> >
     typedef fl::Gaussian<Noise>                 GaussianType;
     typedef typename GaussianType::SecondMoment SecondMoment;
 
-    typedef StationaryProcessModel<State, Input>   ProcessModelBase;
+//    typedef StationaryProcessModel<State, Input>   ProcessModelBase;
 //    typedef GaussianMap<State, Noise>         GaussianMapBase;
 };
 }
@@ -89,8 +89,8 @@ struct Traits<DampedWienerProcessModel<State_> >
  * \ingroup process_models
  */
 template <typename State>
-class DampedWienerProcessModel:
-        public internal::Traits<DampedWienerProcessModel<State> >::ProcessModelBase
+class DampedWienerProcessModel
+//        :public internal::Traits<DampedWienerProcessModel<State> >::ProcessModelBase
 //        ,public internal::Traits<DampedWienerProcessModel<State> >::GaussianMapBase
 {
 public:
