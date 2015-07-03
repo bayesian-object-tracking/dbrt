@@ -107,7 +107,7 @@ public:
     /// \todo uncomment default argument
     explicit DampedWienerProcessModel(
             const double& delta_time,
-            const unsigned& dimension /*= State::SizeAtCompileTime*/):
+            const unsigned& dimension = State::SizeAtCompileTime):
 
         gaussian_(dimension),
         delta_time_(delta_time)
@@ -124,21 +124,21 @@ public:
         return gaussian_.map_standard_normal(sample);
     }
 
-//    virtual void Condition(const State&  state,
-//                           const Input&   input)
-//    {
-//        gaussian_.mean(Mean(delta_time_, state, input));
-//        gaussian_.diagonal_covariance(Covariance(delta_time_));
-//    }
-
-
-    virtual void Condition(const Scalar&  delta_time,
-                           const State&  state,
+    virtual void Condition(const State&  state,
                            const Input&   input)
     {
-        gaussian_.mean(Mean(delta_time, state, input));
-        gaussian_.diagonal_covariance(Covariance(delta_time));
+        gaussian_.mean(Mean(delta_time_, state, input));
+        gaussian_.diagonal_covariance(Covariance(delta_time_));
     }
+
+
+//    virtual void Condition(const Scalar&  delta_time,
+//                           const State&  state,
+//                           const Input&   input)
+//    {
+//        gaussian_.mean(Mean(delta_time, state, input));
+//        gaussian_.diagonal_covariance(Covariance(delta_time));
+//    }
 
 
     virtual void Parameters(const Scalar& damping,

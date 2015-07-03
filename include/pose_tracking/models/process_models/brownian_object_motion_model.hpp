@@ -125,8 +125,9 @@ public:
 
         for(size_t i = 0; i < count_objects; i++)
         {
-            linear_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT));
-            angular_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT));
+            /// \todo check dimensions, not entirely sure about this
+            linear_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT/2));
+            angular_process_.push_back(Process(delta_time, DIMENSION_PER_OBJECT/2));
         }
 
 //        linear_process_.resize(count_objects);
@@ -177,41 +178,8 @@ public:
 
 
 
-    virtual void Condition(const Scalar& delta_time,
-                           const State&  state,
-                           const Input&  control)
-    {
-        state_ = state;
-        for(size_t i = 0; i < state_.body_count(); i++)
-        {
-            quaternion_map_[i] = ff::hf::QuaternionMatrix(state_.quaternion(i).coeffs());
-
-            // transform the state, which is the pose and velocity with respect to to the origin,
-            // into internal representation, which is the position and velocity of the center
-            // and the orientation and angular velocity around the center
-            state_.position(i)        += state_.rotation_matrix(i)*rotation_center_[i];
-            state_.linear_velocity(i) += state_.angular_velocity(i).cross(state_.position(i));
-
-            Eigen::Matrix<Scalar, 6, 1> linear_state;
-            linear_state.topRows(3) = Eigen::Vector3d::Zero();
-            linear_state.bottomRows(3) = state_.linear_velocity(i);
-            linear_process_[i].Condition(delta_time,
-                                         linear_state,
-                                         control.template middleRows<3>(i*DIMENSION_PER_OBJECT));
-
-            Eigen::Matrix<Scalar, 6, 1> angular_state;
-            angular_state.topRows(3) = Eigen::Vector3d::Zero();
-            angular_state.bottomRows(3) = state_.angular_velocity(i);
-            angular_process_[i].Condition(delta_time,
-                                          angular_state,
-                                          control.template middleRows<3>(i*DIMENSION_PER_OBJECT + 3));
-        }
-    }
-
-
-
-
-//    virtual void Condition(const State&  state,
+//    virtual void Condition(const Scalar& delta_time,
+//                           const State&  state,
 //                           const Input&  control)
 //    {
 //        state_ = state;
@@ -228,16 +196,49 @@ public:
 //            Eigen::Matrix<Scalar, 6, 1> linear_state;
 //            linear_state.topRows(3) = Eigen::Vector3d::Zero();
 //            linear_state.bottomRows(3) = state_.linear_velocity(i);
-//            linear_process_[i].Condition(linear_state,
+//            linear_process_[i].Condition(delta_time,
+//                                         linear_state,
 //                                         control.template middleRows<3>(i*DIMENSION_PER_OBJECT));
 
 //            Eigen::Matrix<Scalar, 6, 1> angular_state;
 //            angular_state.topRows(3) = Eigen::Vector3d::Zero();
 //            angular_state.bottomRows(3) = state_.angular_velocity(i);
-//            angular_process_[i].Condition(angular_state,
+//            angular_process_[i].Condition(delta_time,
+//                                          angular_state,
 //                                          control.template middleRows<3>(i*DIMENSION_PER_OBJECT + 3));
 //        }
 //    }
+
+
+
+
+    virtual void Condition(const State&  state,
+                           const Input&  control)
+    {
+        state_ = state;
+        for(size_t i = 0; i < state_.body_count(); i++)
+        {
+            quaternion_map_[i] = ff::hf::QuaternionMatrix(state_.quaternion(i).coeffs());
+
+            // transform the state, which is the pose and velocity with respect to to the origin,
+            // into internal representation, which is the position and velocity of the center
+            // and the orientation and angular velocity around the center
+            state_.position(i)        += state_.rotation_matrix(i)*rotation_center_[i];
+            state_.linear_velocity(i) += state_.angular_velocity(i).cross(state_.position(i));
+
+            Eigen::Matrix<Scalar, 6, 1> linear_state;
+            linear_state.topRows(3) = Eigen::Vector3d::Zero();
+            linear_state.bottomRows(3) = state_.linear_velocity(i);
+            linear_process_[i].Condition(linear_state,
+                                         control.template middleRows<3>(i*DIMENSION_PER_OBJECT));
+
+            Eigen::Matrix<Scalar, 6, 1> angular_state;
+            angular_state.topRows(3) = Eigen::Vector3d::Zero();
+            angular_state.bottomRows(3) = state_.angular_velocity(i);
+            angular_process_[i].Condition(angular_state,
+                                          control.template middleRows<3>(i*DIMENSION_PER_OBJECT + 3));
+        }
+    }
 
     virtual void Parameters(const size_t&                       object_index,
                             const Eigen::Matrix<Scalar, 3, 1>&  rotation_center,

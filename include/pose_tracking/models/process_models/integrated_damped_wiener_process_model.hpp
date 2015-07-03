@@ -128,7 +128,7 @@ public:
 
     IntegratedDampedWienerProcessModel(
             const double& delta_time,
-            const unsigned& degree_of_freedom/* = DEGREE_OF_FREEDOM*/):
+            const unsigned& degree_of_freedom = DEGREE_OF_FREEDOM):
         velocity_distribution_(delta_time, degree_of_freedom),
         position_distribution_(degree_of_freedom),
         delta_time_(delta_time)
@@ -152,31 +152,31 @@ public:
     }
 
 
-//    virtual void Condition(const State& state,
-//                           const Input& input)
-//    {
-//        position_distribution_.mean(Mean(state.topRows(InputDimension()), // position
-//                                                state.bottomRows(InputDimension()), // velocity
-//                                                input, // acceleration
-//                                                delta_time_));
-//        position_distribution_.covariance(Covariance(delta_time_));
-
-//        velocity_distribution_.Condition(state.bottomRows(InputDimension()), input);
-//    }
-
-
-    virtual void Condition(const Scalar&  delta_time,
-                           const State&  state,
-                           const Input&   input)
+    virtual void Condition(const State& state,
+                           const Input& input)
     {
         position_distribution_.mean(Mean(state.topRows(InputDimension()), // position
                                                 state.bottomRows(InputDimension()), // velocity
                                                 input, // acceleration
-                                                delta_time));
-        position_distribution_.covariance(Covariance(delta_time));
+                                                delta_time_));
+        position_distribution_.covariance(Covariance(delta_time_));
 
-        velocity_distribution_.Condition(delta_time, state.bottomRows(InputDimension()), input);
+        velocity_distribution_.Condition(state.bottomRows(InputDimension()), input);
     }
+
+
+//    virtual void Condition(const Scalar&  delta_time,
+//                           const State&  state,
+//                           const Input&   input)
+//    {
+//        position_distribution_.mean(Mean(state.topRows(InputDimension()), // position
+//                                                state.bottomRows(InputDimension()), // velocity
+//                                                input, // acceleration
+//                                                delta_time));
+//        position_distribution_.covariance(Covariance(delta_time));
+
+//        velocity_distribution_.Condition(delta_time, state.bottomRows(InputDimension()), input);
+//    }
 
 
 

@@ -119,7 +119,7 @@ public:
             MEASURE("sampling");
             for(size_t particle_index = 0; particle_index < samples_.size(); particle_index++)
             {
-                process_model_->Condition(delta_time, samples_[particle_index],
+                process_model_->Condition(samples_[particle_index],
                                           input);
                 next_samples_[particle_index] = process_model_->MapStandardGaussian(noises_[particle_index]);
             }
