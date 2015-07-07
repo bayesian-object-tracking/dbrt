@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
 
-#include <pose_tracking_interface/utils/cloud_visualizer.hpp>
+#include <state_filtering/utils/cloud_visualizer.hpp>
 #include <pcl/registration/registration.h>
 #include <pcl/filters/voxel_grid.h>
 

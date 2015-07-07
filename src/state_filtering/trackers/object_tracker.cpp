@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot/utils/profiling.hpp>
 
-#include <pose_tracking_interface/trackers/object_tracker.hpp>
-#include <pose_tracking_interface/utils/ros_interface.hpp>
-#include <pose_tracking_interface/utils/object_file_reader.hpp>
+#include <state_filtering/trackers/object_tracker.hpp>
+#include <state_filtering/utils/ros_interface.hpp>
+#include <state_filtering/utils/object_file_reader.hpp>
 
 
 
@@ -42,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //#include <dbot/utils/distribution_test.hpp>
 
-#include <pose_tracking_interface/utils/cloud_visualizer.hpp>
+#include <state_filtering/utils/cloud_visualizer.hpp>
 
 
 #include <boost/filesystem.hpp>
@@ -169,14 +169,16 @@ void MultiObjectTracker::Initialize(
                                                  initial_occlusion_prob,
                                                  delta_time));
 
+
+        /// \todo this is suboptimal to hardcode the path here.
         std::string vertex_shader_path =
-                ros::package::getPath("state_filtering")
+                ros::package::getPath("dbot")
                 + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "VertexShader.vertexshader";
 
         std::string fragment_shader_path =
-                ros::package::getPath("state_filtering")
+                ros::package::getPath("dbot")
                 + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";

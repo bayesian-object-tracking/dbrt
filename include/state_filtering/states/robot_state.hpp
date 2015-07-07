@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
-#include <pose_tracking_interface/utils/kinematics_from_urdf.hpp>
+#include <state_filtering/utils/kinematics_from_urdf.hpp>
 
 
 template<int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>

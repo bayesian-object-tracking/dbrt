@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot/utils/helper_functions.hpp>
 
-#include <pose_tracking_interface/utils/image_visualizer.hpp>
+#include <state_filtering/utils/image_visualizer.hpp>
 
 #include <cv.h>
 #include <highgui.h>

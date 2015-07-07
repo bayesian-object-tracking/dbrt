@@ -41,8 +41,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dbot/rao_blackwell_coordinate_particle_filter.hpp>
 #include <dbot/models/process_models/damped_wiener_process_model.hpp>
 #include <dbot/models/observation_models/kinect_image_observation_model_cpu.hpp>
-#include <pose_tracking_interface/states/robot_state.hpp>
-#include <pose_tracking_interface/utils/kinematics_from_urdf.hpp>
+#include <state_filtering/states/robot_state.hpp>
+#include <state_filtering/utils/kinematics_from_urdf.hpp>
 #include <dbot/utils/rigid_body_renderer.hpp>
 
 #ifdef BUILD_GPU

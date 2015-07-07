@@ -31,10 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot/utils/profiling.hpp>
 
-#include <pose_tracking_interface/trackers/robot_tracker.hpp>
-#include <pose_tracking_interface/utils/image_visualizer.hpp>
-#include <pose_tracking_interface/utils/cloud_visualizer.hpp>
-#include <pose_tracking_interface/utils/ros_interface.hpp>
+#include <state_filtering/trackers/robot_tracker.hpp>
+#include <state_filtering/utils/image_visualizer.hpp>
+#include <state_filtering/utils/cloud_visualizer.hpp>
+#include <state_filtering/utils/ros_interface.hpp>
 
 #include <dbot/utils/profiling.hpp>
 
@@ -218,13 +218,13 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
 
 
         std::string vertex_shader_path =
-                ros::package::getPath("state_filtering")
+                ros::package::getPath("dbot")
                 + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "VertexShader.vertexshader";
 
         std::string fragment_shader_path =
-                ros::package::getPath("state_filtering")
+                ros::package::getPath("dbot")
                 + "/src/dbot/models/observation_models/"
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";
