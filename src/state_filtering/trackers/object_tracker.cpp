@@ -44,6 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <state_filtering/utils/cloud_visualizer.hpp>
 
+#include <fl/model/process/orientation_transition_function.hpp>
+//#include <fl/util/math/euler_vector.hpp>
+
 
 #include <boost/filesystem.hpp>
 
@@ -302,6 +305,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     // visualize the mean state
     ff::FreeFloatingRigidBodiesState<> mean = filter_->StateDistribution().mean();
+
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         std::string object_model_path = "package://arm_object_models/objects/" + object_names_[i] + "/" + object_names_[i] + ".obj";
@@ -309,6 +313,52 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
     }
+
+
+
+    /// just testing **************************************************
+//    typedef fl::OrientationStateTransitionFunction TF;
+//    TF tf;
+//    tf.noise_matrix(TF::NoiseMatrix::Identity()*0.01);
+//    tf.dynamics_matrix(TF::DynamicsMatrix::Identity()*0.9);
+
+//    static Eigen::Matrix<double, 6, 1> orientation =
+//                                            Eigen::Matrix<double, 6, 1>::Zero();
+//    fl::Gaussian<TF::Noise> gaussian; gaussian.set_standard();
+//    orientation = tf.state(orientation, gaussian.sample(), TF::Input::Zero());
+
+//    ff::FreeFloatingRigidBodiesState<1> state;
+//    state.euler_vector() = orientation.topRows(3);
+//    state.position() = Eigen::Vector3d(0,0,1);
+
+//    std::string object_model_path = "package://arm_object_models/objects/" + object_names_[0] + "/" + object_names_[0] + ".obj";
+//    ri::PublishMarker(state.homogeneous_matrix().cast<float>(),
+//                      ros_image.header, object_model_path, object_publisher_,
+//                      1, 0, 1, 0);
+
+
+
+
+    /// ***************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     last_measurement_time_ = ros_image.header.stamp.toSec();
     return filter_->StateDistribution().mean();
