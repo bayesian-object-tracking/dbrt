@@ -163,6 +163,7 @@ file(GLOB_RECURSE headers include/${PROJECT_NAME}/*.hpp
 
 set(sources
     src/${PROJECT_NAME}/trackers/object_tracker.cpp
+    src/${PROJECT_NAME}/trackers/old_object_tracker.cpp
     src/${PROJECT_NAME}/trackers/robot_tracker.cpp
 
     src/${PROJECT_NAME}/utils/image_visualizer.cpp
@@ -185,6 +186,17 @@ add_library(${PROJECT_NAME} ${dbot_headers}
 add_executable(object_tracker
     src/${PROJECT_NAME}/trackers/object_tracker_node.cpp)
 target_link_libraries(object_tracker
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${PCL_LIBRARIES}
+    yaml-cpp)
+
+
+## old_object_tracker
+add_executable(old_object_tracker
+    src/${PROJECT_NAME}/trackers/old_object_tracker_node.cpp)
+target_link_libraries(old_object_tracker
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${OpenCV_LIBS}
