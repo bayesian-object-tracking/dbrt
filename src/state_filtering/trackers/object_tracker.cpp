@@ -263,7 +263,7 @@ void MultiObjectTracker::Initialize(
         // create the multi body initial samples ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         State default_state(object_names_.size());
         for(size_t object_index = 0; object_index < object_names_.size(); object_index++)
-            default_state.position(object_index) = Eigen::Vector3d(0, 0, 1.5); // outside of image
+            default_state.component(object_index).position() = Eigen::Vector3d(0, 0, 1.5); // outside of image
 
         std::vector<State> multi_body_samples(initial_states.size());
         for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
