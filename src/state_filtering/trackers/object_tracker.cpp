@@ -33,19 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <state_filtering/utils/object_file_reader.hpp>
 
 
-
-//#include <fast_filtering/distributions/uniform_distribution.hpp>
-//#include <dbot/models/observation_models/continuous_kinect_pixel_observation_model.hpp>
-//#include <dbot/models/observation_models/approximate_kinect_pixel_observation_model.hpp>
-
-//#include <dbot/models/process_models/continuous_occlusion_process_model.hpp>
-
-//#include <dbot/utils/distribution_test.hpp>
-
 #include <state_filtering/utils/cloud_visualizer.hpp>
 
 #include <fl/model/process/orientation_transition_function.hpp>
-//#include <fl/util/math/euler_vector.hpp>
 
 
 #include <boost/filesystem.hpp>
@@ -56,8 +46,9 @@ MultiObjectTracker::MultiObjectTracker():
         last_measurement_time_(std::numeric_limits<Scalar>::quiet_NaN())
 {
     ri::ReadParameter("object_names", object_names_, node_handle_);
-    ri::ReadParameter("downsampling_factor", downsampling_factor_, node_handle_);
-    object_publisher_ = node_handle_.advertise<visualization_msgs::Marker>("object_model", 0);
+    ri::ReadParameter("downsampling_factor",downsampling_factor_, node_handle_);
+    object_publisher_ =
+          node_handle_.advertise<visualization_msgs::Marker>("object_model", 0);
 }
 
 void MultiObjectTracker::Initialize(
@@ -68,44 +59,69 @@ void MultiObjectTracker::Initialize(
 {
     boost::mutex::scoped_lock lock(mutex_);
 
-
-    std::cout << "received " << initial_states.size() << " intial states " << std::endl;
+    std::cout << "received " << initial_states.size()
+                             << " intial states " << std::endl;
     // convert camera matrix and image to desired format
     camera_matrix.topLeftCorner(2,3) /= double(downsampling_factor_);
-    Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_); // convert to meters
+    Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_);
 
-    // read some parameters
-    bool use_gpu; ri::ReadParameter("use_gpu", use_gpu, node_handle_);
-    int evaluation_count; ri::ReadParameter("evaluation_count", evaluation_count, node_handle_);
-    std::vector<std::vector<size_t> > sampling_blocks; ri::ReadParameter("sampling_blocks", sampling_blocks, node_handle_);
-    double max_kl_divergence; ri::ReadParameter("max_kl_divergence", max_kl_divergence, node_handle_);
 
-    int max_sample_count; ri::ReadParameter("max_sample_count", max_sample_count, node_handle_);
 
-    double initial_occlusion_prob; ri::ReadParameter("initial_occlusion_prob", initial_occlusion_prob, node_handle_);
-    double p_occluded_visible; ri::ReadParameter("p_occluded_visible", p_occluded_visible, node_handle_);
-    double p_occluded_occluded; ri::ReadParameter("p_occluded_occluded", p_occluded_occluded, node_handle_);
+    /// read parameters ********************************************************
+    bool use_gpu;
+    ri::ReadParameter("use_gpu", use_gpu, node_handle_);
+    int evaluation_count;
+    ri::ReadParameter("evaluation_count", evaluation_count, node_handle_);
+    std::vector<std::vector<size_t> > sampling_blocks;
+    ri::ReadParameter("sampling_blocks", sampling_blocks, node_handle_);
+    double max_kl_divergence;
+    ri::ReadParameter("max_kl_divergence", max_kl_divergence, node_handle_);
 
-    double linear_acceleration_sigma; ri::ReadParameter("linear_acceleration_sigma", linear_acceleration_sigma, node_handle_);
-    double angular_acceleration_sigma; ri::ReadParameter("angular_acceleration_sigma", angular_acceleration_sigma, node_handle_);
-    double damping; ri::ReadParameter("damping", damping, node_handle_);
+    int max_sample_count;
+    ri::ReadParameter("max_sample_count", max_sample_count, node_handle_);
 
-    double tail_weight; ri::ReadParameter("tail_weight", tail_weight, node_handle_);
-    double model_sigma; ri::ReadParameter("model_sigma", model_sigma, node_handle_);
-    double sigma_factor; ri::ReadParameter("sigma_factor", sigma_factor, node_handle_);
+    double initial_occlusion_prob;
+    ri::ReadParameter("initial_occlusion_prob",
+                      initial_occlusion_prob, node_handle_);
+    double p_occluded_visible;
+    ri::ReadParameter("p_occluded_visible", p_occluded_visible, node_handle_);
+    double p_occluded_occluded;
+    ri::ReadParameter("p_occluded_occluded", p_occluded_occluded, node_handle_);
+
+    double linear_acceleration_sigma;
+    ri::ReadParameter("linear_acceleration_sigma",
+                      linear_acceleration_sigma, node_handle_);
+    double angular_acceleration_sigma;
+    ri::ReadParameter("angular_acceleration_sigma",
+                      angular_acceleration_sigma, node_handle_);
+    double damping;
+    ri::ReadParameter("damping", damping, node_handle_);
+
+    double tail_weight;
+    ri::ReadParameter("tail_weight", tail_weight, node_handle_);
+    double model_sigma;
+    ri::ReadParameter("model_sigma", model_sigma, node_handle_);
+    double sigma_factor;
+    ri::ReadParameter("sigma_factor", sigma_factor, node_handle_);
 
     double delta_time = 0.033;
 
     std::cout << "sampling blocks: " << std::endl;
     ff::hf::PrintVector(sampling_blocks);
 
-    // load object mesh
-    std::vector<std::vector<Eigen::Vector3d> > object_vertices(object_names_.size());
-    std::vector<std::vector<std::vector<int> > > object_triangle_indices(object_names_.size());
+
+
+    /// load object mesh *******************************************************
+    std::vector<std::vector<Eigen::Vector3d> >
+            object_vertices(object_names_.size());
+    std::vector<std::vector<std::vector<int> > >
+            object_triangle_indices(object_names_.size());
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        std::string object_model_path = ros::package::getPath("arm_object_models") +
-                "/objects/" + object_names_[i] + "/" + object_names_[i] + "_downsampled" + ".obj";
+        std::string object_model_path =
+                ros::package::getPath("arm_object_models") + "/objects/"
+                + object_names_[i] + "/" + object_names_[i]
+                + "_downsampled" + ".obj";
         ObjectFileReader file_reader;
         file_reader.set_filename(object_model_path);
         file_reader.Read();
@@ -114,28 +130,15 @@ void MultiObjectTracker::Initialize(
         object_triangle_indices[i] = *file_reader.get_indices();
     }
 
+    boost::shared_ptr<State> rigid_bodies_state(new State(object_names_.size()));
+    boost::shared_ptr<ff::RigidBodyRenderer> object_renderer(
+                            new ff::RigidBodyRenderer(object_vertices,
+                                                      object_triangle_indices,
+                                                      rigid_bodies_state));
 
 
 
-    boost::shared_ptr<State> rigid_bodies_state(new ff::FreeFloatingRigidBodiesState<>(object_names_.size()));
-    boost::shared_ptr<ff::RigidBodyRenderer> object_renderer(new ff::RigidBodyRenderer(
-                                                                      object_vertices,
-                                                                      object_triangle_indices,
-                                                                      rigid_bodies_state));
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // initialize observation model ========================================================================================================================================================================================================================================================================================================================================================================================================================
+    /// initialize observation model *******************************************
     boost::shared_ptr<ObservationModel> observation_model;
 #ifndef BUILD_GPU
     use_gpu = false;
@@ -144,10 +147,16 @@ void MultiObjectTracker::Initialize(
     if(!use_gpu)
     {
         // cpu obseration model
-        boost::shared_ptr<ff::KinectPixelObservationModel> kinect_pixel_observation_model(
-                    new ff::KinectPixelObservationModel(tail_weight, model_sigma, sigma_factor));
+        boost::shared_ptr<ff::KinectPixelObservationModel>
+            kinect_pixel_observation_model(new ff::KinectPixelObservationModel(
+                                                    tail_weight,
+                                                    model_sigma,
+                                                    sigma_factor));
+
         boost::shared_ptr<ff::OcclusionProcessModel> occlusion_process(
-                    new ff::OcclusionProcessModel(p_occluded_visible, p_occluded_occluded));
+                            new ff::OcclusionProcessModel(p_occluded_visible,
+                                                          p_occluded_occluded));
+
         observation_model = boost::shared_ptr<ObservationModelCPUType>(
                     new ObservationModelCPUType(camera_matrix,
                                         image.rows(),
@@ -209,20 +218,28 @@ void MultiObjectTracker::Initialize(
                                          6.0f,         // max_depth
                                          -log(0.5),
                                          vertex_shader_path,
-                                         fragment_shader_path);   // exponential_rate
+                                         fragment_shader_path);
 
         gpu_observation_model->Initialize();
         observation_model = gpu_observation_model;
 #endif
     }
-
     std::cout << "initialized observation omodel " << std::endl;
 
-    // initialize process model ========================================================================================================================================================================================================================================================================================================================================================================================================================
-    Eigen::MatrixXd linear_acceleration_covariance = Eigen::MatrixXd::Identity(3, 3) * pow(double(linear_acceleration_sigma), 2);
-    Eigen::MatrixXd angular_acceleration_covariance = Eigen::MatrixXd::Identity(3, 3) * pow(double(angular_acceleration_sigma), 2);
 
-    boost::shared_ptr<ProcessModel> process(new ProcessModel(delta_time, object_names_.size()));
+
+    /// initialize process model ***********************************************
+    Eigen::MatrixXd linear_acceleration_covariance =
+                            Eigen::MatrixXd::Identity(3, 3)
+                            * pow(double(linear_acceleration_sigma), 2);
+    Eigen::MatrixXd angular_acceleration_covariance =
+                                   Eigen::MatrixXd::Identity(3, 3)
+                                   * pow(double(angular_acceleration_sigma), 2);
+
+    boost::shared_ptr<ProcessModel>
+            process(new ProcessModel(delta_time, object_names_.size()));
+
+    std::cout << "setting center shizzles " << std::endl;
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         process->Parameters(i, object_renderer->object_center(i).cast<double>(),
@@ -246,11 +263,11 @@ void MultiObjectTracker::Initialize(
     if(state_is_partial)
     {
         // create the multi body initial samples ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        ff::FreeFloatingRigidBodiesState<> default_state(object_names_.size());
+        State default_state(object_names_.size());
         for(size_t object_index = 0; object_index < object_names_.size(); object_index++)
             default_state.position(object_index) = Eigen::Vector3d(0, 0, 1.5); // outside of image
 
-        std::vector<ff::FreeFloatingRigidBodiesState<> > multi_body_samples(initial_states.size());
+        std::vector<State> multi_body_samples(initial_states.size());
         for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
             multi_body_samples[state_index] = default_state;
 
@@ -260,7 +277,7 @@ void MultiObjectTracker::Initialize(
             std::cout << "evalution of object " << object_names_[body_index] << std::endl;
             for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
             {
-                ff::FreeFloatingRigidBodiesState<> full_initial_state(multi_body_samples[state_index]);
+                State full_initial_state(multi_body_samples[state_index]);
                 full_initial_state[body_index] = initial_states[state_index];
                 multi_body_samples[state_index] = full_initial_state;
             }
@@ -273,7 +290,7 @@ void MultiObjectTracker::Initialize(
     }
     else
     {
-        std::vector<ff::FreeFloatingRigidBodiesState<> > multi_body_samples(initial_states.size());
+        std::vector<State > multi_body_samples(initial_states.size());
         for(size_t i = 0; i < multi_body_samples.size(); i++)
             multi_body_samples[i] = initial_states[i];
 
@@ -283,6 +300,10 @@ void MultiObjectTracker::Initialize(
     filter_->Resample(evaluation_count/sampling_blocks.size());
     filter_->SamplingBlocks(sampling_blocks);
 }
+
+
+
+
 
 Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 {
@@ -304,7 +325,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
 
     // visualize the mean state
-    ff::FreeFloatingRigidBodiesState<> mean = filter_->StateDistribution().mean();
+    State mean = filter_->StateDistribution().mean();
 
     for(size_t i = 0; i < object_names_.size(); i++)
     {

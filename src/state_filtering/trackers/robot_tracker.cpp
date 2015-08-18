@@ -154,16 +154,16 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                                                robot_state));
 
     // FOR DEBUGGING
-    std::cout << "Image rows and cols " << image.rows() << " " << image.cols() << std::endl;
+//    std::cout << "Image rows and cols " << image.rows() << " " << image.cols() << std::endl;
 
-    robot_renderer_->state(initial_samples[0]);
-    std::vector<int> indices;
-    std::vector<float> depth;
-    robot_renderer_->Render(camera_matrix,
-            image.rows(),
-            image.cols(),
-            indices,
-            depth);
+//    robot_renderer_->state(initial_samples[0]);
+//    std::vector<int> indices;
+//    std::vector<float> depth;
+//    robot_renderer_->Render(camera_matrix,
+//            image.rows(),
+//            image.cols(),
+//            indices,
+//            depth);
 //    vis::ImageVisualizer image_viz(image.rows(),image.cols());
 //    image_viz.set_image(image);
 //    image_viz.add_points(indices, depth);
@@ -327,7 +327,15 @@ void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
     *mean_ = (Eigen::VectorXd)(filter_->StateDistribution().mean());
 
     // DEBUG to see depth images
-    robot_renderer_->state(*mean_);
+    std::vector<Eigen::Matrix3d> rotations(mean_->body_count());
+    std::vector<Eigen::Vector3d> translations(mean_->body_count());
+    for(size_t i = 0; i < rotations.size(); i++)
+    {
+        rotations[i] = mean_->rotation_matrix(i);
+        translations[i] = mean_->position(i);
+    }
+
+    robot_renderer_->set_poses(rotations, translations);
         std::vector<int> indices;
         std::vector<float> depth;
         robot_renderer_->Render(camera_matrix_,
@@ -436,7 +444,15 @@ Eigen::VectorXd RobotTracker::FilterAndReturn(const sensor_msgs::Image& ros_imag
     *mean_ = (Eigen::VectorXd)(filter_->StateDistribution().mean());
 
     // DEBUG to see depth images
-    robot_renderer_->state(*mean_);
+    std::vector<Eigen::Matrix3d> rotations(mean_->body_count());
+    std::vector<Eigen::Vector3d> translations(mean_->body_count());
+    for(size_t i = 0; i < rotations.size(); i++)
+    {
+        rotations[i] = mean_->rotation_matrix(i);
+        translations[i] = mean_->position(i);
+    }
+
+    robot_renderer_->set_poses(rotations, translations);
         std::vector<int> indices;
         std::vector<float> depth;
         robot_renderer_->Render(camera_matrix_,
