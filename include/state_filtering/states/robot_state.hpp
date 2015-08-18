@@ -48,6 +48,8 @@ public:
     typedef typename Base::AngleAxis            AngleAxis;
     typedef typename Base::Quaternion           Quaternion;
 
+    typedef typename Base::PoseVelocityBlock    PoseVelocityBlock;
+
 public:
     RobotState(): Base() { }
 
@@ -82,6 +84,31 @@ public:
         CheckKinematics();
         return kinematics_->num_links();
     }
+
+
+    // \todo these functions below comply with the new format. there is some reduncandy
+    // now
+    virtual int count() const
+    {
+        CheckKinematics();
+        return kinematics_->num_links();
+    }
+
+    virtual fl::PoseVelocityVector component(int index) const
+    {
+        fl::PoseVelocityVector vector;
+        vector.position() = position(index);
+        vector.euler_vector() = euler_vector(index);
+
+        return vector;
+    }
+
+
+
+
+
+
+
 
     // TODO: SHOULD THIS FUNCITON BE IN HERE?
     void GetJointState(std::map<std::string, double>& joint_positions)
