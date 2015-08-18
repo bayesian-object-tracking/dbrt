@@ -142,7 +142,6 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
    State::kinematics_ = urdf_kinematics;\
    cout << "done setting kinematics " << endl;
 
-    boost::shared_ptr<ff::RigidBodiesState<> > robot_state(new State(State::Zero(urdf_kinematics->num_joints())));
     dimension_ = urdf_kinematics->num_joints();
 
     // initialize the result container for the emperical mean
@@ -150,8 +149,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
 
     robot_renderer_ = boost::shared_ptr<ff::RigidBodyRenderer>(
                 new ff::RigidBodyRenderer(part_vertices,
-                                               part_triangle_indices,
-                                               robot_state));
+                                               part_triangle_indices));
 
     // FOR DEBUGGING
 //    std::cout << "Image rows and cols " << image.rows() << " " << image.cols() << std::endl;

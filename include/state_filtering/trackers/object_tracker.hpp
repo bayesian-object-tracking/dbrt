@@ -46,9 +46,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
 #endif
 
+#include <fl/util/math/pose_vector.hpp>
+#include <fl/util/math/composed_vector.hpp>
+
 class MultiObjectTracker
 {
-public:   
+public:
+    typedef Eigen::VectorXd StateVector;
+    typedef fl::PoseBlock<StateVector> StateBlock;
+
+//    typedef fl::ComposedVector<StateBlock, StateVector> State;
+
     typedef ff::FreeFloatingRigidBodiesState<>  State;
     typedef State::Scalar                       Scalar;
 

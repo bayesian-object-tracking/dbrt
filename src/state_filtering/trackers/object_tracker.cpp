@@ -130,11 +130,9 @@ void MultiObjectTracker::Initialize(
         object_triangle_indices[i] = *file_reader.get_indices();
     }
 
-    boost::shared_ptr<State> rigid_bodies_state(new State(object_names_.size()));
-    boost::shared_ptr<ff::RigidBodyRenderer> object_renderer(
-                            new ff::RigidBodyRenderer(object_vertices,
-                                                      object_triangle_indices,
-                                                      rigid_bodies_state));
+    boost::shared_ptr<ff::RigidBodyRenderer>
+            object_renderer(new ff::RigidBodyRenderer(object_vertices,
+                                                      object_triangle_indices));
 
 
 
