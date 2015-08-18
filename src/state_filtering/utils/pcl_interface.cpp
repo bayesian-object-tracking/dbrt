@@ -655,11 +655,11 @@ SampleTableClusters(const std::vector<Eigen::Matrix<Scalar,3,1> >& points,
         for(size_t i = 0; i < size_t(sample_count)/clusters.size(); i++)
         {
             BodySystem body_system(1);
-            body_system.position() =
+            body_system.component(0).pose().position() =
                     t_mean +
                     standard_deviation_translation * unit_gaussian.sample()(0) * table_vector_a +
                     standard_deviation_translation * unit_gaussian.sample()(0) * table_vector_b;
-            body_system.quaternion(Eigen::Quaterniond(
+            body_system.component(0).euler_vector().quaternion(Eigen::Quaterniond(
                                      Eigen::AngleAxisd(standard_deviation_rotation * unit_gaussian.sample()(0), table_normal) * R_mean));
 
             states.push_back(body_system);
