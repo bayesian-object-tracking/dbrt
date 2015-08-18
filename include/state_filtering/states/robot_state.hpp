@@ -60,6 +60,7 @@ public:
 
     using Base::operator=;
 
+private:
     virtual Vector position(const size_t& object_index = 0) const
     {
         CheckKinematics();
@@ -79,13 +80,8 @@ public:
         return kinematics_->GetLinkOrientation(object_index);
     }
 
-    virtual unsigned body_count() const
-    {
-        CheckKinematics();
-        return kinematics_->num_links();
-    }
 
-
+public:
     // \todo these functions below comply with the new format. there is some reduncandy
     // now
     virtual int count() const
