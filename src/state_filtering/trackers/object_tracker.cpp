@@ -276,7 +276,8 @@ void MultiObjectTracker::Initialize(
             for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
             {
                 State full_initial_state(multi_body_samples[state_index]);
-                full_initial_state[body_index] = initial_states[state_index];
+                full_initial_state.component(body_index) =
+                                                initial_states[state_index];
                 multi_body_samples[state_index] = full_initial_state;
             }
             filter_->Samples(multi_body_samples);
