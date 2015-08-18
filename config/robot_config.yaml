@@ -9,7 +9,7 @@ collision: false
 
 max_kl_divergence: 2.3 #4.5, 2.3
 
-use_gpu: false
+use_gpu: true
 evaluation_count: 2000 #100 #the number of evaluations
 
 # filtering parameters ----------------------------------------------------------------------

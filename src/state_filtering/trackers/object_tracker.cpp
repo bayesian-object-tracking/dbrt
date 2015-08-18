@@ -329,7 +329,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         std::string object_model_path = "package://arm_object_models/objects/" + object_names_[i] + "/" + object_names_[i] + ".obj";
-        ri::PublishMarker(mean.homogeneous_matrix(i).cast<float>(),
+        ri::PublishMarker(mean.component(i).pose().homogeneous_matrix().cast<float>(),
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
     }
