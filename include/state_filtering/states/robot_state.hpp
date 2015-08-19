@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Dense>
 #include <vector>
 
+#include <fl/util/math/euler_vector.hpp>
 #include <dbot/states/rigid_bodies_state.hpp>
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
@@ -45,9 +46,6 @@ class RobotState: public ff::RigidBodiesState<JointCount>
 public:
     typedef ff::RigidBodiesState<JointCount>    Base;
     typedef typename Base::Vector               Vector;
-    typedef typename Base::AngleAxis            AngleAxis;
-    typedef typename Base::Quaternion           Quaternion;
-
     typedef typename Base::PoseVelocityBlock    PoseVelocityBlock;
 
 public:
@@ -60,30 +58,7 @@ public:
 
     using Base::operator=;
 
-private:
-    virtual Vector position(const size_t& object_index = 0) const
-    {
-        CheckKinematics();
-        kinematics_->InitKDLData(*this);
-        return kinematics_->GetLinkPosition(object_index);
-    }
-
-    virtual Vector euler_vector(const size_t& object_index = 0) const
-    {
-        CheckKinematics();
-        kinematics_->InitKDLData(*this);
-        return Quaternion2EulerVector(kinematics_->GetLinkOrientation(object_index));
-    }
-
-    virtual Quaternion quaternion(const size_t& object_index = 0) const
-    {
-        return kinematics_->GetLinkOrientation(object_index);
-    }
-
-
 public:
-    // \todo these functions below comply with the new format. there is some reduncandy
-    // now
     virtual int count() const
     {
         CheckKinematics();
@@ -99,13 +74,6 @@ public:
         return vector;
     }
 
-
-
-
-
-
-
-
     // TODO: SHOULD THIS FUNCITON BE IN HERE?
     void GetJointState(std::map<std::string, double>& joint_positions)
     {
@@ -118,10 +86,21 @@ public:
     }
 
 private:
-    virtual Vector Quaternion2EulerVector(const Quaternion& quaternion) const
+    virtual Vector position(const size_t& object_index = 0) const
     {
-        AngleAxis angle_axis(quaternion);
-        return angle_axis.angle()*angle_axis.axis();
+        CheckKinematics();
+        kinematics_->InitKDLData(*this);
+        return kinematics_->GetLinkPosition(object_index);
+    }
+
+    virtual fl::EulerVector euler_vector(const size_t& object_index = 0) const
+    {
+        CheckKinematics();
+        kinematics_->InitKDLData(*this);
+
+        fl::EulerVector v;
+        v.quaternion(kinematics_->GetLinkOrientation(object_index));
+        return v;
     }
 
     void CheckKinematics() const
