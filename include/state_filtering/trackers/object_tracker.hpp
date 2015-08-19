@@ -92,6 +92,8 @@ private:
     // parameters
     std::vector<std::string> object_names_;
     int downsampling_factor_;
+
+    std::vector<Eigen::Vector3d> centers_;
 };
 
 

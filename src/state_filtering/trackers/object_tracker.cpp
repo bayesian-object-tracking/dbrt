@@ -112,9 +112,9 @@ void MultiObjectTracker::Initialize(
 
     /// load object mesh *******************************************************
     std::vector<std::vector<Eigen::Vector3d> >
-            object_vertices(object_names_.size());
+            vertices(object_names_.size());
     std::vector<std::vector<std::vector<int> > >
-            object_triangle_indices(object_names_.size());
+            triangle_indices(object_names_.size());
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         std::string object_model_path =
@@ -125,14 +125,46 @@ void MultiObjectTracker::Initialize(
         file_reader.set_filename(object_model_path);
         file_reader.Read();
 
-        object_vertices[i] = *file_reader.get_vertices();
-        object_triangle_indices[i] = *file_reader.get_indices();
+        vertices[i] = *file_reader.get_vertices();
+        triangle_indices[i] = *file_reader.get_indices();
     }
 
-    boost::shared_ptr<ff::RigidBodyRenderer>
-            object_renderer(new ff::RigidBodyRenderer(object_vertices,
-                                                      object_triangle_indices));
+    /// compute object centers *************************************************
+    centers_.resize(vertices.size());
+    for(size_t i = 0; i < vertices.size(); i++)
+    {
+        centers_[i] = Eigen::Vector3d::Zero();
+        for(size_t j = 0; j < vertices[i].size(); j++)
+        {
+            centers_[i] += vertices[i][j];
+        }
+        centers_[i] /= double(vertices[i].size());
+    }
 
+//    /// switch coordinate system ***********************************************
+//    for(size_t i = 0; i < vertices.size(); i++)
+//    {
+//        for(size_t j = 0; j < vertices[i].size(); j++)
+//        {
+//            vertices[i][j] -= centers_[i];
+//        }
+//    }
+//    for(size_t i = 0; i < initial_states.size(); i++)
+//    {
+//        State state = initial_states[i];
+
+//        for(size_t j = 0; j < state.count(); j++)
+//        {
+//            state.component(j).position() +=
+//               state.component(j).orientation().rotation_matrix() * centers_[j];
+//        }
+
+//        initial_states[i] = state;
+//    }
+
+
+    boost::shared_ptr<ff::RigidBodyRenderer>
+            renderer(new ff::RigidBodyRenderer(vertices, triangle_indices));
 
 
     /// initialize observation model *******************************************
@@ -159,7 +191,7 @@ void MultiObjectTracker::Initialize(
                                         image.rows(),
                                         image.cols(),
                                         initial_states.size(),
-                                        object_renderer,
+                                        renderer,
                                         kinect_pixel_observation_model,
                                         occlusion_process,
                                         initial_occlusion_prob,
@@ -205,8 +237,8 @@ void MultiObjectTracker::Initialize(
             exit(-1);
         }
 
-        gpu_observation_model->Constants(object_vertices,
-                                         object_triangle_indices,
+        gpu_observation_model->Constants(vertices,
+                                         triangle_indices,
                                          p_occluded_visible,
                                          p_occluded_occluded,
                                          tail_weight,
@@ -239,7 +271,7 @@ void MultiObjectTracker::Initialize(
     std::cout << "setting center shizzles " << std::endl;
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        process->Parameters(i, object_renderer->object_center(i).cast<double>(),
+        process->Parameters(i, renderer->object_center(i).cast<double>(),
                                damping,
                                linear_acceleration_covariance,
                                angular_acceleration_covariance);
