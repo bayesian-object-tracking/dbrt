@@ -162,12 +162,7 @@ void MultiObjectTracker::Initialize(
         initial_states[i] = state;
     }
 
-
-    boost::shared_ptr<ff::RigidBodyRenderer>
-            renderer(new ff::RigidBodyRenderer(vertices, triangle_indices));
-
-
-    /// initialize observation model *******************************************
+    /// initialize cpu observation model ***************************************
     boost::shared_ptr<ObservationModel> observation_model;
 #ifndef BUILD_GPU
     use_gpu = false;
@@ -186,6 +181,9 @@ void MultiObjectTracker::Initialize(
                             new ff::OcclusionProcessModel(p_occluded_visible,
                                                           p_occluded_occluded));
 
+        boost::shared_ptr<ff::RigidBodyRenderer>
+                renderer(new ff::RigidBodyRenderer(vertices, triangle_indices));
+
         observation_model = boost::shared_ptr<ObservationModelCPUType>(
                     new ObservationModelCPUType(camera_matrix,
                                         image.rows(),
@@ -197,6 +195,8 @@ void MultiObjectTracker::Initialize(
                                         initial_occlusion_prob,
                                         delta_time));
     }
+
+    /// initialize gpu observation model ***************************************
     else
     {
 #ifdef BUILD_GPU
@@ -255,8 +255,6 @@ void MultiObjectTracker::Initialize(
     }
     std::cout << "initialized observation omodel " << std::endl;
 
-
-
     /// initialize process model ***********************************************
     Eigen::MatrixXd linear_acceleration_covariance =
                             Eigen::MatrixXd::Identity(3, 3)
@@ -271,7 +269,7 @@ void MultiObjectTracker::Initialize(
     std::cout << "setting center shizzles " << std::endl;
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        process->Parameters(i, renderer->object_center(i).cast<double>(),
+        process->Parameters(i, Eigen::Vector3d::Zero(),
                                damping,
                                linear_acceleration_covariance,
                                angular_acceleration_covariance);
