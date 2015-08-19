@@ -54,8 +54,7 @@ MultiObjectTracker::MultiObjectTracker():
 void MultiObjectTracker::Initialize(
         std::vector<Eigen::VectorXd> initial_states,
         const sensor_msgs::Image& ros_image,
-        Eigen::Matrix3d camera_matrix,
-        bool state_is_partial)
+        Eigen::Matrix3d camera_matrix)
 {
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -247,9 +246,12 @@ void MultiObjectTracker::Initialize(
     }
 
     std::cout << "initialized process model " << std::endl;
-    // initialize coordinate_filter ============================================================================================================================================================================================================================================================
-    filter_ = boost::shared_ptr<FilterType>
-            (new FilterType(process, observation_model, sampling_blocks, max_kl_divergence));
+
+    /// initialize filter ******************************************************
+    filter_ = boost::shared_ptr<FilterType>(new FilterType(process,
+                                                           observation_model,
+                                                           sampling_blocks,
+                                                           max_kl_divergence));
 
     // for the initialization we do standard sampling
     std::vector<std::vector<size_t> > dependent_sampling_blocks(1);
@@ -258,44 +260,13 @@ void MultiObjectTracker::Initialize(
         dependent_sampling_blocks[0][i] = i;
     filter_->SamplingBlocks(dependent_sampling_blocks);
 
-    if(state_is_partial)
-    {
-        // create the multi body initial samples ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        State default_state(object_names_.size());
-        for(size_t object_index = 0; object_index < object_names_.size(); object_index++)
-            default_state.component(object_index).position() = Eigen::Vector3d(0, 0, 1.5); // outside of image
+    std::vector<State > multi_body_samples(initial_states.size());
+    for(size_t i = 0; i < multi_body_samples.size(); i++)
+        multi_body_samples[i] = initial_states[i];
 
-        std::vector<State> multi_body_samples(initial_states.size());
-        for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
-            multi_body_samples[state_index] = default_state;
+    filter_->Samples(multi_body_samples);
+    filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
 
-        std::cout << "doing evaluations " << std::endl;
-        for(size_t body_index = 0; body_index < object_names_.size(); body_index++)
-        {
-            std::cout << "evalution of object " << object_names_[body_index] << std::endl;
-            for(size_t state_index = 0; state_index < multi_body_samples.size(); state_index++)
-            {
-                State full_initial_state(multi_body_samples[state_index]);
-                full_initial_state.component(body_index) =
-                                                initial_states[state_index];
-                multi_body_samples[state_index] = full_initial_state;
-            }
-            filter_->Samples(multi_body_samples);
-            filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
-            filter_->Resample(multi_body_samples.size());
-
-            multi_body_samples = filter_->Samples();
-        }
-    }
-    else
-    {
-        std::vector<State > multi_body_samples(initial_states.size());
-        for(size_t i = 0; i < multi_body_samples.size(); i++)
-            multi_body_samples[i] = initial_states[i];
-
-        filter_->Samples(multi_body_samples);
-        filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
-   }
     filter_->Resample(evaluation_count/sampling_blocks.size());
     filter_->SamplingBlocks(sampling_blocks);
 }
@@ -315,7 +286,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     std::cout << "actual delta time " << delta_time << std::endl;
     // convert image
-    Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_); // convert to m
+    Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_);
 
     // filter
     INIT_PROFILING;
@@ -328,7 +299,8 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        std::string object_model_path = "package://arm_object_models/objects/" + object_names_[i] + "/" + object_names_[i] + ".obj";
+        std::string object_model_path = "package://arm_object_models/objects/"
+                        + object_names_[i] + "/" + object_names_[i] + ".obj";
         ri::PublishMarker(mean.component(i).pose().homogeneous().cast<float>(),
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);

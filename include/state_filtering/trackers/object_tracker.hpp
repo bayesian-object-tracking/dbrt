@@ -76,8 +76,7 @@ public:
 
     void Initialize(std::vector<Eigen::VectorXd> initial_states,
                     const sensor_msgs::Image& ros_image,
-                    Eigen::Matrix3d camera_matrix,
-                    bool state_is_partial = true);
+                    Eigen::Matrix3d camera_matrix);
 
     Eigen::VectorXd Filter(const sensor_msgs::Image& ros_image);
 

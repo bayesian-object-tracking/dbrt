@@ -125,6 +125,7 @@ int main (int argc, char **argv)
     // read from camera
     if(source == "camera")
     {
+        /// \todo this will only work for one object
         std::cout << "reading data from camera " << std::endl;
         Eigen::Matrix3d camera_matrix = ri::GetCameraMatrix<double>(camera_info_topic, node_handle, 2.0);
 
@@ -165,7 +166,7 @@ int main (int argc, char **argv)
         std::cout << "initializing filter " << std::endl;
         // intialize the filter
         boost::shared_ptr<MultiObjectTracker> tracker(new MultiObjectTracker);
-        tracker->Initialize(initial_states, *TrackingDataset.GetImage(0), TrackingDataset.GetCameraMatrix(0), false);
+        tracker->Initialize(initial_states, *TrackingDataset.GetImage(0), TrackingDataset.GetCameraMatrix(0));
         Tracker interface(tracker);
 
         ros::Publisher image_publisher = node_handle.advertise<sensor_msgs::Image>("/bagfile/depth/image", 0);
