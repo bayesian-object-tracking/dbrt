@@ -141,26 +141,26 @@ void MultiObjectTracker::Initialize(
         centers_[i] /= double(vertices[i].size());
     }
 
-//    /// switch coordinate system ***********************************************
-//    for(size_t i = 0; i < vertices.size(); i++)
-//    {
-//        for(size_t j = 0; j < vertices[i].size(); j++)
-//        {
-//            vertices[i][j] -= centers_[i];
-//        }
-//    }
-//    for(size_t i = 0; i < initial_states.size(); i++)
-//    {
-//        State state = initial_states[i];
+    /// switch coordinate system ***********************************************
+    for(size_t i = 0; i < vertices.size(); i++)
+    {
+        for(size_t j = 0; j < vertices[i].size(); j++)
+        {
+            vertices[i][j] -= centers_[i];
+        }
+    }
+    for(size_t i = 0; i < initial_states.size(); i++)
+    {
+        State state = initial_states[i];
 
-//        for(size_t j = 0; j < state.count(); j++)
-//        {
-//            state.component(j).position() +=
-//               state.component(j).orientation().rotation_matrix() * centers_[j];
-//        }
+        for(size_t j = 0; j < state.count(); j++)
+        {
+            state.component(j).position() +=
+               state.component(j).orientation().rotation_matrix() * centers_[j];
+        }
 
-//        initial_states[i] = state;
-//    }
+        initial_states[i] = state;
+    }
 
 
     boost::shared_ptr<ff::RigidBodyRenderer>
@@ -285,12 +285,7 @@ void MultiObjectTracker::Initialize(
                                                            sampling_blocks,
                                                            max_kl_divergence));
 
-    // for the initialization we do standard sampling
-    std::vector<std::vector<size_t> > dependent_sampling_blocks(1);
-    dependent_sampling_blocks[0].resize(object_names_.size()*6);
-    for(size_t i = 0; i < dependent_sampling_blocks[0].size(); i++)
-        dependent_sampling_blocks[0][i] = i;
-    filter_->SamplingBlocks(dependent_sampling_blocks);
+    filter_->SamplingBlocks(sampling_blocks);
 
     std::vector<State > multi_body_samples(initial_states.size());
     for(size_t i = 0; i < multi_body_samples.size(); i++)
@@ -300,7 +295,6 @@ void MultiObjectTracker::Initialize(
     filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
 
     filter_->Resample(evaluation_count/sampling_blocks.size());
-    filter_->SamplingBlocks(sampling_blocks);
 }
 
 
@@ -314,20 +308,25 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     if(std::isnan(last_measurement_time_))
         last_measurement_time_ = ros_image.header.stamp.toSec();
     Scalar delta_time = ros_image.header.stamp.toSec() - last_measurement_time_;
-
-
     std::cout << "actual delta time " << delta_time << std::endl;
     // convert image
     Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_);
 
-    // filter
+    /// filter *****************************************************************
     INIT_PROFILING;
     filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
 
 
-    // visualize the mean state
+    /// visualize the mean state ***********************************************
     State mean = filter_->StateDistribution().mean();
+
+    // switch coordinate system
+    for(size_t j = 0; j < mean.count(); j++)
+    {
+        mean.component(j).position() -=
+                mean.component(j).orientation().rotation_matrix() * centers_[j];
+    }
 
     for(size_t i = 0; i < object_names_.size(); i++)
     {
@@ -338,9 +337,12 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
                           i, 1, 0, 0);
     }
 
+    last_measurement_time_ = ros_image.header.stamp.toSec();
+    return mean;
+}
 
 
-    /// just testing **************************************************
+/// just testing **************************************************
 //    typedef fl::OrientationStateTransitionFunction TF;
 //    TF tf;
 //    tf.noise_matrix(TF::NoiseMatrix::Identity()*0.01);
@@ -363,7 +365,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
 
 
-    /// ***************************************************************
+/// ***************************************************************
 
 
 
@@ -384,6 +386,3 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
 
 
-    last_measurement_time_ = ros_image.header.stamp.toSec();
-    return filter_->StateDistribution().mean();
-}
