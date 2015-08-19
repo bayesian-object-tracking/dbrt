@@ -329,7 +329,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     for(size_t i = 0; i < object_names_.size(); i++)
     {
         std::string object_model_path = "package://arm_object_models/objects/" + object_names_[i] + "/" + object_names_[i] + ".obj";
-        ri::PublishMarker(mean.component(i).pose().homogeneous_matrix().cast<float>(),
+        ri::PublishMarker(mean.component(i).pose().homogeneous().cast<float>(),
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
     }
@@ -348,7 +348,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 //    orientation = tf.state(orientation, gaussian.sample(), TF::Input::Zero());
 
 //    ff::FreeFloatingRigidBodiesState<1> state;
-//    state.euler_vector() = orientation.topRows(3);
+//    state.orientation() = orientation.topRows(3);
 //    state.position() = Eigen::Vector3d(0,0,1);
 
 //    std::string object_model_path = "package://arm_object_models/objects/" + object_names_[0] + "/" + object_names_[0] + ".obj";

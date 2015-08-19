@@ -329,7 +329,7 @@ void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
     std::vector<Eigen::Vector3d> translations(mean_->count());
     for(size_t i = 0; i < rotations.size(); i++)
     {
-        rotations[i] = mean_->component(i).euler_vector().rotation_matrix();
+        rotations[i] = mean_->component(i).orientation().rotation_matrix();
         translations[i] = mean_->component(i).position();
     }
 
@@ -446,7 +446,7 @@ Eigen::VectorXd RobotTracker::FilterAndReturn(const sensor_msgs::Image& ros_imag
     std::vector<Eigen::Vector3d> translations(mean_->count());
     for(size_t i = 0; i < rotations.size(); i++)
     {
-        rotations[i] = mean_->component(i).euler_vector().rotation_matrix();
+        rotations[i] = mean_->component(i).orientation().rotation_matrix();
         translations[i] = mean_->component(i).position();
     }
 

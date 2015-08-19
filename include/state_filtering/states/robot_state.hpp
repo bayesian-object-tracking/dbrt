@@ -69,7 +69,7 @@ public:
     {
         fl::PoseVelocityVector vector;
         vector.position() = position(index);
-        vector.euler_vector() = euler_vector(index);
+        vector.orientation() = euler_vector(index);
 
         return vector;
     }
