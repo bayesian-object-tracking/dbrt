@@ -117,10 +117,13 @@ void MultiObjectTracker::Initialize(
             triangle_indices(object_names_.size());
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        std::string object_model_path =
-                ros::package::getPath("arm_object_models") + "/objects/"
-                + object_names_[i] + "/" + object_names_[i]
-                + "_downsampled" + ".obj";
+//        std::string object_model_path =
+//                ros::package::getPath("arm_object_models") + "/objects/"
+//                + object_names_[i] + "/" + object_names_[i]
+//                + "_downsampled" + ".obj";
+
+        std::string object_model_path = ros::package::getPath("state_filtering")
+                        + "/object_models/"  + object_names_[i] + ".obj";
         ObjectFileReader file_reader;
         file_reader.set_filename(object_model_path);
         file_reader.Read();
@@ -328,8 +331,13 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-        std::string object_model_path = "package://arm_object_models/objects/"
-                        + object_names_[i] + "/" + object_names_[i] + ".obj";
+//        std::string object_model_path = "package://arm_object_models/objects/"
+//                        + object_names_[i] + "/" + object_names_[i] + ".obj";
+
+
+        std::string object_model_path =
+            "package://state_filtering/object_models/" + object_names_[i] + ".obj";
+
         ri::PublishMarker(mean.component(i).pose().homogeneous().cast<float>(),
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
