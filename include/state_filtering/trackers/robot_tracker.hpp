@@ -70,7 +70,7 @@ public:
     typedef ObservationModelCPUType::Base ObservationModel;
     typedef ObservationModelCPUType::Observation Observation;
 
-    typedef ff::RaoBlackwellCoordinateParticleFilter<ProcessModel, ObservationModel> FilterType;
+    typedef ff::RBCoordinateParticleFilter<ProcessModel, ObservationModel> FilterType;
 
     RobotTracker();
 

@@ -279,9 +279,9 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
 
     // we evaluate the initial particles and resample -------------------------------------------------------------------------------
     std::cout << "evaluating initial particles cpu ..." << std::endl;
-    filter_->Samples(initial_samples);
-    filter_->Filter(image, Input::Zero(dimension_));
-    filter_->Resample(evaluation_count_/sampling_blocks.size());
+    filter_->set_particles(initial_samples);
+    filter_->filter(image, Input::Zero(dimension_));
+    filter_->resample(evaluation_count_/sampling_blocks.size());
 }
 
 void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
@@ -315,14 +315,14 @@ void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
     // filter
     {
     INIT_PROFILING;
-    filter_->Filter(image, Eigen::VectorXd::Zero(dimension_));
+    filter_->filter(image, Eigen::VectorXd::Zero(dimension_));
     MEASURE("-----------------> total time for filtering");
     }
 
     // get the mean estimation for the robot joints
     // Casting is a disgusting hack to make sure that the correct equal-operator is used
     // TODO: Make this right
-    *mean_ = (Eigen::VectorXd)(filter_->StateDistribution().mean());
+    *mean_ = (Eigen::VectorXd)(filter_->belief().mean());
 
     // DEBUG to see depth images
     std::vector<Eigen::Matrix3d> rotations(mean_->count());
@@ -432,14 +432,14 @@ Eigen::VectorXd RobotTracker::FilterAndReturn(const sensor_msgs::Image& ros_imag
     // filter
     {
     INIT_PROFILING;
-    filter_->Filter(image, Eigen::VectorXd::Zero(dimension_));
+    filter_->filter(image, Eigen::VectorXd::Zero(dimension_));
     MEASURE("-----------------> total time for filtering");
     }
 
     // get the mean estimation for the robot joints
     // Casting is a disgusting hack to make sure that the correct equal-operator is used
     // TODO: Make this right
-    *mean_ = (Eigen::VectorXd)(filter_->StateDistribution().mean());
+    *mean_ = (Eigen::VectorXd)(filter_->belief().mean());
 
     // DEBUG to see depth images
     std::vector<Eigen::Matrix3d> rotations(mean_->count());

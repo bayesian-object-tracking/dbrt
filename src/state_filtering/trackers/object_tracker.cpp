@@ -286,16 +286,16 @@ void MultiObjectTracker::Initialize(
                                                            sampling_blocks,
                                                            max_kl_divergence));
 
-    filter_->SamplingBlocks(sampling_blocks);
+//    filter_->SamplingBlocks(sampling_blocks);
 
     std::vector<State > multi_body_samples(initial_states.size());
     for(size_t i = 0; i < multi_body_samples.size(); i++)
         multi_body_samples[i] = initial_states[i];
 
-    filter_->Samples(multi_body_samples);
-    filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
+    filter_->set_particles(multi_body_samples);
+    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
 
-    filter_->Resample(evaluation_count/sampling_blocks.size());
+    filter_->resample(evaluation_count/sampling_blocks.size());
 }
 
 
@@ -315,12 +315,12 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     /// filter *****************************************************************
     INIT_PROFILING;
-    filter_->Filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
+    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
 
 
     /// visualize the mean state ***********************************************
-    State mean = filter_->StateDistribution().mean();
+    State mean = filter_->belief().mean();
 
     // switch coordinate system
     for(size_t j = 0; j < mean.count(); j++)
