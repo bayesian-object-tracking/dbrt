@@ -253,7 +253,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                                          vertex_shader_path,
                                          fragment_shader_path);   // exponential_rate
 
-        gpu_observation_model->Initialize(*urdf_kinematics);
+        gpu_observation_model->Initialize();
         observation_model = gpu_observation_model;
 #endif
     }

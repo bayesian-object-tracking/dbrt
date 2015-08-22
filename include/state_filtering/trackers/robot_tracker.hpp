@@ -65,7 +65,7 @@ public:
     typedef ff::KinectImageObservationModelCPU<Scalar,
                                                 State>  ObservationModelCPUType;
 #ifdef BUILD_GPU
-    typedef ff::KinectImageObservationModelGPUHack<State>   ObservationModelGPUType;
+    typedef ff::KinectImageObservationModelGPU<State>   ObservationModelGPUType;
 #endif
     typedef ObservationModelCPUType::Base ObservationModel;
     typedef ObservationModelCPUType::Observation Observation;
