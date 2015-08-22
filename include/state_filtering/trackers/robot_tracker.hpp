@@ -47,7 +47,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef BUILD_GPU
 #include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
-#include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu_hack.hpp>
 #endif
 
 
