@@ -289,6 +289,30 @@ void MultiObjectTracker::Initialize(
     filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
 
     filter_->resample(evaluation_count/sampling_blocks.size());
+
+    /// convert to a differential reperesentation ******************************
+//    State mean = filter_->belief().mean();
+//    default_poses_.resize(mean.count());
+//    for(size_t i = 0; i < mean.count(); i++)
+//    {
+//        default_poses_[i] = mean.component(i).affine();
+//    }
+//    filter_->observation_model()->default_state(mean);
+
+//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+//    {
+//        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
+//        {
+//            Affine A, A_mean, A_delta;
+
+//            A = filter_->belief().location(i_part).component(i_obj).affine();
+//            A_mean = default_poses_[i_obj];
+//            A_delta = A * A_mean.inverse();
+
+//            filter_->belief().location(i_part).component(i_obj).affine(A_delta);
+//        }
+//    }
+
 }
 
 
@@ -310,6 +334,29 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     INIT_PROFILING;
     filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
+
+
+    /// convert to a differential reperesentation ******************************
+//    State mean = filter_->belief().mean();
+//    for(size_t i = 0; i < mean.count(); i++)
+//    {
+//        default_poses_[i] = mean.component(i).affine() * default_poses_[i];
+//    }
+//    filter_->observation_model()->default_state(mean);
+
+//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+//    {
+//        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
+//        {
+//            Affine A, A_mean, A_delta;
+
+//            A = filter_->belief().location(i_part).component(i_obj).affine();
+//            A_mean = default_poses_[i_obj];
+//            A_delta = A * A_mean.inverse();
+
+//            filter_->belief().location(i_part).component(i_obj).affine(A_delta);
+//        }
+//    }
 
 
     /// visualize the mean state ***********************************************

@@ -72,6 +72,10 @@ public:
 
     typedef ff::RBCoordinateParticleFilter<ProcessModel, ObservationModel> FilterType;
 
+
+    typedef typename Eigen::Transform<fl::Real, 3, Eigen::Affine> Affine;
+
+
     MultiObjectTracker();
 
     void Initialize(std::vector<Eigen::VectorXd> initial_states,
@@ -94,6 +98,8 @@ private:
     int downsampling_factor_;
 
     std::vector<Eigen::Vector3d> centers_;
+
+    std::vector<Affine> default_poses_;
 };
 
 
