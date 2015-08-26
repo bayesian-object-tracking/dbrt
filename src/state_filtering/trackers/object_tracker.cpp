@@ -291,27 +291,27 @@ void MultiObjectTracker::Initialize(
     filter_->resample(evaluation_count/sampling_blocks.size());
 
     /// convert to a differential reperesentation ******************************
-//    State mean = filter_->belief().mean();
-//    default_poses_.resize(mean.count());
-//    for(size_t i = 0; i < mean.count(); i++)
-//    {
-//        default_poses_[i] = mean.component(i).affine();
-//    }
-//    filter_->observation_model()->default_state(mean);
+    State mean = filter_->belief().mean();
+    filter_->observation_model()->default_poses().recount(mean.count());
+    for(size_t i = 0; i < mean.count(); i++)
+    {
+        auto pose = filter_->observation_model()->default_poses().component(i);
+        auto delta = mean.component(i);
+        pose.orientation() = delta.orientation() * pose.orientation();
+        pose.position() = delta.position() + pose.position();
+    }
 
-//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
-//    {
-//        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
-//        {
-//            Affine A, A_mean, A_delta;
-
-//            A = filter_->belief().location(i_part).component(i_obj).affine();
-//            A_mean = default_poses_[i_obj];
-//            A_delta = A * A_mean.inverse();
-
-//            filter_->belief().location(i_part).component(i_obj).affine(A_delta);
-//        }
-//    }
+    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+    {
+        State& state = filter_->belief().location(i_part);
+        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
+        {
+            state.component(i_obj).position() -=
+                                        mean.component(i_obj).position();
+            state.component(i_obj).orientation() = state.component(i_obj).orientation() *
+                                        mean.component(i_obj).orientation().inverse();
+        }
+    }
 
 }
 
@@ -337,36 +337,39 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
 
     /// convert to a differential reperesentation ******************************
-//    State mean = filter_->belief().mean();
-//    for(size_t i = 0; i < mean.count(); i++)
-//    {
-//        default_poses_[i] = mean.component(i).affine() * default_poses_[i];
-//    }
-//    filter_->observation_model()->default_state(mean);
+    State mean = filter_->belief().mean();
+    filter_->observation_model()->default_poses().recount(mean.count());
+    for(size_t i = 0; i < mean.count(); i++)
+    {
+        auto pose = filter_->observation_model()->default_poses().component(i);
+        auto delta = mean.component(i);
+        pose.orientation() = delta.orientation() * pose.orientation();
+        pose.position() = delta.position() + pose.position();
+    }
 
-//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
-//    {
-//        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
-//        {
-//            Affine A, A_mean, A_delta;
-
-//            A = filter_->belief().location(i_part).component(i_obj).affine();
-//            A_mean = default_poses_[i_obj];
-//            A_delta = A * A_mean.inverse();
-
-//            filter_->belief().location(i_part).component(i_obj).affine(A_delta);
-//        }
-//    }
+    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+    {
+        State& state = filter_->belief().location(i_part);
+        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
+        {
+            state.component(i_obj).position() -=
+                                        mean.component(i_obj).position();
+            state.component(i_obj).orientation() -=
+                                        mean.component(i_obj).orientation();
+        }
+    }
 
 
     /// visualize the mean state ***********************************************
-    State mean = filter_->belief().mean();
+    ObservationModel::PoseArray poses =
+                                filter_->observation_model()->default_poses();
+//    State mean = filter_->belief().mean();
 
     // switch coordinate system
-    for(size_t j = 0; j < mean.count(); j++)
+    for(size_t j = 0; j < poses.count(); j++)
     {
-        mean.component(j).position() -=
-                mean.component(j).orientation().rotation_matrix() * centers_[j];
+        poses.component(j).position() -=
+                poses.component(j).orientation().rotation_matrix() * centers_[j];
     }
 
     for(size_t i = 0; i < object_names_.size(); i++)
@@ -374,13 +377,16 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
         std::string object_model_path =
          "package://state_filtering/object_models/" + object_names_[i] + ".obj";
 
-        ri::PublishMarker(mean.component(i).pose().homogeneous().cast<float>(),
+        ri::PublishMarker(poses.component(i).homogeneous().cast<float>(),
                           ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
     }
 
     last_measurement_time_ = ros_image.header.stamp.toSec();
-    return mean;
+
+
+    /// \todo this should return the proper mean
+    return State::Zero(0);
 }
 
 
