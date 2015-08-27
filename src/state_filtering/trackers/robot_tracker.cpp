@@ -235,19 +235,17 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                                           image.rows(),
                                           image.cols(),
                                           max_sample_count,
-                                          initial_occlusion_prob,
-                                          delta_time,
                                           part_vertices,
                                           part_triangle_indices,
+                                          vertex_shader_path,
+                                          fragment_shader_path,
+                                          initial_occlusion_prob,
+                                          delta_time,
                                           p_occluded_visible,
                                           p_occluded_occluded,
                                           tail_weight,
                                           model_sigma,
-                                          sigma_factor,
-                                          6.0f,         // max_depth
-                                          -log(0.5),
-                                          vertex_shader_path,
-                                          fragment_shader_path));
+                                          sigma_factor));
 
         observation_model = gpu_observation_model;
 #endif
