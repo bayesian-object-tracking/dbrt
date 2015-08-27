@@ -38,9 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fl/model/process/orientation_transition_function.hpp>
 
 
-#include <boost/filesystem.hpp>
-
-
 MultiObjectTracker::MultiObjectTracker():
         node_handle_("~"),
         last_measurement_time_(std::numeric_limits<Scalar>::quiet_NaN())
