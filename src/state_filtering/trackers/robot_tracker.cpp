@@ -215,18 +215,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";
 
-        if(!boost::filesystem::exists(vertex_shader_path))
-        {
-            std::cout << "vertex shader does not exist at: "
-                 << vertex_shader_path << std::endl;
-            exit(-1);
-        }
-        if(!boost::filesystem::exists(fragment_shader_path))
-        {
-            std::cout << "fragment_shader does not exist at: "
-                 << fragment_shader_path << std::endl;
-            exit(-1);
-        }
+
 
         // gpu obseration model
         boost::shared_ptr<ObservationModelGPUType>
