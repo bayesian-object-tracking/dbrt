@@ -291,28 +291,36 @@ void MultiObjectTracker::Initialize(
     filter_->resample(evaluation_count/sampling_blocks.size());
 
     /// convert to a differential reperesentation ******************************
-//    State mean = filter_->belief().mean();
-//    filter_->observation_model()->default_poses().recount(mean.count());
-//    for(size_t i = 0; i < mean.count(); i++)
-//    {
-//        auto pose = filter_->observation_model()->default_poses().component(i);
-//        auto delta = mean.component(i);
-////        pose.orientation() = delta.orientation() * pose.orientation();
-//        pose.position() = delta.position() + pose.position();
-//    }
+    State mean = filter_->belief().mean();
+    filter_->observation_model()->default_poses().recount(mean.count());
+    for(size_t i = 0; i < mean.count(); i++)
+    {
+        auto pose = filter_->observation_model()->default_poses().component(i);
+        auto delta = mean.component(i);
+        pose.orientation() = delta.orientation() * pose.orientation();
+        pose.position() = delta.position() + pose.position();
+    }
+    std::cout << "befo " << filter_->belief().mean().transpose() << std::endl;
 
-//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
-//    {
-//        State& state = filter_->belief().location(i_part);
-//        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
-//        {
-//            state.component(i_obj).position() = state.component(i_obj).position() -
-//                                        mean.component(i_obj).position();
-////            state.component(i_obj).orientation() =
-////                    state.component(i_obj).orientation() *
-////                    mean.component(i_obj).orientation().inverse();
-//        }
-//    }
+    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+    {
+        State& state = filter_->belief().location(i_part);
+        for(size_t i_obj = 0; i_obj < mean.count(); i_obj++)
+        {
+            state.component(i_obj).position() = state.component(i_obj).position() -
+                                        mean.component(i_obj).position();
+
+            state.component(i_obj).orientation() =
+                    state.component(i_obj).orientation() *
+                    mean.component(i_obj).orientation().inverse();
+
+            state.component(i_obj).linear_velocity() = Eigen::Vector3d::Zero();
+            state.component(i_obj).angular_velocity() = Eigen::Vector3d::Zero();
+        }
+    }
+
+    std::cout << "afte " << filter_->belief().mean().transpose() << std::endl;
+
 
 }
 
@@ -338,40 +346,40 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     MEASURE("-----------------> total time for filtering");
 
 
-//    /// convert to a differential reperesentation ******************************
-//    State mean_delta = filter_->belief().mean();
-//    filter_->observation_model()->default_poses().recount(mean_delta.count());
-//    for(size_t i = 0; i < mean_delta.count(); i++)
-//    {
-//        auto pose = filter_->observation_model()->default_poses().component(i);
-//        auto delta = mean_delta.component(i);
-//        pose.orientation() = delta.orientation() * pose.orientation();
-//        pose.position() = delta.position() + pose.position();
-//    }
+    /// convert to a differential reperesentation ******************************
+    State mean_delta = filter_->belief().mean();
+    filter_->observation_model()->default_poses().recount(mean_delta.count());
+    for(size_t i = 0; i < mean_delta.count(); i++)
+    {
+        auto pose = filter_->observation_model()->default_poses().component(i);
+        auto delta = mean_delta.component(i);
+        pose.orientation() = delta.orientation() * pose.orientation();
+        pose.position() = delta.position() + pose.position();
+    }
 
-//    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
-//    {
-//        State& state = filter_->belief().location(i_part);
-//        for(size_t i_obj = 0; i_obj < mean_delta.count(); i_obj++)
-//        {
-//            state.component(i_obj).position() -=
-//                                        mean_delta.component(i_obj).position();
-//            state.component(i_obj).orientation() -=
-//                                      mean_delta.component(i_obj).orientation();
-//        }
-//    }
+    for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
+    {
+        State& state = filter_->belief().location(i_part);
+        for(size_t i_obj = 0; i_obj < mean_delta.count(); i_obj++)
+        {
+            state.component(i_obj).position() -=
+                                        mean_delta.component(i_obj).position();
+            state.component(i_obj).orientation() -=
+                                      mean_delta.component(i_obj).orientation();
+        }
+    }
 
 
     /// visualize the mean state ***********************************************
     State mean = filter_->belief().mean();
-//    for(size_t i = 0; i < mean.count(); i++)
-//    {
-//        auto pose_0 = filter_->observation_model()->default_poses().component(i);
-//        auto state = mean.component(i);
+    for(size_t i = 0; i < mean.count(); i++)
+    {
+        auto pose_0 = filter_->observation_model()->default_poses().component(i);
+        auto state = mean.component(i);
 
-//        state.position() = state.position() + pose_0.position();
-//        state.orientation() = state.orientation() * pose_0.orientation();
-//    }
+        state.position() = state.position() + pose_0.position();
+        state.orientation() = state.orientation() * pose_0.orientation();
+    }
 
     // switch coordinate system
     for(size_t j = 0; j < mean.count(); j++)
