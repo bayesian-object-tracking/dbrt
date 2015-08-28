@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <state_filtering/utils/cloud_visualizer.hpp>
 
 #include <fl/model/process/orientation_transition_function.hpp>
+#include <fl/model/process/linear_state_transition_model.hpp>
+
 
 
 #include <boost/filesystem.hpp>
@@ -274,6 +276,12 @@ void MultiObjectTracker::Initialize(
     }
 
     std::cout << "initialized process model " << std::endl;
+
+
+    /// initialize NEW process model *******************************************
+    typedef Eigen::Matrix<fl::Real, 6, 1> Input;
+    typedef fl::LinearStateTransitionModel<State, Input> NewProcessModel;
+
 
     /// initialize filter ******************************************************
     filter_ = boost::shared_ptr<FilterType>(new FilterType(process,
