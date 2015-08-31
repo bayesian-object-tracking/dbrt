@@ -291,11 +291,13 @@ void MultiObjectTracker::Initialize(
 
     std::vector<State > multi_body_samples(initial_states.size());
     for(size_t i = 0; i < multi_body_samples.size(); i++)
+    {
         multi_body_samples[i] = initial_states[i];
+    }
 
     filter_->set_particles(multi_body_samples);
-    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
 
+    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     filter_->resample(evaluation_count/sampling_blocks.size());
 
     /// convert to a differential reperesentation ******************************
@@ -308,7 +310,6 @@ void MultiObjectTracker::Initialize(
         pose.orientation() = delta.orientation() * pose.orientation();
         pose.position() = delta.position() + pose.position();
     }
-    std::cout << "befo " << filter_->belief().mean().transpose() << std::endl;
 
     for(size_t i_part = 0; i_part < filter_->belief().size(); i_part++)
     {
@@ -322,12 +323,14 @@ void MultiObjectTracker::Initialize(
                     state.component(i_obj).orientation() *
                     mean.component(i_obj).orientation().inverse();
 
+            // this needs to be set to zero, because as we switch coordinate
+            // system, the linear velocity changes, since it has to account for
+            // part of the angular velocity.
             state.component(i_obj).linear_velocity() = Eigen::Vector3d::Zero();
             state.component(i_obj).angular_velocity() = Eigen::Vector3d::Zero();
         }
     }
 
-    std::cout << "afte " << filter_->belief().mean().transpose() << std::endl;
 
 
 }
@@ -352,6 +355,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     INIT_PROFILING;
     filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
+    std::cout << "afte " << filter_->belief().location(0).component(0).linear_velocity().transpose() << std::endl;
 
 
     /// convert to a differential reperesentation ******************************
