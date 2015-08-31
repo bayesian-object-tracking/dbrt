@@ -355,8 +355,6 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
     INIT_PROFILING;
     filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
-    std::cout << "afte " << filter_->belief().location(0).component(0).linear_velocity().transpose() << std::endl;
-
 
     /// convert to a differential reperesentation ******************************
     State mean_delta = filter_->belief().mean();
