@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <state_filtering/utils/cloud_visualizer.hpp>
 
 #include <fl/model/process/orientation_transition_function.hpp>
-#include <fl/model/process/linear_state_transition_model.hpp>
 
 
 
@@ -97,6 +96,17 @@ void MultiObjectTracker::Initialize(
                       angular_acceleration_sigma, node_handle_);
     double damping;
     ri::ReadParameter("damping", damping, node_handle_);
+
+    double velocity_factor;
+    ri::ReadParameter("velocity_factor",
+                      velocity_factor, node_handle_);
+
+    double linear_sigma;
+    ri::ReadParameter("linear_sigma",
+                      linear_sigma, node_handle_);
+    double angular_sigma;
+    ri::ReadParameter("angular_sigma",
+                      angular_sigma, node_handle_);
 
     double tail_weight;
     ri::ReadParameter("tail_weight", tail_weight, node_handle_);
@@ -256,31 +266,59 @@ void MultiObjectTracker::Initialize(
     std::cout << "initialized observation omodel " << std::endl;
 
     /// initialize process model ***********************************************
-    Eigen::MatrixXd linear_acceleration_covariance =
-                            Eigen::MatrixXd::Identity(3, 3)
-                            * pow(double(linear_acceleration_sigma), 2);
-    Eigen::MatrixXd angular_acceleration_covariance =
-                                   Eigen::MatrixXd::Identity(3, 3)
-                                   * pow(double(angular_acceleration_sigma), 2);
+//    Eigen::MatrixXd linear_acceleration_covariance =
+//                            Eigen::MatrixXd::Identity(3, 3)
+//                            * pow(double(linear_acceleration_sigma), 2);
+//    Eigen::MatrixXd angular_acceleration_covariance =
+//                                   Eigen::MatrixXd::Identity(3, 3)
+//                                   * pow(double(angular_acceleration_sigma), 2);
 
-    boost::shared_ptr<ProcessModel>
-            process(new ProcessModel(delta_time, object_names_.size()));
+//    boost::shared_ptr<ProcessModel>
+//            process(new ProcessModel(delta_time, object_names_.size()));
 
-    std::cout << "setting center shizzles " << std::endl;
-    for(size_t i = 0; i < object_names_.size(); i++)
-    {
-        process->Parameters(i, Eigen::Vector3d::Zero(),
-                               damping,
-                               linear_acceleration_covariance,
-                               angular_acceleration_covariance);
-    }
+//    std::cout << "setting center shizzles " << std::endl;
+//    for(size_t i = 0; i < object_names_.size(); i++)
+//    {
+//        process->Parameters(i, Eigen::Vector3d::Zero(),
+//                               damping,
+//                               linear_acceleration_covariance,
+//                               angular_acceleration_covariance);
+//    }
 
-    std::cout << "initialized process model " << std::endl;
+//    std::cout << "initialized process model " << std::endl;
 
 
     /// initialize NEW process model *******************************************
-    typedef Eigen::Matrix<fl::Real, 6, 1> Input;
-    typedef fl::LinearStateTransitionModel<State, Input> NewProcessModel;
+
+
+    boost::shared_ptr<ProcessModel>
+            process(new ProcessModel(object_names_.size() * 12, 6));
+    auto A = process->create_dynamics_matrix();
+    A.topLeftCorner(6,6).setIdentity();
+    A.topRightCorner(6,6).setIdentity();
+    A.bottomLeftCorner(6,6).setZero();
+    A.bottomRightCorner(6,6).setIdentity();
+    A.bottomRightCorner(6,6) *= velocity_factor;
+    process->dynamics_matrix(A);
+
+    auto B = process->create_noise_matrix();
+    B.setZero();
+    B.block<3,3>(6,0) = Eigen::Matrix3d::Identity() * linear_sigma;
+    B.block<3,3>(9,3) = Eigen::Matrix3d::Identity() * angular_sigma;
+    process->noise_matrix(B);
+
+    auto C = process->create_input_matrix();
+    C.setZero();
+    process->input_matrix(C);
+
+    std::cout << "dynamics: " << std::endl << process->dynamics_matrix() << std::endl;
+    std::cout << "noise: " << std::endl << process->noise_matrix() << std::endl;
+    std::cout << "input: " << std::endl << process->input_matrix() << std::endl;
+
+
+
+
+
 
 
     /// initialize filter ******************************************************

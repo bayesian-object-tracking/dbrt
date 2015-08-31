@@ -46,6 +46,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
 #endif
 
+#include <fl/model/process/linear_state_transition_model.hpp>
+
+
 #include <fl/util/math/pose_vector.hpp>
 #include <fl/util/math/composed_vector.hpp>
 
@@ -60,7 +63,18 @@ public:
     typedef ff::FreeFloatingRigidBodiesState<>  State;
     typedef State::Scalar                       Scalar;
 
-    typedef ff::BrownianObjectMotionModel<State>        ProcessModel;
+
+    typedef Eigen::Matrix<fl::Real, 6, 1> Input;
+    typedef fl::LinearStateTransitionModel<State, Input> StateTransition;
+
+    typedef StateTransition ProcessModel;
+
+//    typedef ff::BrownianObjectMotionModel<State>        ProcessModel;
+
+
+
+
+
     typedef ff::KinectImageObservationModelCPU<Scalar,
                                                 State>  ObservationModelCPUType;
 #ifdef BUILD_GPU
