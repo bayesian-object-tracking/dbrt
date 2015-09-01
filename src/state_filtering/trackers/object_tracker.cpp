@@ -70,6 +70,10 @@ void MultiObjectTracker::Initialize(
     /// read parameters ********************************************************
     bool use_gpu;
     ri::ReadParameter("use_gpu", use_gpu, node_handle_);
+
+    bool use_new_process;
+    ri::ReadParameter("use_new_process", use_new_process, node_handle_);
+
     int evaluation_count;
     ri::ReadParameter("evaluation_count", evaluation_count, node_handle_);
     std::vector<std::vector<size_t> > sampling_blocks;
@@ -265,56 +269,72 @@ void MultiObjectTracker::Initialize(
     }
     std::cout << "initialized observation omodel " << std::endl;
 
+
     /// initialize process model ***********************************************
-//    Eigen::MatrixXd linear_acceleration_covariance =
-//                            Eigen::MatrixXd::Identity(3, 3)
-//                            * pow(double(linear_acceleration_sigma), 2);
-//    Eigen::MatrixXd angular_acceleration_covariance =
-//                                   Eigen::MatrixXd::Identity(3, 3)
-//                                   * pow(double(angular_acceleration_sigma), 2);
+    Eigen::MatrixXd linear_acceleration_covariance =
+                            Eigen::MatrixXd::Identity(3, 3)
+                            * pow(double(linear_acceleration_sigma), 2);
+    Eigen::MatrixXd angular_acceleration_covariance =
+                                   Eigen::MatrixXd::Identity(3, 3)
+                                   * pow(double(angular_acceleration_sigma), 2);
 
-//    boost::shared_ptr<ProcessModel>
-//            process(new ProcessModel(delta_time, object_names_.size()));
 
-//    std::cout << "setting center shizzles " << std::endl;
-//    for(size_t i = 0; i < object_names_.size(); i++)
-//    {
-//        process->Parameters(i, Eigen::Vector3d::Zero(),
-//                               damping,
-//                               linear_acceleration_covariance,
-//                               angular_acceleration_covariance);
-//    }
+    OldStateTransition old_process(delta_time, object_names_.size());
 
-//    std::cout << "initialized process model " << std::endl;
+    std::cout << "setting center shizzles " << std::endl;
+    for(size_t i = 0; i < object_names_.size(); i++)
+    {
+        old_process.Parameters(i, Eigen::Vector3d::Zero(),
+                               damping,
+                               linear_acceleration_covariance,
+                               angular_acceleration_covariance);
+    }
+
+    std::cout << "initialized process model " << std::endl;
+
+
+
 
 
     /// initialize NEW process model *******************************************
-
-
-    boost::shared_ptr<ProcessModel>
-            process(new ProcessModel(object_names_.size() * 12, 6));
-    auto A = process->create_dynamics_matrix();
+    NewStateTransition new_process(12, 6);
+    auto A = new_process.create_dynamics_matrix();
     A.topLeftCorner(6,6).setIdentity();
     A.topRightCorner(6,6).setIdentity();
     A.bottomLeftCorner(6,6).setZero();
     A.bottomRightCorner(6,6).setIdentity();
     A.bottomRightCorner(6,6) *= velocity_factor;
-    process->dynamics_matrix(A);
+    new_process.dynamics_matrix(A);
 
-    auto B = process->create_noise_matrix();
+    auto B = new_process.create_noise_matrix();
     B.setZero();
     B.block<3,3>(6,0) = Eigen::Matrix3d::Identity() * linear_sigma;
     B.block<3,3>(9,3) = Eigen::Matrix3d::Identity() * angular_sigma;
-    process->noise_matrix(B);
+    new_process.noise_matrix(B);
 
-    auto C = process->create_input_matrix();
+    auto C = new_process.create_input_matrix();
     C.setZero();
-    process->input_matrix(C);
+    new_process.input_matrix(C);
 
-    std::cout << "dynamics: " << std::endl << process->dynamics_matrix() << std::endl;
-    std::cout << "noise: " << std::endl << process->noise_matrix() << std::endl;
-    std::cout << "input: " << std::endl << process->input_matrix() << std::endl;
 
+
+    std::cout << "dynamics: " << std::endl << new_process.dynamics_matrix() << std::endl;
+    std::cout << "noise: " << std::endl << new_process.noise_matrix() << std::endl;
+    std::cout << "input: " << std::endl << new_process.input_matrix() << std::endl;
+
+
+    boost::shared_ptr<StateTransition> process;
+
+    if(use_new_process)
+    {
+        process = boost::shared_ptr<StateTransition>
+                         (new NewStateTransition(new_process));
+    }
+    else
+    {
+        process = boost::shared_ptr<StateTransition>
+                         (new OldStateTransition(old_process));
+    }
 
 
 
@@ -335,7 +355,7 @@ void MultiObjectTracker::Initialize(
 
     filter_->set_particles(multi_body_samples);
 
-    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
+    filter_->filter(image, StateTransition::Input::Zero(object_names_.size()*6));
     filter_->resample(evaluation_count/sampling_blocks.size());
 
     /// convert to a differential reperesentation ******************************
@@ -391,7 +411,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     /// filter *****************************************************************
     INIT_PROFILING;
-    filter_->filter(image, ProcessModel::Input::Zero(object_names_.size()*6));
+    filter_->filter(image, StateTransition::Input::Zero(object_names_.size()*6));
     MEASURE("-----------------> total time for filtering");
 
     /// convert to a differential reperesentation ******************************

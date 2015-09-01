@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <fl/model/process/linear_state_transition_model.hpp>
+#include <fl/model/process/interface/state_transition_function.hpp>
 
 
 #include <fl/util/math/pose_vector.hpp>
@@ -64,12 +65,16 @@ public:
     typedef State::Scalar                       Scalar;
 
 
-    typedef Eigen::Matrix<fl::Real, 6, 1> Input;
-    typedef fl::LinearStateTransitionModel<State, Input> StateTransition;
+    typedef Eigen::Matrix<fl::Real, -1, 1> Input;
 
-    typedef StateTransition ProcessModel;
+    typedef fl::StateTransitionFunction<State, State, Input> StateTransition;
 
-//    typedef ff::BrownianObjectMotionModel<State>        ProcessModel;
+
+    typedef fl::LinearStateTransitionModel<State, Input> NewStateTransition;
+
+//    typedef StateTransition ProcessModel;
+
+    typedef ff::BrownianObjectMotionModel<State>        OldStateTransition;
 
 
 
@@ -84,7 +89,7 @@ public:
     typedef ObservationModelCPUType::Base ObservationModel;
     typedef ObservationModelCPUType::Observation Observation;
 
-    typedef ff::RBCoordinateParticleFilter<ProcessModel, ObservationModel> FilterType;
+    typedef ff::RBCoordinateParticleFilter<StateTransition, ObservationModel> FilterType;
 
 
     typedef typename Eigen::Transform<fl::Real, 3, Eigen::Affine> Affine;
