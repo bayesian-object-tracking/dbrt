@@ -299,17 +299,18 @@ void MultiObjectTracker::Initialize(
     /// initialize NEW process model *******************************************
     NewStateTransition new_process(12, 6);
     auto A = new_process.create_dynamics_matrix();
-    A.topLeftCorner(6,6).setIdentity();
+    A.setIdentity();
+//    A.bottomLeftCorner(6,6).setZero();
     A.topRightCorner(6,6).setIdentity();
-    A.bottomLeftCorner(6,6).setZero();
-    A.bottomRightCorner(6,6).setIdentity();
-    A.bottomRightCorner(6,6) *= velocity_factor;
+    A.rightCols(6) *= velocity_factor;
+//    A.bottomRightCorner(6,6) = A.topRightCorner(6,6);
     new_process.dynamics_matrix(A);
 
     auto B = new_process.create_noise_matrix();
     B.setZero();
     B.block<3,3>(6,0) = Eigen::Matrix3d::Identity() * linear_sigma;
     B.block<3,3>(9,3) = Eigen::Matrix3d::Identity() * angular_sigma;
+    B.topRows(6) = B.bottomRows(6);
     new_process.noise_matrix(B);
 
     auto C = new_process.create_input_matrix();
@@ -322,6 +323,7 @@ void MultiObjectTracker::Initialize(
     std::cout << "noise: " << std::endl << new_process.noise_matrix() << std::endl;
     std::cout << "input: " << std::endl << new_process.input_matrix() << std::endl;
 
+//exit(-1);
 
     boost::shared_ptr<StateTransition> process;
 
@@ -329,6 +331,12 @@ void MultiObjectTracker::Initialize(
     {
         process = boost::shared_ptr<StateTransition>
                          (new NewStateTransition(new_process));
+        sampling_blocks.resize(1);
+        sampling_blocks[0].resize(12);
+        for(size_t i = 0; i < 12; i++)
+        {
+            sampling_blocks[0][i] = i;
+        }
     }
     else
     {
