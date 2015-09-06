@@ -3,7 +3,7 @@
 
 #include <state_filtering/utils/image_publisher.hpp>
 
-using namespace ff;
+using namespace dbot;
 
 ImagePublisher::ImagePublisher(ros::NodeHandle& node_handle):
     it(image_transport::ImageTransport(node_handle))
@@ -79,7 +79,7 @@ sensor_msgs::ImagePtr ImagePublisher::toRosImage(const Eigen::MatrixXd& m,
                                             int width,
                                             float min,
                                             float max)
-{    
+{
     cv_bridge::CvImage cvImage;
 
     cvImage.image = cv::Mat(height, width, CV_8UC3);
@@ -169,6 +169,8 @@ sensor_msgs::ImagePtr ImagePublisher::toRosImagePT(const Eigen::MatrixXd& m,
         {
             float val = m(i * width + j, 0);
 
+            if (std::isinf(val)) val = 0;
+
             if(val < min_val)
             {
               min_val = val;
@@ -186,7 +188,11 @@ sensor_msgs::ImagePtr ImagePublisher::toRosImagePT(const Eigen::MatrixXd& m,
     {
         for (int j = 0; j < width; j++)
         {
-            cvImage.image.at<unsigned char>(i, j) = (m(i * width + j, 0) - min_val) / (max_val-min_val) * 255;
+            float val = m(i * width + j, 0);
+            if (std::isinf(val)) val = 0;
+
+            cvImage.image.at<unsigned char>(i, j) =
+                (val - min_val) / (max_val - min_val) * 255;
         }
     }
 
@@ -253,7 +259,7 @@ void ImagePublisher::rainbow_set(cv::Vec3b& dst, float value, float min, float m
     if (value < min)
         value = min;
     if (value > max)
-        value = max;    
+        value = max;
 
     k = (int) ((value - min) / (max - min) * 0xFFFF);
 
