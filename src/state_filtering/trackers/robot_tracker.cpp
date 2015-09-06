@@ -115,7 +115,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     ROS_INFO("Number of joints %d", urdf_kinematics->num_joints());
 
     std::vector<std::string> joints = urdf_kinematics->GetJointMap();
-    ff::hf::PrintVector(joints);
+    dbot::hf::PrintVector(joints);
 
 
     // get the name of the root frame
@@ -132,7 +132,7 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     {
         part_vertices[i] = *(part_meshes_[i]->get_vertices());
         part_triangle_indices[i] = *(part_meshes_[i]->get_indices());
-	n_triangles +=part_triangle_indices[i].size();
+    n_triangles +=part_triangle_indices[i].size();
     }
 
     std::cout << "Total number of triangles " << n_triangles << std::endl;
@@ -147,8 +147,8 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     // initialize the result container for the emperical mean
     mean_ = boost::shared_ptr<State > (new State);
 
-    robot_renderer_ = boost::shared_ptr<ff::RigidBodyRenderer>(
-                new ff::RigidBodyRenderer(part_vertices,
+    robot_renderer_ = boost::shared_ptr<dbot::RigidBodyRenderer>(
+                new dbot::RigidBodyRenderer(part_vertices,
                                                part_triangle_indices));
 
     // FOR DEBUGGING
@@ -184,10 +184,10 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     if(!use_gpu)
     {
         // cpu obseration model
-        boost::shared_ptr<ff::KinectPixelObservationModel> kinect_pixel_observation_model(
-                    new ff::KinectPixelObservationModel(tail_weight, model_sigma, sigma_factor));
-        boost::shared_ptr<ff::OcclusionProcessModel> occlusion_process_model(
-                    new ff::OcclusionProcessModel(p_occluded_visible, p_occluded_occluded));
+        boost::shared_ptr<dbot::KinectPixelObservationModel> kinect_pixel_observation_model(
+                    new dbot::KinectPixelObservationModel(tail_weight, model_sigma, sigma_factor));
+        boost::shared_ptr<dbot::OcclusionProcessModel> occlusion_process_model(
+                    new dbot::OcclusionProcessModel(p_occluded_visible, p_occluded_occluded));
         observation_model = boost::shared_ptr<ObservationModelCPUType>(
                     new ObservationModelCPUType(camera_matrix,
                                                 image.rows(),
@@ -310,7 +310,7 @@ void RobotTracker::Filter(const sensor_msgs::Image& ros_image)
     Observation image = ri::Ros2Eigen<Scalar>(ros_image, downsampling_factor_);
     if(!data_in_meters_)
       image = image/1000.; // convert to meters
-      
+
 
     // filter
     {

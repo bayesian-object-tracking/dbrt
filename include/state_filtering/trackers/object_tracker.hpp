@@ -61,7 +61,7 @@ public:
 
 //    typedef fl::ComposedVector<StateBlock, StateVector> State;
 
-    typedef ff::FreeFloatingRigidBodiesState<>  State;
+    typedef dbot::FreeFloatingRigidBodiesState<>  State;
     typedef State::Scalar                       Scalar;
 
 
@@ -74,22 +74,22 @@ public:
 
 //    typedef StateTransition ProcessModel;
 
-    typedef ff::BrownianObjectMotionModel<State>        OldStateTransition;
+    typedef dbot::BrownianObjectMotionModel<State>        OldStateTransition;
 
 
 
 
 
-    typedef ff::KinectImageObservationModelCPU<Scalar,
+    typedef dbot::KinectImageObservationModelCPU<Scalar,
                                                 State>  ObservationModelCPUType;
 #ifdef BUILD_GPU
-    typedef ff::KinectImageObservationModelGPU<State>   ObservationModelGPUType;
+    typedef dbot::KinectImageObservationModelGPU<State>   ObservationModelGPUType;
 #endif
 
     typedef ObservationModelCPUType::Base ObservationModel;
     typedef ObservationModelCPUType::Observation Observation;
 
-    typedef ff::RBCoordinateParticleFilter<StateTransition, ObservationModel> FilterType;
+    typedef dbot::RBCoordinateParticleFilter<StateTransition, ObservationModel> FilterType;
 
 
     typedef typename Eigen::Transform<fl::Real, 3, Eigen::Affine> Affine;
@@ -103,7 +103,7 @@ public:
 
     Eigen::VectorXd Filter(const sensor_msgs::Image& ros_image);
 
-private:  
+private:
     Scalar last_measurement_time_;
 
     boost::mutex mutex_;

@@ -41,10 +41,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 template<int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>
-class RobotState: public ff::RigidBodiesState<JointCount>
+class RobotState: public dbot::RigidBodiesState<JointCount>
 {
 public:
-    typedef ff::RigidBodiesState<JointCount>    Base;
+    typedef dbot::RigidBodiesState<JointCount>    Base;
     typedef typename Base::Vector               Vector;
     typedef typename Base::PoseVelocityBlock    PoseVelocityBlock;
 

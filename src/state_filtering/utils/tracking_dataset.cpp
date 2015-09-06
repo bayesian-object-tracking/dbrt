@@ -42,9 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 DataFrame::DataFrame(const sensor_msgs::Image::ConstPtr& image,
-		     const sensor_msgs::CameraInfo::ConstPtr& info,
-		     const Eigen::VectorXd& ground_truth,
-		     const Eigen::VectorXd& deviation):
+             const sensor_msgs::CameraInfo::ConstPtr& info,
+             const Eigen::VectorXd& ground_truth,
+             const Eigen::VectorXd& deviation):
     image_(image),
     info_(info),
     ground_truth_(ground_truth),
@@ -52,8 +52,8 @@ DataFrame::DataFrame(const sensor_msgs::Image::ConstPtr& image,
 
 DataFrame::DataFrame(const sensor_msgs::Image::ConstPtr& image,
           const sensor_msgs::CameraInfo::ConstPtr& info,
-	  const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-	  const sensor_msgs::JointState::ConstPtr& noisy_joints,
+      const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+      const sensor_msgs::JointState::ConstPtr& noisy_joints,
           const Eigen::VectorXd& ground_truth,
           const Eigen::VectorXd& deviation):
     image_(image),
@@ -64,13 +64,13 @@ DataFrame::DataFrame(const sensor_msgs::Image::ConstPtr& image,
     deviation_(deviation) { }
 
 DataFrame::DataFrame(const sensor_msgs::Image::ConstPtr& image,
-		     const sensor_msgs::CameraInfo::ConstPtr& info,
-		     const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-		     const sensor_msgs::JointState::ConstPtr& noisy_joints,
-		     const tf::tfMessage::ConstPtr& tf,
-		     const tf::tfMessage::ConstPtr& fixed_tf,
-		     const Eigen::VectorXd& ground_truth,
-		     const Eigen::VectorXd& deviation):
+             const sensor_msgs::CameraInfo::ConstPtr& info,
+             const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+             const sensor_msgs::JointState::ConstPtr& noisy_joints,
+             const tf::tfMessage::ConstPtr& tf,
+             const tf::tfMessage::ConstPtr& fixed_tf,
+             const Eigen::VectorXd& ground_truth,
+             const Eigen::VectorXd& deviation):
   image_(image),
   info_(info),
   ground_truth_joints_(ground_truth_joints),
@@ -119,7 +119,7 @@ pcl::PointCloud<pcl::PointXYZ>::ConstPtr TrackingDataset::GetPointCloud(
         const size_t& index)
 {
     Eigen::MatrixXd image = ri::Ros2Eigen<double>(*data_[index].image_);
-    Eigen::Matrix<Eigen::Matrix<double, 3, 1> , -1, -1> points = ff::hf::Image2Points(image, GetCameraMatrix(index));
+    Eigen::Matrix<Eigen::Matrix<double, 3, 1> , -1, -1> points = dbot::hf::Image2Points(image, GetCameraMatrix(index));
     pcl::PointCloud<pcl::PointXYZ>::Ptr
             point_cloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>));
 
@@ -193,7 +193,7 @@ void TrackingDataset::Load()
     // load ground_truth.txt ---------------------------------------------------------------------
     if (! LoadTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH))
       std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
-    
+
 }
 
 bool TrackingDataset::LoadTextFile(const char *filename, DataType type)
@@ -271,10 +271,10 @@ void TrackingDataset::Store()
     bag.close();
 
     // write ground truth to txt file ----------------------------------------------------------
-    if(!StoreTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH)) 
+    if(!StoreTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH))
       {
-	std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
-	exit(-1);
+    std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
+    exit(-1);
       }
 }
 
@@ -286,30 +286,30 @@ bool TrackingDataset::StoreTextFile(const char *filename, DataType type)
     {
       for(size_t i = 0; i < data_.size(); i++)
         {
-	  switch(type) 
-	    {
-	    case(DataType::GROUND_TRUTH):
-	      if(data_[i].ground_truth_.rows() != 0)
-		{
-		  file << data_[i].image_->header.stamp << " ";
-		  file << data_[i].ground_truth_.transpose() << std::endl;
-		}
-	      break;
-	    case(DataType::DEVIATION):
-	      if(data_[i].deviation_.rows() != 0)
-		{
-		  file << data_[i].image_->header.stamp << " ";
-		  file << data_[i].deviation_.transpose() << std::endl;
-		}
-	      break;
-	    default:
-	      return false;
-	    }
+      switch(type)
+        {
+        case(DataType::GROUND_TRUTH):
+          if(data_[i].ground_truth_.rows() != 0)
+        {
+          file << data_[i].image_->header.stamp << " ";
+          file << data_[i].ground_truth_.transpose() << std::endl;
+        }
+          break;
+        case(DataType::DEVIATION):
+          if(data_[i].deviation_.rows() != 0)
+        {
+          file << data_[i].image_->header.stamp << " ";
+          file << data_[i].deviation_.transpose() << std::endl;
+        }
+          break;
+        default:
+          return false;
+        }
         }
       file.close();
     }
   else return false;
-  
+
   return true;
 }
 

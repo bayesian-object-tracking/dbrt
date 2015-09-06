@@ -24,6 +24,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
+
+
+
 #include <ros/package.h>
 
 #include <dbot/utils/profiling.hpp>
@@ -122,7 +125,7 @@ void MultiObjectTracker::Initialize(
     double delta_time = 0.033;
 
     std::cout << "sampling blocks: " << std::endl;
-    ff::hf::PrintVector(sampling_blocks);
+    dbot::hf::PrintVector(sampling_blocks);
 
 
 
@@ -185,18 +188,18 @@ void MultiObjectTracker::Initialize(
     if(!use_gpu)
     {
         // cpu obseration model
-        boost::shared_ptr<ff::KinectPixelObservationModel>
-            kinect_pixel_observation_model(new ff::KinectPixelObservationModel(
+        boost::shared_ptr<dbot::KinectPixelObservationModel>
+            kinect_pixel_observation_model(new dbot::KinectPixelObservationModel(
                                                     tail_weight,
                                                     model_sigma,
                                                     sigma_factor));
 
-        boost::shared_ptr<ff::OcclusionProcessModel> occlusion_process(
-                            new ff::OcclusionProcessModel(p_occluded_visible,
+        boost::shared_ptr<dbot::OcclusionProcessModel> occlusion_process(
+                            new dbot::OcclusionProcessModel(p_occluded_visible,
                                                           p_occluded_occluded));
 
-        boost::shared_ptr<ff::RigidBodyRenderer>
-                renderer(new ff::RigidBodyRenderer(vertices, triangle_indices));
+        boost::shared_ptr<dbot::RigidBodyRenderer>
+                renderer(new dbot::RigidBodyRenderer(vertices, triangle_indices));
 
         observation_model = boost::shared_ptr<ObservationModelCPUType>(
                     new ObservationModelCPUType(camera_matrix,
@@ -488,7 +491,7 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 //    fl::Gaussian<TF::Noise> gaussian; gaussian.set_standard();
 //    orientation = tf.state(orientation, gaussian.sample(), TF::Input::Zero());
 
-//    ff::FreeFloatingRigidBodiesState<1> state;
+//    dbot::FreeFloatingRigidBodiesState<1> state;
 //    state.orientation() = orientation.topRows(3);
 //    state.position() = Eigen::Vector3d(0,0,1);
 
