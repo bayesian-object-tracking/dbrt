@@ -104,7 +104,8 @@ void ri::PublishMarker(const Eigen::Matrix3f R, const Eigen::Vector3f t,
         std_msgs::Header header,
         std::string object_model_path,
         const ros::Publisher &pub,
-        int marker_id, float r, float g, float b, float a)
+        int marker_id, float r, float g, float b, float a,
+        std::string ns)
 {
 
     Eigen::Quaternion<float> q(R);
@@ -124,7 +125,7 @@ void ri::PublishMarker(const Eigen::Matrix3f R, const Eigen::Vector3f t,
     visualization_msgs::Marker marker;
     marker.header.frame_id =  pose.header.frame_id;
     marker.header.stamp =  pose.header.stamp;
-    marker.ns = "object_pose_estimation";
+    marker.ns = ns;
     marker.id = marker_id;
     marker.scale.x = 1.0;
     marker.scale.y = 1.0;
@@ -147,13 +148,15 @@ void ri::PublishMarker(const Eigen::Matrix4f H,
         std_msgs::Header header,
         std::string object_model_path,
         const ros::Publisher &pub,
-        int marker_id, float r, float g, float b, float a)
+        int marker_id, float r, float g, float b, float a,
+        std::string ns)
 {
     PublishMarker(H.topLeftCorner(3,3),
                   H.topRightCorner(3,1),
                   header,
                   object_model_path, pub,
-                  marker_id, r, g, b, a);
+                  marker_id, r, g, b, a,
+                  ns);
 }
 
 void ri::PublishPoints(const std_msgs::Header header,

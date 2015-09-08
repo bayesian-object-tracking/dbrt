@@ -111,40 +111,42 @@ GetCameraMatrix(const std::string& camera_info_topic,
             ros::topic::waitForMessage<sensor_msgs::CameraInfo> (camera_info_topic,
                                                                  node_handle,
                                                                  ros::Duration(seconds));
-   
+
     Eigen::Matrix<Scalar, 3, 3> camera_matrix = Eigen::Matrix<Scalar, 3, 3>::Zero();
-    
+
     if(!camera_info) {
       // if not topic was received within <seconds>
       ROS_WARN("CameraInfo wasn't received within %f seconds. Returning default Zero message.", seconds);
       return camera_matrix;
     }
     ROS_INFO("Valid CameraInfo was received");
-    
+
     for(size_t col = 0; col < 3; col++)
         for(size_t row = 0; row < 3; row++)
-	  camera_matrix(row,col) = camera_info->K[col+row*3];
+      camera_matrix(row,col) = camera_info->K[col+row*3];
 
     return camera_matrix;
 }
 
 
 void PublishMarker(const Eigen::Matrix3f R, const Eigen::Vector3f t,
-		std_msgs::Header header,
-		std::string object_model_path,
-		const ros::Publisher &pub,
-        int marker_id = 0, float r = 0, float g = 1, float b = 0, float a = 1.0);
+        std_msgs::Header header,
+        std::string object_model_path,
+        const ros::Publisher &pub,
+        int marker_id = 0, float r = 0, float g = 1, float b = 0, float a = 1.0,
+        std::string ns= "object");
 
 void PublishMarker(const Eigen::Matrix4f H,
-		std_msgs::Header header,
-		std::string object_model_path,
-		const ros::Publisher &pub,
-        int marker_id = 0, float r = 0, float g = 1, float b = 0, float a = 1.0);
+        std_msgs::Header header,
+        std::string object_model_path,
+        const ros::Publisher &pub,
+        int marker_id = 0, float r = 0, float g = 1, float b = 0, float a = 1.0,
+        std::string ns = "object");
 
 
 
 void PublishPoints(const std_msgs::Header header,
-		const ros::Publisher &pub,
+        const ros::Publisher &pub,
         const std::vector<Eigen::Vector3f> points,
         std::vector<float> colors = std::vector<float>(0),
         const Eigen::Matrix3f R = Eigen::Matrix3f::Identity(),
