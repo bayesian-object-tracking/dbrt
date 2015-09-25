@@ -54,7 +54,7 @@ public:
     template <typename T>
     RobotState(const Eigen::MatrixBase<T>& state_vector): Base(state_vector) { }
 
-    virtual ~RobotState() { }
+    virtual ~RobotState() noexcept { }
 
     using Base::operator=;
 
