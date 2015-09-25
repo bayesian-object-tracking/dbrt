@@ -140,8 +140,8 @@ void MultiObjectTracker::Initialize(
             triangle_indices(object_names_.size());
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-//        std::string object_model_path = ros::package::getPath("state_filtering")
-//                        + "/object_models/"  + object_names_[i] + ".obj";
+        std::string object_model_path = ros::package::getPath("state_filtering")
+                        + "/object_models/"  + object_names_[i] + ".obj";
         ObjectFileReader file_reader;
         file_reader.set_filename(object_model_path);
         file_reader.Read();
