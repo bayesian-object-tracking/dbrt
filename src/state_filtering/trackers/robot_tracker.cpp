@@ -25,7 +25,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
-#include <boost/filesystem.hpp>
 
 #include <sensor_msgs/PointCloud2.h>
 
@@ -202,18 +201,6 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
     else
     {
 #ifdef BUILD_GPU
-        // gpu obseration model
-        boost::shared_ptr<ObservationModelGPUType>
-                gpu_observation_model(new ObservationModelGPUType(
-                                          camera_matrix,
-                                          image.rows(),
-                                          image.cols(),
-                                          max_sample_count,
-                                          initial_occlusion_prob,
-                                          delta_time));
-
-
-
 
         std::string vertex_shader_path =
                 ros::package::getPath("dbot")
@@ -227,33 +214,27 @@ void RobotTracker::Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";
 
-        if(!boost::filesystem::exists(fragment_shader_path))
-        {
-            std::cout << "vertex shader does not exist at: "
-                 << vertex_shader_path << std::endl;
-            exit(-1);
-        }
-        if(!boost::filesystem::exists(vertex_shader_path))
-        {
-            std::cout << "fragment_shader does not exist at: "
-                 << fragment_shader_path << std::endl;
-            exit(-1);
-        }
 
 
-        gpu_observation_model->Constants(part_vertices,
-                                         part_triangle_indices,
-                                         p_occluded_visible,
-                                         p_occluded_occluded,
-                                         tail_weight,
-                                         model_sigma,
-                                         sigma_factor,
-                                         6.0f,         // max_depth
-                                         -log(0.5),
-                                         vertex_shader_path,
-                                         fragment_shader_path);   // exponential_rate
+        // gpu obseration model
+        boost::shared_ptr<ObservationModelGPUType>
+                gpu_observation_model(new ObservationModelGPUType(
+                                          camera_matrix,
+                                          image.rows(),
+                                          image.cols(),
+                                          max_sample_count,
+                                          part_vertices,
+                                          part_triangle_indices,
+                                          vertex_shader_path,
+                                          fragment_shader_path,
+                                          initial_occlusion_prob,
+                                          delta_time,
+                                          p_occluded_visible,
+                                          p_occluded_occluded,
+                                          tail_weight,
+                                          model_sigma,
+                                          sigma_factor));
 
-        gpu_observation_model->Initialize();
         observation_model = gpu_observation_model;
 #endif
     }

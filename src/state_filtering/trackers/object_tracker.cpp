@@ -44,7 +44,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/filesystem.hpp>
 
-
 MultiObjectTracker::MultiObjectTracker():
         node_handle_("~"),
         last_measurement_time_(std::numeric_limits<Scalar>::quiet_NaN())
@@ -221,16 +220,6 @@ void MultiObjectTracker::Initialize(
     else
     {
 #ifdef BUILD_GPU
-        // gpu obseration model
-        boost::shared_ptr<ObservationModelGPUType>
-                gpu_observation_model(new ObservationModelGPUType(
-                                                 camera_matrix,
-                                                 image.rows(),
-                                                 image.cols(),
-                                                 max_sample_count,
-                                                 initial_occlusion_prob,
-                                                 delta_time));
-
 
         /// \todo this is suboptimal to hardcode the path here.
         std::string vertex_shader_path =
@@ -245,32 +234,28 @@ void MultiObjectTracker::Initialize(
                 + "kinect_image_observation_model_gpu/shaders/"
                 + "FragmentShader.fragmentshader";
 
-        if(!boost::filesystem::exists(fragment_shader_path))
-        {
-            std::cout << "vertex shader does not exist at: "
-                 << vertex_shader_path << std::endl;
-            exit(-1);
-        }
-        if(!boost::filesystem::exists(vertex_shader_path))
-        {
-            std::cout << "fragment_shader does not exist at: "
-                 << fragment_shader_path << std::endl;
-            exit(-1);
-        }
 
-        gpu_observation_model->Constants(vertices,
-                                         triangle_indices,
-                                         p_occluded_visible,
-                                         p_occluded_occluded,
-                                         tail_weight,
-                                         model_sigma,
-                                         sigma_factor,
-                                         6.0f,         // max_depth
-                                         -log(0.5),
-                                         vertex_shader_path,
-                                         fragment_shader_path);
 
-        gpu_observation_model->Initialize();
+        // gpu obseration model
+        boost::shared_ptr<ObservationModelGPUType>
+                gpu_observation_model(new ObservationModelGPUType(
+                                                 camera_matrix,
+                                                 image.rows(),
+                                                 image.cols(),
+                                                 max_sample_count,
+                                                 vertices,
+                                                 triangle_indices,
+                                                 vertex_shader_path,
+                                                 fragment_shader_path,
+                                                 initial_occlusion_prob,
+                                                 delta_time,
+                                                 p_occluded_visible,
+                                                 p_occluded_occluded,
+                                                 tail_weight,
+                                                 model_sigma,
+                                                 sigma_factor));
+
+
         observation_model = gpu_observation_model;
 #endif
     }
