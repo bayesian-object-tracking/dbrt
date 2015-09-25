@@ -49,7 +49,7 @@ MultiObjectTracker::MultiObjectTracker():
         node_handle_("~"),
         last_measurement_time_(std::numeric_limits<Scalar>::quiet_NaN())
 {
-//    ri::ReadParameter("object_names", object_names_, node_handle_);
+    ri::ReadParameter("object_names", object_names_, node_handle_);
     ri::ReadParameter("downsampling_factor",downsampling_factor_, node_handle_);
     object_publisher_ =
           node_handle_.advertise<visualization_msgs::Marker>("object_model", 0);
@@ -58,13 +58,11 @@ MultiObjectTracker::MultiObjectTracker():
 void MultiObjectTracker::Initialize(
         std::vector<Eigen::VectorXd> initial_states,
         const sensor_msgs::Image& ros_image,
-        Eigen::Matrix3d camera_matrix,
-        std::string object_model_uri,
-        std::string object_model_path)
+        Eigen::Matrix3d camera_matrix)
 {
-    object_model_uri_ = object_model_uri;
-    object_model_path_ = object_model_path;
-    object_names_ = {object_model_uri};
+//    object_model_uri_ = object_model_uri;
+//    object_model_path_ = object_model_path;
+//    object_names_ = {object_model_uri};
 
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -475,13 +473,13 @@ Eigen::VectorXd MultiObjectTracker::Filter(const sensor_msgs::Image& ros_image)
 
     for(size_t i = 0; i < object_names_.size(); i++)
     {
-//        std::string object_model_path =
-//         "package://state_filtering/object_models/" + object_names_[i] + ".obj";
+        std::string object_model_path =
+         "package://state_filtering/object_models/" + object_names_[i] + ".obj";
 
 
 
         ri::PublishMarker(mean.component(i).homogeneous().cast<float>(),
-                          ros_image.header, object_model_uri_, object_publisher_,
+                          ros_image.header, object_model_path, object_publisher_,
                           i, 1, 0, 0);
     }
     return mean;

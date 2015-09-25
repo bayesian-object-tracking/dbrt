@@ -101,7 +101,7 @@ public:
 
     void Initialize(std::vector<Eigen::VectorXd> initial_states,
                     const sensor_msgs::Image& ros_image,
-                    Eigen::Matrix3d camera_matrix, std::string object_model_uri, std::string object_model_path);
+                    Eigen::Matrix3d camera_matrix);
 
     Eigen::VectorXd Filter(const sensor_msgs::Image& ros_image);
 
@@ -115,8 +115,8 @@ private:
     boost::shared_ptr<FilterType> filter_;
 
     // parameters
-    std::string object_model_uri_;
-    std::string object_model_path_;
+//    std::string object_model_uri_;
+//    std::string object_model_path_;
     std::vector<std::string> object_names_;
     int downsampling_factor_;
 
