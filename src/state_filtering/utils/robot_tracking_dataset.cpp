@@ -36,22 +36,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot/utils/helper_functions.hpp>
 
-#include <state_filtering/utils/ros_interface.hpp>
-#include <state_filtering/utils/pcl_interface.hpp>
+#include <dbot_ros_pkg/utils/ros_interface.hpp>
+#include <dbot_ros_pkg/utils/pcl_interface.hpp>
 #include <state_filtering/utils/robot_tracking_dataset.hpp>
 
-RobotTrackingDataset::RobotTrackingDataset(const std::string& path) : TrackingDataset(path), 
-				       ground_truth_joints_topic_("joint_states"),
-				       noisy_joints_topic_("noisy_joint_states"),
-				       deviation_filename_("deviation.txt") {}
-			    
+RobotTrackingDataset::RobotTrackingDataset(const std::string& path) : TrackingDataset(path),
+                       ground_truth_joints_topic_("joint_states"),
+                       noisy_joints_topic_("noisy_joint_states"),
+                       deviation_filename_("deviation.txt") {}
+
 void RobotTrackingDataset::AddFrame(
         const sensor_msgs::Image::ConstPtr& image,
         const sensor_msgs::CameraInfo::ConstPtr& info,
-	const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-	const sensor_msgs::JointState::ConstPtr& noisy_joints,
-	const tf::tfMessage::ConstPtr& tf,
-	const tf::tfMessage::ConstPtr& fixed_tf,
+    const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+    const sensor_msgs::JointState::ConstPtr& noisy_joints,
+    const tf::tfMessage::ConstPtr& tf,
+    const tf::tfMessage::ConstPtr& fixed_tf,
         const Eigen::VectorXd& ground_truth,
         const Eigen::VectorXd& deviation)
 {
@@ -62,10 +62,10 @@ void RobotTrackingDataset::AddFrame(
 void RobotTrackingDataset::AddFrame(
         const sensor_msgs::Image::ConstPtr& image,
         const sensor_msgs::CameraInfo::ConstPtr& info,
-	const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-	const sensor_msgs::JointState::ConstPtr& noisy_joints,
-	const tf::tfMessage::ConstPtr& tf,
-	const tf::tfMessage::ConstPtr& fixed_tf)
+    const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+    const sensor_msgs::JointState::ConstPtr& noisy_joints,
+    const tf::tfMessage::ConstPtr& tf,
+    const tf::tfMessage::ConstPtr& fixed_tf)
 {
   DataFrame data(image, info, ground_truth_joints, noisy_joints, tf, fixed_tf);
   data_.push_back(data);
@@ -74,8 +74,8 @@ void RobotTrackingDataset::AddFrame(
 void RobotTrackingDataset::AddFrame(
         const sensor_msgs::Image::ConstPtr& image,
         const sensor_msgs::CameraInfo::ConstPtr& info,
-	const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-	const sensor_msgs::JointState::ConstPtr& noisy_joints,
+    const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+    const sensor_msgs::JointState::ConstPtr& noisy_joints,
         const Eigen::VectorXd& ground_truth,
         const Eigen::VectorXd& deviation)
 {
@@ -86,8 +86,8 @@ void RobotTrackingDataset::AddFrame(
 void RobotTrackingDataset::AddFrame(
         const sensor_msgs::Image::ConstPtr& image,
         const sensor_msgs::CameraInfo::ConstPtr& info,
-	const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
-	const sensor_msgs::JointState::ConstPtr& noisy_joints)
+    const sensor_msgs::JointState::ConstPtr& ground_truth_joints,
+    const sensor_msgs::JointState::ConstPtr& noisy_joints)
 {
   DataFrame data(image, info, ground_truth_joints, noisy_joints);
   data_.push_back(data);
@@ -153,20 +153,20 @@ void RobotTrackingDataset::Load()
             if (info != NULL)
                 info_subscriber.newMessage(info);
         }
-	
-	if (m.getTopic() == ground_truth_joints_topic_ || (m.getTopic() == "/" + ground_truth_joints_topic_))
-	  {
+
+    if (m.getTopic() == ground_truth_joints_topic_ || (m.getTopic() == "/" + ground_truth_joints_topic_))
+      {
             sensor_msgs::JointState::ConstPtr gt_joints = m.instantiate<sensor_msgs::JointState>();
             if (gt_joints != NULL)
-	      ground_truth_subscriber.newMessage(gt_joints);
-	  }
-	
-	if (m.getTopic() == noisy_joints_topic_ || (m.getTopic() == "/" + noisy_joints_topic_))
-	  {
+          ground_truth_subscriber.newMessage(gt_joints);
+      }
+
+    if (m.getTopic() == noisy_joints_topic_ || (m.getTopic() == "/" + noisy_joints_topic_))
+      {
             sensor_msgs::JointState::ConstPtr noisy_joints = m.instantiate<sensor_msgs::JointState>();
             if (noisy_joints != NULL)
-	      noisy_subscriber.newMessage(noisy_joints);
-	  }
+          noisy_subscriber.newMessage(noisy_joints);
+      }
     }
     bag.close();
 
@@ -174,7 +174,7 @@ void RobotTrackingDataset::Load()
     if (! LoadTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH))
       std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
     exit(-1);
-    
+
     // load deviation file   ---------------------------------------------------------------------
     if (! LoadTextFile((path_ / deviation_filename_).c_str(), DataType::DEVIATION))
       std::cout << "could not open file " << path_ / deviation_filename_ << std::endl;
@@ -185,7 +185,7 @@ void RobotTrackingDataset::Load()
 void RobotTrackingDataset::Store()
 {
     if(boost::filesystem::exists(path_ / observations_filename_) ||
-       boost::filesystem::exists(path_ / ground_truth_filename_) || 
+       boost::filesystem::exists(path_ / ground_truth_filename_) ||
        boost::filesystem::exists(path_ / deviation_filename_))
     {
         std::cout << "TrackingDataset with name " << path_ << " already exists, will not overwrite." << std::endl;
@@ -204,15 +204,15 @@ void RobotTrackingDataset::Store()
         bag.write(info_topic_, data_[i].info_->header.stamp, data_[i].info_);
         bag.write(ground_truth_joints_topic_, data_[i].ground_truth_joints_->header.stamp, data_[i].ground_truth_joints_);
         bag.write(noisy_joints_topic_, data_[i].noisy_joints_->header.stamp, data_[i].noisy_joints_);
-	bag.write("/tf", data_[i].gt_tf_->transforms.back().header.stamp, data_[i].gt_tf_);
-	/* DEBUG
-	std::cout << "Time Image\t" << data_[i].image_->header.stamp << std::endl;
-	std::cout << "Camera Info\t" << data_[i].info_->header.stamp << std::endl;
-	std::cout << "GT Joints\t" << data_[i].ground_truth_joints_->header.stamp << std::endl;
-	std::cout << "Noisy Joints\t" << data_[i].noisy_joints_->header.stamp << std::endl;
-	std::cout << "tf\t" << data_[i].gt_tf_->transforms.back().header.stamp << std::endl;
-	std::cout << "tf_fixed\t" << data_[i].gt_tf_fixed_->transforms.back().header.stamp << std::endl;
-	*/
+    bag.write("/tf", data_[i].gt_tf_->transforms.back().header.stamp, data_[i].gt_tf_);
+    /* DEBUG
+    std::cout << "Time Image\t" << data_[i].image_->header.stamp << std::endl;
+    std::cout << "Camera Info\t" << data_[i].info_->header.stamp << std::endl;
+    std::cout << "GT Joints\t" << data_[i].ground_truth_joints_->header.stamp << std::endl;
+    std::cout << "Noisy Joints\t" << data_[i].noisy_joints_->header.stamp << std::endl;
+    std::cout << "tf\t" << data_[i].gt_tf_->transforms.back().header.stamp << std::endl;
+    std::cout << "tf_fixed\t" << data_[i].gt_tf_fixed_->transforms.back().header.stamp << std::endl;
+    */
     }
 
     for(size_t i = 0; i < data_.size(); i++)
@@ -221,17 +221,17 @@ void RobotTrackingDataset::Store()
     bag.close();
 
     // write ground truth to txt file ----------------------------------------------------------
-    if(!StoreTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH)) 
+    if(!StoreTextFile((path_ / ground_truth_filename_).c_str(), DataType::GROUND_TRUTH))
       {
-	std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
-	exit(-1);
+    std::cout << "could not open file " << path_ / ground_truth_filename_ << std::endl;
+    exit(-1);
       }
 
     // write deviation to txt file ----------------------------------------------------------
-    if(!StoreTextFile((path_ / deviation_filename_).c_str(), DataType::DEVIATION)) 
+    if(!StoreTextFile((path_ / deviation_filename_).c_str(), DataType::DEVIATION))
       {
-	std::cout << "could not open file " << path_ / deviation_filename_ << std::endl;
-	exit(-1);
+    std::cout << "could not open file " << path_ / deviation_filename_ << std::endl;
+    exit(-1);
       }
 
 }

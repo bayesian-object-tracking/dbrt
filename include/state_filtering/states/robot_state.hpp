@@ -32,8 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Dense>
 #include <vector>
 
-#include <fl/util/math/euler_vector.hpp>
-#include <dbot/states/rigid_bodies_state.hpp>
+#include <osr/euler_vector.hpp>
+#include <osr/rigid_bodies_state.hpp>
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
@@ -41,10 +41,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 template<int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>
-class RobotState: public dbot::RigidBodiesState<JointCount>
+class RobotState: public osr::RigidBodiesState<JointCount>
 {
 public:
-    typedef dbot::RigidBodiesState<JointCount>    Base;
+    typedef osr::RigidBodiesState<JointCount>    Base;
     typedef typename Base::Vector               Vector;
     typedef typename Base::PoseVelocityBlock    PoseVelocityBlock;
 
@@ -65,9 +65,9 @@ public:
         return kinematics_->num_links();
     }
 
-    virtual fl::PoseVelocityVector component(int index) const
+    virtual osr::PoseVelocityVector component(int index) const
     {
-        fl::PoseVelocityVector vector;
+        osr::PoseVelocityVector vector;
         vector.position() = position(index);
         vector.orientation() = euler_vector(index);
 
@@ -93,12 +93,12 @@ private:
         return kinematics_->GetLinkPosition(object_index);
     }
 
-    virtual fl::EulerVector euler_vector(const size_t& object_index = 0) const
+    virtual osr::EulerVector euler_vector(const size_t& object_index = 0) const
     {
         CheckKinematics();
         kinematics_->InitKDLData(*this);
 
-        fl::EulerVector v;
+        osr::EulerVector v;
         v.quaternion(kinematics_->GetLinkOrientation(object_index));
         return v;
     }

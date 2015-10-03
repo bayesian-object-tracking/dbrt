@@ -23,6 +23,7 @@ find_package(catkin REQUIRED
     image_transport
     fl
     dbot
+    dbot_ros_pkg
 )
 
 
@@ -144,6 +145,7 @@ catkin_package(
         image_transport
         fl
         dbot
+        dbot_ros_pkg
     DEPENDS
         OpenCV
         eigen
@@ -162,17 +164,11 @@ file(GLOB_RECURSE headers include/${PROJECT_NAME}/*.hpp
                           include/${PROJECT_NAME}/*.h)
 
 set(sources
-    src/${PROJECT_NAME}/trackers/object_tracker.cpp
     src/${PROJECT_NAME}/trackers/robot_tracker.cpp
 
     src/${PROJECT_NAME}/utils/image_visualizer.cpp
-    src/${PROJECT_NAME}/utils/cloud_visualizer.cpp
-    src/${PROJECT_NAME}/utils/object_file_reader.cpp
     src/${PROJECT_NAME}/utils/kinematics_from_urdf.cpp
-    src/${PROJECT_NAME}/utils/tracking_dataset.cpp
     src/${PROJECT_NAME}/utils/robot_tracking_dataset.cpp
-    src/${PROJECT_NAME}/utils/pcl_interface.cpp
-    src/${PROJECT_NAME}/utils/ros_interface.cpp
     src/${PROJECT_NAME}/utils/image_publisher.cpp)
 
 
@@ -180,41 +176,40 @@ add_library(${PROJECT_NAME} ${dbot_headers}
                             ${headers}
                             ${sources})
 
-
-## object_tracker
-add_executable(object_tracker
-    src/${PROJECT_NAME}/trackers/object_tracker_node.cpp)
-target_link_libraries(object_tracker
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_LIBRARIES}
-    yaml-cpp)
-
-## robot_tracker
-add_executable(robot_tracker
-    src/${PROJECT_NAME}/trackers/robot_tracker_node.cpp)
-target_link_libraries(robot_tracker
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_LIBRARIES}
-    yaml-cpp)
-
-## robot_tracker
-add_executable(robot_tracker_evaluation
-    src/${PROJECT_NAME}/trackers/robot_tracker_evaluation_node.cpp)
-target_link_libraries(robot_tracker_evaluation
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_LIBRARIES}
-    yaml-cpp)
-
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
                                       ${catkin_LIBRARIES}
                                       ${OpenCV_LIBRARIES}
                                       assimp)
+### object_tracker
+#add_executable(object_tracker
+#    src/${PROJECT_NAME}/trackers/object_tracker_node.cpp)
+#target_link_libraries(object_tracker
+#    ${PROJECT_NAME}
+#    ${catkin_LIBRARIES}
+#    ${OpenCV_LIBS}
+#    ${PCL_LIBRARIES}
+#    yaml-cpp)
+
+### robot_tracker
+#add_executable(robot_tracker
+#    src/${PROJECT_NAME}/trackers/robot_tracker_node.cpp)
+#target_link_libraries(robot_tracker
+#    ${PROJECT_NAME}
+#    ${catkin_LIBRARIES}
+#    ${OpenCV_LIBS}
+#    ${PCL_LIBRARIES}
+#    yaml-cpp)
+
+### robot_tracker
+#add_executable(robot_tracker_evaluation
+#    src/${PROJECT_NAME}/trackers/robot_tracker_evaluation_node.cpp)
+#target_link_libraries(robot_tracker_evaluation
+#    ${PROJECT_NAME}
+#    ${catkin_LIBRARIES}
+#    ${OpenCV_LIBS}
+#    ${PCL_LIBRARIES}
+#    yaml-cpp)
+
 
 
 
