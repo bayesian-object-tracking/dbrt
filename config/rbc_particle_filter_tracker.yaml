@@ -1,0 +1,52 @@
+
+particle_filter:
+  use_gpu: true 
+
+  cpu:
+    evaluation_count: 100
+
+    # State moving average update rate in [0.0; 1.0]
+    #   1: unfiltered wiggly estimates.
+    #   0: constant
+    update_rate: 0.8
+
+    max_kl_divergence: 2.0
+
+  gpu:
+    evaluation_count: 2000
+
+    # State moving average update rate in [0.0; 1.0]
+    #   1: unfiltered wiggly estimates.
+    #   0: constant
+    update_rate: .99
+
+    max_kl_divergence: 2.0
+
+    # this is for the gpu to allocate memory
+    max_sample_count: 10000
+
+    # set true to use custom shader definitions file defined below
+    # if set to false, the default shader will be used
+    use_custom_shaders: false
+
+    vertex_shader_file: /path/to/custom/vertex_shader.vertexshader
+    fragment_shader_file: /path/to/custom/fragment_shader.fragmentshader
+
+    # optional (values: none | /path/to/shader)
+    geometry_shader_file: none
+
+  observation:
+    occlusion:
+      initial_occlusion_prob: 0.1 #0.1
+      p_occluded_visible: 0.1 #0.1
+      p_occluded_occluded: 0.7 #0.7
+    kinect:
+      tail_weight: 0.01 #0.01, 0.998
+      model_sigma: 0.015 #0.003, 0.005
+      sigma_factor: 0.0 #0.0014247
+
+  joint_transition:
+    joint_sigma: 0.1
+    velocity_factor: 0.8
+
+
