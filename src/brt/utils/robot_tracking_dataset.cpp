@@ -34,11 +34,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/foreach.hpp>
 
-#include <dbot/utils/helper_functions.hpp>
+#include <dbot/util/helper_functions.hpp>
 
-#include <dbot_ros_pkg/utils/ros_interface.hpp>
-#include <dbot_ros_pkg/utils/pcl_interface.hpp>
-#include <state_filtering/utils/robot_tracking_dataset.hpp>
+#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/utils/pcl_interface.hpp>
+#include <brt/utils/robot_tracking_dataset.hpp>
 
 RobotTrackingDataset::RobotTrackingDataset(const std::string& path) : TrackingDataset(path),
                        ground_truth_joints_topic_("joint_states"),

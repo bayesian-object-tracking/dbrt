@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <state_filtering/utils/kinematics_from_urdf.hpp>
-
+#include <brt/utils/kinematics_from_urdf.hpp>
+#include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 
 KinematicsFromURDF::KinematicsFromURDF()
@@ -141,8 +141,8 @@ void KinematicsFromURDF::InitKDLData(const Eigen::VectorXd& joint_state)
 
 
       // Internally, KDL array use Eigen Vectors
-
-  if(jnt_array_.data.size() == 0 || !jnt_array_.data.isApprox(joint_state))
+  if(jnt_array_.data.size() == 0 ||
+          !jnt_array_.data.isApprox(joint_state))
     {
   jnt_array_.data = joint_state;
   // Given the new joint angles, compute all link transforms in one go

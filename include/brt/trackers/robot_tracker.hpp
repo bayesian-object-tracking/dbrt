@@ -1,135 +1,119 @@
-/*************************************************************************
-This software allows for filtering in high-dimensional observation and
-state spaces, as described in
+/*
+ * This is part of the Bayesian Robot Tracking
+ *
+ * Copyright (c) 2015 Max Planck Society,
+ * 				 Autonomous Motion Department,
+ * 			     Institute for Intelligent Systems
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License License (GNU GPL). A copy of the license can be found in the LICENSE
+ * file distributed with this source code.
+ */
 
-M. Wuthrich, P. Pastor, M. Kalakrishnan, J. Bohg, and S. Schaal.
-Probabilistic Object Tracking using a Range Camera
-IEEE/RSJ Intl Conf on Intelligent Robots and Systems, 2013
+/**
+ * \file robot_tracker.hpp
+ * \date December 2015
+ * \author Jan Issac (jan.issac@gmail.com)
+ * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
+ */
 
-In a publication based on this software pleace cite the above reference.
-
-
-Copyright (C) 2014  Manuel Wuthrich
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*************************************************************************/
-
-#ifndef POSE_TRACKING_INTERFACE_TRACKERS_ROBOT_TRACKER_HPP
-#define POSE_TRACKING_INTERFACE_TRACKERS_ROBOT_TRACKER_HPP
-
-#include <boost/thread/mutex.hpp>
-
-#include <ros/ros.h>
+#pragma once
 
 #include <Eigen/Dense>
 
+#include <vector>
+#include <string>
+#include <memory>
+#include <mutex>
+
+#include <dbot/util/camera_data.hpp>
+#include <dbot/util/object_model.hpp>
+
+#include <osr/pose_vector.hpp>
+#include <osr/composed_vector.hpp>
+#include <osr/free_floating_rigid_bodies_state.hpp>
+
+#include <ros/ros.h>
 #include <image_transport/image_transport.h>
 
 #include <robot_state_pub/robot_state_publisher.h>
 
-#include <dbot/rao_blackwell_coordinate_particle_filter.hpp>
-#include <dbot/models/process_models/damped_wiener_process_model.hpp>
-#include <dbot/models/observation_models/kinect_image_observation_model_cpu.hpp>
-#include <state_filtering/states/robot_state.hpp>
-#include <state_filtering/utils/kinematics_from_urdf.hpp>
-#include <dbot/utils/rigid_body_renderer.hpp>
+#include <brt/states/robot_state.hpp>
+#include <brt/utils/kinematics_from_urdf.hpp>
 
-#ifdef BUILD_GPU
-#include <dbot/models/observation_models/kinect_image_observation_model_gpu/kinect_image_observation_model_gpu.hpp>
-#endif
-
-
+namespace brt
+{
+/**
+ * \brief Abstract RobotTracker context
+ */
 class RobotTracker
 {
 public:
-    typedef RobotState<>    State;
-    typedef State::Scalar   Scalar;
+    typedef RobotState<> State;
+    typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> Obsrv;
+    typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> Noise;
+    typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> Input;
 
-    // process model
-    typedef dbot::DampedWienerProcessModel<State>         ProcessModel;
-    typedef typename ProcessModel::Input                Input;
+public:
+    /**
+     * \brief Creates the tracker
+     *
+     * \param filter
+     *     Rbc particle filter instance
+     * \param object_model
+     *     Object model instance
+     * \param camera_data
+     *     Camera data container
+     * \param update_rate
+     *     Moving average update rate
+     */
+    RobotTracker(const dbot::ObjectModel& object_model,
+                 const dbot::CameraData& camera_data);
 
-    // observation models
-    typedef dbot::KinectImageObservationModelCPU<Scalar,
-                                                State>  ObservationModelCPUType;
-#ifdef BUILD_GPU
-    typedef dbot::KinectImageObservationModelGPU<State>   ObservationModelGPUType;
-#endif
-    typedef ObservationModelCPUType::Base ObservationModel;
-    typedef ObservationModelCPUType::Observation Observation;
+    /**
+     * \brief Hook function which is called during tracking
+     * \return Current belief state
+     */
+    virtual State on_track(const Obsrv& image) = 0;
 
-    typedef dbot::RBCoordinateParticleFilter<ProcessModel, ObservationModel> FilterType;
+    /**
+     * \brief Hook function which is called during initialization
+     * \return Initial belief state
+     */
+    virtual State on_initialize(
+        const std::vector<State>& initial_states,
+        std::shared_ptr<KinematicsFromURDF>& urdf_kinematics) = 0;
 
-    RobotTracker();
+    /**
+     * \brief perform a single filter step
+     *
+     * \param image
+     *     Current observation image
+     */
+    State track(const Obsrv& image);
 
-    void Initialize(std::vector<Eigen::VectorXd> initial_samples_eigen,
-                    const sensor_msgs::Image& ros_image,
-                    Eigen::Matrix3d camera_matrix,
-                    boost::shared_ptr<KinematicsFromURDF> &urdf_kinematics);
+    /**
+     * \brief Initializes the particle filter with the given initial states and
+     *     the number of evaluations
+     * @param initial_states
+     * @param evaluation_count
+     */
+    void initialize(const std::vector<State>& initial_states,
+                    std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
 
-    void Filter(const sensor_msgs::Image& ros_image);
+    /**
+     * \brief Returns camera data
+     */
+    const dbot::CameraData& camera_data() const;
 
-    Eigen::VectorXd FilterAndReturn(const sensor_msgs::Image& ros_image);
+    /**
+     * \brief Shorthand for a zero input vector
+     */
+    Input zero_input() const;
 
-private:  
-
-  void publishImage(const ros::Time& time,
-            sensor_msgs::Image &image);
-
-  void publishTransform(const ros::Time& time,
-			const std::string& from,
-            const std::string& to);
-
-  void publishPointCloud(const Observation& image,
-                         const ros::Time& stamp);
-
-  Scalar last_measurement_time_;
-
-  boost::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
-  
-
-  boost::mutex mutex_;
-  ros::NodeHandle node_handle_;
-
-  boost::shared_ptr<FilterType> filter_;
-  
-  boost::shared_ptr<RobotState<> > mean_;
-  boost::shared_ptr<robot_state_pub::RobotStatePublisher> robot_state_publisher_;
-  boost::shared_ptr<ros::Publisher> pub_point_cloud_;
-  
-  image_transport::Publisher pub_rgb_image_;
-
-  std::string tf_prefix_;
-  std::string root_;
-
-  // Camera parameters
-  Eigen::Matrix3d camera_matrix_;
-  std::string camera_frame_;
-
-
-  // parameters
-  int downsampling_factor_;
-  int evaluation_count_;
-
-  int dimension_;
-
-  // determines whether it is necessary to convert depth data to meters
-  bool data_in_meters_;
-
-  // For debugging
-  boost::shared_ptr<dbot::RigidBodyRenderer> robot_renderer_;  
+protected:
+    dbot::ObjectModel object_model_;
+    dbot::CameraData camera_data_;
+    std::mutex mutex_;
 };
-
-#endif
-
+}
