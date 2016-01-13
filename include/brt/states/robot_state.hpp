@@ -25,37 +25,40 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************/
 
-
-#ifndef POSE_TRACKING_STATES_ROBOT_STATE_HPP
-#define POSE_TRACKING_STATES_ROBOT_STATE_HPP
+#pragma once
 
 #include <Eigen/Dense>
 #include <vector>
+
+#include <memory>
 
 #include <osr/euler_vector.hpp>
 #include <osr/rigid_bodies_state.hpp>
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
-#include <state_filtering/utils/kinematics_from_urdf.hpp>
+#include <brt/utils/kinematics_from_urdf.hpp>
 
+namespace brt
+{
 
-template<int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>
-class RobotState: public osr::RigidBodiesState<JointCount>
+template <int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>
+class RobotState : public osr::RigidBodiesState<JointCount>
 {
 public:
-    typedef osr::RigidBodiesState<JointCount>    Base;
-    typedef typename Base::Vector               Vector;
-    typedef typename Base::PoseVelocityBlock    PoseVelocityBlock;
+    typedef osr::RigidBodiesState<JointCount> Base;
+    typedef typename Base::Vector Vector;
+    typedef typename Base::PoseVelocityBlock PoseVelocityBlock;
 
 public:
-    RobotState(): Base() { }
-
+    RobotState() : Base() {}
     template <typename T>
-    RobotState(const Eigen::MatrixBase<T>& state_vector): Base(state_vector) { }
+    RobotState(const Eigen::MatrixBase<T>& state_vector)
+        : Base(state_vector)
+    {
+    }
 
-    virtual ~RobotState() noexcept { }
-
+    virtual ~RobotState() noexcept {}
     using Base::operator=;
 
 public:
@@ -79,15 +82,23 @@ public:
     {
         CheckKinematics();
         std::vector<std::string> joint_map = kinematics_->GetJointMap();
-        for(std::vector<std::string>::const_iterator it = joint_map.begin(); it != joint_map.end(); ++it)
+        for (std::vector<std::string>::const_iterator it = joint_map.begin();
+             it != joint_map.end();
+             ++it)
         {
-            joint_positions[*it] = (*this)(it - joint_map.begin(),0);
+            joint_positions[*it] = (*this)(it - joint_map.begin(), 0);
         }
+    }
+
+    void recount(int new_count)
+    {
+        return this->resize(new_count);
     }
 
 private:
     virtual Vector position(const size_t& object_index = 0) const
     {
+        assert(this->size() > 0);
         CheckKinematics();
         kinematics_->InitKDLData(*this);
         return kinematics_->GetLinkPosition(object_index);
@@ -95,6 +106,7 @@ private:
 
     virtual osr::EulerVector euler_vector(const size_t& object_index = 0) const
     {
+        assert(this->size() > 0);
         CheckKinematics();
         kinematics_->InitKDLData(*this);
 
@@ -105,7 +117,7 @@ private:
 
     void CheckKinematics() const
     {
-        if(!kinematics_)
+        if (!kinematics_)
         {
             std::cout << "kinematics not set" << std::endl;
             exit(-1);
@@ -113,11 +125,11 @@ private:
     }
 
 public:
-    static boost::shared_ptr<KinematicsFromURDF>  kinematics_;
+    static std::shared_ptr<KinematicsFromURDF> kinematics_;
 };
 
-template<int JointCount, int BodyCount>
-boost::shared_ptr<KinematicsFromURDF> RobotState<JointCount, BodyCount>::kinematics_;
+template <int JointCount, int BodyCount>
+std::shared_ptr<KinematicsFromURDF>
+    RobotState<JointCount, BodyCount>::kinematics_;
 
-
-#endif
+}
