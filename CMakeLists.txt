@@ -10,7 +10,7 @@ if(DBRT_BUILD_GPU)
   add_definitions(-DDBRT_BUILD_GPU=1)
 endif(DBRT_BUILD_GPU)
 
-add_definitions(-std=c++0x )
+add_definitions(-std=c++0x -fno-omit-frame-pointer)
 add_definitions(-DPROFILING_ON=1) #print profiling output
 
 find_package(catkin REQUIRED
@@ -43,6 +43,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(/home/issac_local/.local/include)
+link_directories(/home/issac_local/.local/lib)
 
 ##########################################
 # Dealing with different assimp versions #
@@ -139,6 +141,7 @@ target_link_libraries(rbc_particle_filter_robot_tracker
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
      ${PCL_LIBRARIES}
-     yaml-cpp)
+     yaml-cpp
+     profiler)
 
 

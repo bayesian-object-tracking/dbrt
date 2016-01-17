@@ -51,8 +51,8 @@ auto RbcParticleFilterRobotTracker::on_initialize(
 auto RbcParticleFilterRobotTracker::on_track(const Obsrv& image) -> State
 {
     filter_->filter(image, zero_input());
-    State mean = filter_->belief().mean();
 
+    State mean = filter_->belief().mean();
     return mean;
 }
 

@@ -37,6 +37,8 @@
 #include <dbot/tracker/builder/rb_observation_model_cpu_builder.hpp>
 #include <brt/trackers/builder/rbc_particle_filter_robot_tracker_builder.hpp>
 
+#include <gperftools/profiler.h>
+
 typedef brt::RbcParticleFilterRobotTracker Tracker;
 
 class RobotTrackerNode
@@ -151,7 +153,7 @@ public:
                                             depth_image_topic,
                                             resolution,
                                             downsampling_factor,
-                                            2.0));
+                                            60.0));
         dbot::CameraData camera_data(camera_data_provider);
 
         ros::Subscriber joint_states_sub =
@@ -229,6 +231,7 @@ public:
         tracker_ = tracker_builder.build();
         tracker_->initialize(initial_states, urdf_kinematics);
 
+
         /* ------------------------------ */
         /* - Create and run tracker     - */
         /* - node                       - */
@@ -238,6 +241,7 @@ public:
             depth_image_topic, 1, &RobotTrackerNode::tracking_callback, this);
 
         ros::spin();
+
     }
 
     void depthImageCallback(const sensor_msgs::Image::ConstPtr& msg)
@@ -269,9 +273,11 @@ public:
      */
     void tracking_callback(const sensor_msgs::Image& ros_image)
     {
+        INIT_PROFILING;
+        boost::mutex::scoped_lock lock(mutex_);
+
         auto image = ri::Ros2EigenVector<typename fl::Real>(
             ros_image, tracker_->camera_data().downsampling_factor());
-
         auto mean_ = tracker_->track(image);
 
         // DEBUG to see depth images
@@ -282,7 +288,6 @@ public:
             rotations[i] = mean_.component(i).orientation().rotation_matrix();
             translations[i] = mean_.component(i).position();
         }
-
         robot_renderer_->set_poses(rotations, translations);
         std::vector<int> indices;
         std::vector<float> depth;
@@ -293,15 +298,15 @@ public:
                                 depth);
         // image_viz_ = boost::shared_ptr<vis::ImageVisualizer>(new
         // vis::ImageVisualizer(image.rows(),image.cols()));
-        vis::ImageVisualizer image_viz(image.rows(), image.cols());
+        auto org_image = ri::Ros2Eigen<typename fl::Real>(
+            ros_image, tracker_->camera_data().downsampling_factor());
+        vis::ImageVisualizer image_viz(org_image.rows(), org_image.cols());
                 image_viz.set_image(image);
                 image_viz.add_points(indices, depth);
                 // image_viz.show_image("enchilada ", 500, 500, 1.0);
 
         std::map<std::string, double> joint_positions;
         mean_.GetJointState(joint_positions);
-
-//        PVT(mean_);
 
         ros::Time t = ros::Time::now();
         // publish movable joints
@@ -319,10 +324,13 @@ public:
 
         // publish point cloud
         Eigen::MatrixXd full_image = ri::Ros2Eigen<fl::Real>(ros_image, 1);
+        MEASURE("track and stuff")
         Eigen::MatrixXd temp_camera_matrix = camera_data().camera_matrix();
         temp_camera_matrix.topLeftCorner(2, 3) *=
             double(camera_data().downsampling_factor());
         publishPointCloud(full_image, t, temp_camera_matrix);
+        MEASURE("publish point cloud")
+        MEASURE("-------------------------------------------------------------")
     }
 
 private:
@@ -351,6 +359,7 @@ private:
     std::string root_;
 
 private:
+    boost::mutex mutex_;
     ros::NodeHandle nh_;
     ros::NodeHandle priv_nh_;
 
@@ -407,11 +416,16 @@ void RobotTrackerNode::publishPointCloud(const Eigen::MatrixXd& image,
                                          const ros::Time& stamp,
                                          const Eigen::MatrixXd& camera_matrix)
 {
+    INIT_PROFILING
     float bad_point = std::numeric_limits<float>::quiet_NaN();
 
     sensor_msgs::PointCloud2Ptr points =
         boost::make_shared<sensor_msgs::PointCloud2>();
+
+    MEASURE("ppc created point cloud");
+
     points->header.frame_id = tf::resolve(tf_prefix_, camera_data().frame_id());
+    MEASURE("ppc resolved tf");
     points->header.stamp = stamp;
     points->width = image.cols();
     points->height = image.rows();
@@ -432,8 +446,10 @@ void RobotTrackerNode::publishPointCloud(const Eigen::MatrixXd& image,
     points->point_step = offset;
     points->row_step = points->point_step * points->width;
 
+    MEASURE("ppc set data");
     points->data.resize(points->width * points->height * points->point_step);
 
+    MEASURE("ppc allocated memory");
     for (size_t u = 0, nRows = image.rows(), nCols = image.cols(); u < nCols;
          ++u)
         for (size_t v = 0; v < nRows; ++v)
@@ -483,6 +499,8 @@ void RobotTrackerNode::publishPointCloud(const Eigen::MatrixXd& image,
             }
         }
 
+    MEASURE("ppc filled points");
     if (pub_point_cloud_->getNumSubscribers() > 0)
         pub_point_cloud_->publish(points);
+    MEASURE("ppc pubished");
 }
