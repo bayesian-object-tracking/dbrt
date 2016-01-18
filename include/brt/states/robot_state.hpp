@@ -68,6 +68,13 @@ public:
         return kinematics_->num_links();
     }
 
+
+    virtual int count_parts() const
+    {
+        CheckKinematics();
+        return kinematics_->num_links();
+    }
+
     virtual osr::PoseVelocityVector component(int index) const
     {
         osr::PoseVelocityVector vector;

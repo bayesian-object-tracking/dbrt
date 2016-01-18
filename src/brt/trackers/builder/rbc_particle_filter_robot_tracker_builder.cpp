@@ -113,10 +113,9 @@ dbot::ObjectModel RbcParticleFilterRobotTrackerBuilder::create_object_model()
 {
     dbot::ObjectModel object_model;
 
-
     object_model.load_from(std::shared_ptr<dbot::ObjectModelLoader>(
                                new UrdfObjectModelLoader(urdf_kinematics_)),
-                           true);
+                           false);
 
     return object_model;
 }

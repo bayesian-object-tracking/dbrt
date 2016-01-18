@@ -281,29 +281,55 @@ public:
         auto mean_ = tracker_->track(image);
 
         // DEBUG to see depth images
-        std::vector<Eigen::Matrix3d> rotations(mean_.count());
-        std::vector<Eigen::Vector3d> translations(mean_.count());
+        std::vector<Eigen::Matrix3d> rotations(mean_.count_parts());
+        std::vector<Eigen::Vector3d> translations(mean_.count_parts());
         for (size_t i = 0; i < rotations.size(); i++)
         {
             rotations[i] = mean_.component(i).orientation().rotation_matrix();
             translations[i] = mean_.component(i).position();
         }
+        auto org_image = ri::Ros2Eigen<typename fl::Real>(
+            ros_image, tracker_->camera_data().downsampling_factor());
         robot_renderer_->set_poses(rotations, translations);
         std::vector<int> indices;
         std::vector<float> depth;
         robot_renderer_->Render(camera_data().camera_matrix(),
-                                image.rows(),
-                                image.cols(),
+                                org_image.rows(),
+                                org_image.cols(),
                                 indices,
                                 depth);
         // image_viz_ = boost::shared_ptr<vis::ImageVisualizer>(new
         // vis::ImageVisualizer(image.rows(),image.cols()));
-        auto org_image = ri::Ros2Eigen<typename fl::Real>(
-            ros_image, tracker_->camera_data().downsampling_factor());
         vis::ImageVisualizer image_viz(org_image.rows(), org_image.cols());
-                image_viz.set_image(image);
+                image_viz.set_image(org_image);
                 image_viz.add_points(indices, depth);
                 // image_viz.show_image("enchilada ", 500, 500, 1.0);
+
+//        PVT(mean_);
+//        PV(mean_.rows());
+//        PV(mean_.size());
+//        PV(mean_.count_parts());
+//        PV(rotations.size());
+//        PV(translations.size());
+//        PV(robot_renderer_->n_rows_);
+//        PV(robot_renderer_->n_cols_);
+//        PV(robot_renderer_->camera_matrix_);
+//        PV(robot_renderer_->vertices_.size());
+//        PV(robot_renderer_->indices_.size());
+
+        PInfo("Depth pixels");
+        for (auto pixel: depth)
+        {
+            std::cout << pixel << "  ";
+        }
+        std::cout << std::endl;
+        PInfo("Depth indices");
+        for (auto i: indices)
+        {
+            std::cout << i << "  ";
+        }
+        std::cout << std::endl;
+
 
         std::map<std::string, double> joint_positions;
         mean_.GetJointState(joint_positions);

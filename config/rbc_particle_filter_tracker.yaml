@@ -50,7 +50,7 @@ particle_filter:
       sigma_factor: 0.0 #0.0014247
 
   joint_transition:
-    joint_sigma: 0.05
+    joint_sigma: 0.1
     velocity_factor: 0.8
 
 
