@@ -2,32 +2,14 @@
 rendering_root_left: L_SHOULDER
 rendering_root_right: R_SHOULDER
 
-
 particle_filter:
-  use_gpu: true 
+  use_gpu: true
 
   cpu:
-    evaluation_count: 100
-
-    # State moving average update rate in [0.0; 1.0]
-    #   1: unfiltered wiggly estimates.
-    #   0: constant
-    update_rate: 0.8
-
-    max_kl_divergence: 2.3
+    sample_count: 100
 
   gpu:
-    evaluation_count: 2000
-
-    # State moving average update rate in [0.0; 1.0]
-    #   1: unfiltered wiggly estimates.
-    #   0: constant
-    update_rate: 1.0
-
-    max_kl_divergence: 2.3
-
-    # this is for the gpu to allocate memory
-    max_sample_count: 10000
+    sample_count: 2000
 
     # set true to use custom shader definitions file defined below
     # if set to false, the default shader will be used
@@ -38,6 +20,13 @@ particle_filter:
 
     # optional (values: none | /path/to/shader)
     geometry_shader_file: none
+
+  # State moving average update rate in [0.0; 1.0]
+  #   1: unfiltered wiggly estimates.
+  #   0: constant
+  moving_average_update_rate: 1.0
+
+  max_kl_divergence: 2.0
 
   observation:
     occlusion:
@@ -50,7 +39,7 @@ particle_filter:
       sigma_factor: 0.0 #0.0014247
 
   joint_transition:
-    joint_sigma: 0.1
-    velocity_factor: 0.8
+    joint_sigma: 0.08
+    velocity_factor: 0.0
 
 
