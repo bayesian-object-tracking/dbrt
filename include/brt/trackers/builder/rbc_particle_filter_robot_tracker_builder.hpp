@@ -21,108 +21,94 @@
 
 #include <exception>
 
+#include <brt/utils/kinematics_from_urdf.hpp>
 #include <dbot/util/object_resource_identifier.hpp>
-#include <dbot/tracker/builder/rb_observation_model_cpu_builder.hpp>
-
+#include <dbot/tracker/object_tracker.hpp>
 #include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
 #include <brt/trackers/builder/robot_joint_transition_model_builder.hpp>
-
+#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 namespace brt
 {
-/**
- * \brief Represents an Rbc Particle filter based tracker builder
- */
+template <typename Tracker>
 class RbcParticleFilterRobotTrackerBuilder
 {
 public:
-    typedef RobotState<> State;
-    typedef Eigen::VectorXd Noise;
-    typedef Eigen::VectorXd Input;
+    typedef typename Tracker::State State;
+    typedef typename Tracker::Noise Noise;
+    typedef typename Tracker::Input Input;
 
+    /* == Model Builder Interfaces ========================================== */
+    typedef dbot::StateTransitionFunctionBuilder<State, Noise, Input>
+        StateTransitionBuilder;
+    typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
+
+    /* == Model Interfaces ================================================== */
     typedef fl::StateTransitionFunction<State, Noise, Input> StateTransition;
     typedef dbot::RbObservationModel<State> ObservationModel;
     typedef typename ObservationModel::Observation Obsrv;
 
+    /* == Filter algorithm ================================================== */
     typedef dbot::RaoBlackwellCoordinateParticleFilter<StateTransition,
                                                        ObservationModel> Filter;
 
+    /* == Tracker parameters ================================================ */
     struct Parameters
     {
-        struct TrackerParmeters
-        {
-            int evaluation_count;
-            int max_sample_count;
-            double update_rate;
-            double max_kl_divergence;
-        };
-
-        bool use_gpu;
-
-        TrackerParmeters cpu;
-        TrackerParmeters gpu;
-        TrackerParmeters tracker;
-
-        dbot::RbObservationModelBuilder<State>::Parameters observation;
-        RobotJointTransitionModelBuilder<State, Input>::Parameters
-            state_transition;
-    };
-
-    enum SamplingBlockMethod
-    {
-        JointWise,
-        ArmWise,
-        RobotWise
+        int evaluation_count;
+        double moving_average_update_rate;
+        double max_kl_divergence;
     };
 
 public:
-    /**
-     * \brief Creates a RbcParticleFilterTrackerBuilder
-     * \param param			Builder and sub-builder parameters
-     * \param camera_data	Tracker camera data object
-     */
     RbcParticleFilterRobotTrackerBuilder(
-        const Parameters& param,
-        const dbot::CameraData& camera_data,
-        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
+        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
+        const std::shared_ptr<StateTransitionBuilder>& state_transition_builder,
+        const std::shared_ptr<ObservationModelBuilder>& obsrv_model_builder,
+        const std::shared_ptr<dbot::ObjectModel>& object_model,
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const Parameters& params)
+        : state_transition_builder_(state_transition_builder),
+          obsrv_model_builder_(obsrv_model_builder),
+          object_model_(object_model),
+          camera_data_(camera_data),
+          params_(params),
+          urdf_kinematics_(urdf_kinematics)
+    {
+    }
 
     /**
      * \brief Builds the Rbc PF tracker
      */
-    std::shared_ptr<RbcParticleFilterRobotTracker> build();
+    std::shared_ptr<RbcParticleFilterRobotTracker> build()
+    {
+        auto filter =
+            create_filter(this->object_model_, this->params_.max_kl_divergence);
 
-    /**
-     * \brief Creates an instance of the Rbc particle filter
-     */
-    std::shared_ptr<Filter> create_filter(const dbot::ObjectModel& object_model,
-                                          double max_kl_divergence);
+        auto tracker = std::make_shared<RbcParticleFilterRobotTracker>(
+            filter,
+            this->object_model_,
+            this->camera_data_,
+            this->params_.evaluation_count);
 
-    /**
-     * \brief Creates a linear state transition function used in the
-     *        filter
-     */
-    std::shared_ptr<StateTransition> create_state_transition_model(
-        const brt::RobotJointTransitionModelBuilder<State, Input>::Parameters&
-            param) const;
+        return tracker;
+    }
 
-    /**
-     * \brief Creates the Rbc particle filter observation model. This can either
-     *        be CPU or GPU based
-     *
-     * \throws NoGpuSupportException if compile with DBOT_BUILD_GPU=OFF and
-     *         attempting to build a tracker with GPU support
-     */
-    std::shared_ptr<ObservationModel> create_obsrv_model(
-        bool use_gpu,
-        const dbot::ObjectModel& object_model,
-        const dbot::CameraData& camera_data,
-        const dbot::RbObservationModelBuilder<State>::Parameters& param) const;
+    virtual std::shared_ptr<Filter> create_filter(
+        const std::shared_ptr<dbot::ObjectModel>& object_model,
+        double max_kl_divergence)
+    {
+        auto state_transition_model = this->state_transition_builder_->build();
+        auto obsrv_model = this->obsrv_model_builder_->build();
 
-    /**
-     * \brief Loads and creates an object model represented by the specified
-     *        resource identifier
-     */
-    dbot::ObjectModel create_object_model() const;
+        auto sampling_blocks =
+            this->create_sampling_blocks(urdf_kinematics_->num_joints(), 1);
 
+        auto filter = std::make_shared<Filter>(state_transition_model,
+                                               obsrv_model,
+                                               sampling_blocks,
+                                               max_kl_divergence);
+        return filter;
+    }
     /**
      * \brief Creates a sampling block definition used by the coordinate
      *        particle filter
@@ -130,11 +116,28 @@ public:
      * \param blocks		Number of objects or object parts
      * \param block_size	State dimension of each part
      */
-    std::vector<std::vector<size_t>> create_sampling_blocks(int blocks) const;
+    virtual std::vector<std::vector<size_t>> create_sampling_blocks(
+        int blocks,
+        int block_size) const
+    {
+        std::vector<std::vector<size_t>> sampling_blocks(blocks);
+        for (int i = 0; i < blocks; ++i)
+        {
+            for (int k = 0; k < block_size; ++k)
+            {
+                sampling_blocks[i].push_back(i * block_size + k);
+            }
+        }
 
-private:
-    Parameters param_;
-    dbot::CameraData camera_data_;
+        return sampling_blocks;
+    }
+
+protected:
+    std::shared_ptr<StateTransitionBuilder> state_transition_builder_;
+    std::shared_ptr<ObservationModelBuilder> obsrv_model_builder_;
+    std::shared_ptr<dbot::ObjectModel> object_model_;
+    std::shared_ptr<dbot::CameraData> camera_data_;
+    Parameters params_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
 };
 }

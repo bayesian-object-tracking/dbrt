@@ -18,14 +18,15 @@
  */
 
 #include <dbot/util/rigid_body_renderer.hpp>
+
 #include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
 
 namespace brt
 {
 RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
     const std::shared_ptr<Filter>& filter,
-    const dbot::ObjectModel& object_model,
-    const dbot::CameraData& camera_data,
+    const std::shared_ptr<dbot::ObjectModel>& object_model,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
     int evaluation_count)
     : RobotTracker(object_model, camera_data),
       filter_(filter),
@@ -38,11 +39,11 @@ auto RbcParticleFilterRobotTracker::on_initialize(
     std::shared_ptr<KinematicsFromURDF>& urdf_kinematics) -> State
 {
     filter_->set_particles(initial_states);
-    filter_->filter(camera_data_.depth_image_vector(), zero_input());
+    filter_->filter(camera_data_->depth_image_vector(), zero_input());
 
     // determine what is the number of sampling blocks
     // eval_count / sampling blocks
-    filter_->resample(evaluation_count_ / object_model_.count_parts());
+    filter_->resample(evaluation_count_ / initial_states[0].size());
 
     State mean = filter_->belief().mean();
     return mean;
@@ -56,43 +57,4 @@ auto RbcParticleFilterRobotTracker::on_track(const Obsrv& image) -> State
     return mean;
 }
 
-// refactor ////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-//void RobotTracker::Initialize(
-//    std::vector<Eigen::VectorXd> initial_samples_eigen,
-//    const sensor_msgs::Image& ros_image,
-//    Eigen::Matrix3d camera_matrix,
-//    std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
-//{
-//    boost::mutex::scoped_lock lock(mutex_);
-
-//    urdf_kinematics_ = urdf_kinematics;
-
-//    dimension_ = urdf_kinematics->num_joints();
-
-//    // initialize the result container for the emperical mean
-//    mean_ = std::shared_ptr<State>(new State);
-
-//    robot_renderer_ = std::shared_ptr<dbot::RigidBodyRenderer>(
-//        new dbot::RigidBodyRenderer(part_vertices, part_triangle_indices));
-
-//    // initialize process model
-//    // =====================================================================================================
-//    if (dimension_ != joint_sigmas.size())
-//    {
-//        std::cout << "the dimension of the joint sigmas is "
-//                  << joint_sigmas.size() << " while the state dimension is "
-//                  << dimension_ << std::endl;
-//        exit(-1);
-//    }
-//    std::shared_ptr<ProcessModel> process(
-//        new ProcessModel(delta_time, dimension_));
-//    Eigen::MatrixXd joint_covariance =
-//        Eigen::MatrixXd::Zero(dimension_, dimension_);
-//    for (size_t i = 0; i < dimension_; i++)
-//        joint_covariance(i, i) = pow(joint_sigmas[i], 2);
-//    process->Parameters(damping, joint_covariance);
-
-//}
 }

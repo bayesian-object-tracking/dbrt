@@ -24,8 +24,8 @@
 
 namespace brt
 {
-RobotTracker::RobotTracker(const dbot::ObjectModel& object_model,
-                           const dbot::CameraData& camera_data)
+RobotTracker::RobotTracker(const std::shared_ptr<dbot::ObjectModel> &object_model,
+                           const std::shared_ptr<dbot::CameraData> &camera_data)
     : object_model_(object_model), camera_data_(camera_data)
 {
 }
@@ -39,7 +39,7 @@ void RobotTracker::initialize(
     on_initialize(initial_states, urdf_kinematics);
 }
 
-const dbot::CameraData& RobotTracker::camera_data() const
+const std::shared_ptr<dbot::CameraData>& RobotTracker::camera_data() const
 {
     return camera_data_;
 }

@@ -67,8 +67,8 @@ public:
      * \param update_rate
      *     Moving average update rate
      */
-    RobotTracker(const dbot::ObjectModel& object_model,
-                 const dbot::CameraData& camera_data);
+    RobotTracker(const std::shared_ptr<dbot::ObjectModel>& object_model,
+                 const std::shared_ptr<dbot::CameraData>& camera_data);
 
     /**
      * \brief Hook function which is called during tracking
@@ -104,7 +104,7 @@ public:
     /**
      * \brief Returns camera data
      */
-    const dbot::CameraData& camera_data() const;
+    const std::shared_ptr<dbot::CameraData> &camera_data() const;
 
     /**
      * \brief Shorthand for a zero input vector
@@ -112,8 +112,8 @@ public:
     Input zero_input() const;
 
 protected:
-    dbot::ObjectModel object_model_;
-    dbot::CameraData camera_data_;
+    std::shared_ptr<dbot::ObjectModel> object_model_;
+    std::shared_ptr<dbot::CameraData> camera_data_;
     std::mutex mutex_;
 };
 }

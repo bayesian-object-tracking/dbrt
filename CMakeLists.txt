@@ -4,11 +4,11 @@ project(brt)
 ############################
 # Options                  #
 ############################
-option(DBRT_BUILD_GPU "Compile CUDA enabled trackers" OFF)
+option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" OFF)
 
-if(DBRT_BUILD_GPU)
-  add_definitions(-DDBRT_BUILD_GPU=1)
-endif(DBRT_BUILD_GPU)
+if(DBOT_BUILD_GPU)
+  add_definitions(-DDBOT_BUILD_GPU=1)
+endif(DBOT_BUILD_GPU)
 
 add_definitions(-std=c++0x -fno-omit-frame-pointer)
 add_definitions(-DPROFILING_ON=1) #print profiling output
@@ -114,9 +114,12 @@ file(GLOB_RECURSE headers include/${PROJECT_NAME}/*.hpp
                           include/${PROJECT_NAME}/*.h)
 
 set(sources
+    src/${PROJECT_NAME}/robot_tracker_node.cpp
+    src/${PROJECT_NAME}/robot_tracker_publisher.cpp
     src/${PROJECT_NAME}/trackers/robot_tracker.cpp
     src/${PROJECT_NAME}/trackers/rbc_particle_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/trackers/builder/rbc_particle_filter_robot_tracker_builder.cpp
+    src/${PROJECT_NAME}/trackers/builder/robot_rb_observation_model_builder.cpp
     src/${PROJECT_NAME}/utils/urdf_object_loader.cpp
     src/${PROJECT_NAME}/utils/image_visualizer.cpp
     src/${PROJECT_NAME}/utils/kinematics_from_urdf.cpp

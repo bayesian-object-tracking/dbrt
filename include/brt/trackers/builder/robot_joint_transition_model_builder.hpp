@@ -36,28 +36,30 @@ struct RobotJointStateTrait
     enum
     {
         NoiseDim = State::SizeAtCompileTime != -1 ? State::SizeAtCompileTime / 2
-                                                  : Eigen::Dynamic
+                                                  : Eigen::Dynamic,
+        InputDim = Eigen::Dynamic
     };
 
     typedef Eigen::Matrix<typename State::Scalar, NoiseDim, 1> Noise;
+    typedef Eigen::Matrix<typename State::Scalar, InputDim, 1> Input;
 };
 
-template <typename State, typename Input>
+template <typename State>
 class RobotJointTransitionModelBuilder
     : public dbot::StateTransitionFunctionBuilder<
           State,
           typename RobotJointStateTrait<State>::Noise,
-          Input>
+          typename RobotJointStateTrait<State>::Input>
 {
 public:
     typedef fl::StateTransitionFunction<
         State,
         typename RobotJointStateTrait<State>::Noise,
-        Input> Model;
+        typename RobotJointStateTrait<State>::Input> Model;
     typedef fl::LinearStateTransitionModel<
         State,
         typename RobotJointStateTrait<State>::Noise,
-        Input> DerivedModel;
+        typename RobotJointStateTrait<State>::Input> DerivedModel;
 
     struct Parameters
     {

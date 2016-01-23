@@ -54,10 +54,11 @@ public:
      * \param update_rate
      *     Moving average update rate
      */
-    RbcParticleFilterRobotTracker(const std::shared_ptr<Filter>& filter,
-                                  const dbot::ObjectModel& object_model,
-                                  const dbot::CameraData& camera_data,
-                                  int evaluation_count);
+    RbcParticleFilterRobotTracker(
+        const std::shared_ptr<Filter>& filter,
+        const std::shared_ptr<dbot::ObjectModel>& object_model,
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        int evaluation_count);
 
     /**
      * \brief perform a single filter step
@@ -80,5 +81,4 @@ private:
     std::shared_ptr<Filter> filter_;
     int evaluation_count_;
 };
-
 }
