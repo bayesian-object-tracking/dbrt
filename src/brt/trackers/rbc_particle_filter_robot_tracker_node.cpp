@@ -39,30 +39,6 @@
 #include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
 #include <brt/trackers/builder/rbc_particle_filter_robot_tracker_builder.hpp>
 
-// void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg)
-//{
-//    boost::mutex::scoped_lock lock(joint_state_mutex_);
-//    joint_state_ = *msg;
-
-//    if (first_time_) first_time_ = false;
-//}
-
-//    boost::mutex mutex_;
-//    ros::NodeHandle nh_;
-//    ros::NodeHandle priv_nh_;
-
-//    sensor_msgs::Image ros_image_;
-
-//    sensor_msgs::JointState joint_state_;
-//    sensor_msgs::JointState joint_state_copy_;
-//    boost::mutex joint_state_mutex_;
-
-//    ros::Subscriber subscriber_;
-
-//    bool first_time_;
-//    bool has_image_;
-//    bool has_joints_;
-
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "rbc_particle_filter_robot_tracker");
@@ -129,10 +105,8 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
+    brt::RobotState<>::kinematics_ = urdf_kinematics;
     typedef brt::RobotState<> State;
-
-    // very important
-    State::kinematics_ = urdf_kinematics;
 
     typedef brt::RbcParticleFilterRobotTracker Tracker;
     typedef brt::RbcParticleFilterRobotTrackerBuilder<Tracker> TrackerBuilder;
@@ -148,6 +122,7 @@ int main(int argc, char** argv)
     // We will use a linear observation model built by the object transition
     // model builder. The linear model will generate a random walk.
     brt::RobotJointTransitionModelBuilder<State>::Parameters params_state;
+
     // linear state transition parameters
     nh.getParam(pre + "joint_transition/joint_sigma", params_state.joint_sigma);
     nh.getParam(pre + "joint_transition/velocity_factor",
@@ -185,7 +160,7 @@ int main(int argc, char** argv)
                 params_obsrv.kinect.model_sigma);
     nh.getParam(pre + "observation/kinect/sigma_factor",
                 params_obsrv.kinect.sigma_factor);
-    params_obsrv.delta_time = 1. / 30.;
+    params_obsrv.delta_time = 1. / 6.;
 
     // gpu only parameters
     nh.getParam(pre + "gpu/use_custom_shaders",
@@ -235,17 +210,6 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Initialize using joint msg - */
     /* ------------------------------ */
-    //    ros::Subscriber joint_states_sub =
-    //    nh.subscribe<sensor_msgs::JointState>(
-    //        "/joint_states", 1, &jointStateCallback, this);
-
-    //    while (!has_joints)
-    //    {
-    //        ROS_INFO("Waiting for joint angles.");
-    //        ros::spinOnce();
-    //        ros::Rate(30).sleep();
-    //    }
-
     sensor_msgs::JointState::ConstPtr joint_state;
 
     while (!joint_state)
