@@ -21,13 +21,15 @@
 
 #include <exception>
 
-#include <brt/utils/kinematics_from_urdf.hpp>
 #include <dbot/util/object_resource_identifier.hpp>
 #include <dbot/tracker/object_tracker.hpp>
-#include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
-#include <brt/trackers/builder/robot_joint_transition_model_builder.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
-namespace brt
+
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/util/builder/robot_joint_transition_model_builder.hpp>
+
+namespace dbrt
 {
 template <typename Tracker>
 class RbcParticleFilterRobotTrackerBuilder

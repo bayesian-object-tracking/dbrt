@@ -24,10 +24,10 @@
 
 #include <dbot_ros/utils/ros_interface.hpp>
 
-#include <brt/utils/image_visualizer.hpp>
-#include <brt/robot_tracker_publisher.h>
+#include <dbrt/util/image_visualizer.hpp>
+#include <dbrt/robot_tracker_publisher.h>
 
-namespace brt
+namespace dbrt
 {
 template <typename Tracker>
 RobotTrackerPublisher<Tracker>::RobotTrackerPublisher(
@@ -68,13 +68,10 @@ void RobotTrackerPublisher<Tracker>::publish(
         translations[i] = state.component(i).position();
     }
 
-    PVT(state);
 
     auto org_image = ri::Ros2Eigen<typename fl::Real>(
         image, camera_data->downsampling_factor());
-    PInfo("image converted");
     robot_renderer_->set_poses(rotations, translations);
-    PInfo("poses set");
     std::vector<int> indices;
     std::vector<float> depth;
     robot_renderer_->Render(camera_data->camera_matrix(),
@@ -82,17 +79,12 @@ void RobotTrackerPublisher<Tracker>::publish(
                             org_image.cols(),
                             indices,
                             depth);
-    PInfo("rendered");
     vis::ImageVisualizer image_viz(org_image.rows(), org_image.cols());
     image_viz.set_image(org_image);
     image_viz.add_points(indices, depth);
 
-    PInfo("pre get joint state");
-
     std::map<std::string, double> joint_positions;
     state.GetJointState(joint_positions);
-
-    PInfo("pre get joint state");
 
     ros::Time t = ros::Time::now();
     // publish movable joints
@@ -107,7 +99,6 @@ void RobotTrackerPublisher<Tracker>::publish(
     image_viz.get_image(overlay);
     publishImage(t, camera_data->frame_id(), overlay);
 
-    PInfo("pre point cloud publishing");
     // publish point cloud
     Eigen::MatrixXd full_image = ri::Ros2Eigen<fl::Real>(image, 1);
     Eigen::MatrixXd temp_camera_matrix = camera_data->camera_matrix();

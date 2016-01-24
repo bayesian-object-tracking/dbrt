@@ -53,7 +53,7 @@
 #include <kdl/treefksolverpos_recursive.hpp>
 
 // tools
-#include <brt/utils/part_mesh_model.hpp>
+#include <dbrt/util/part_mesh_model.hpp>
 
 class KinematicsFromURDF
 {

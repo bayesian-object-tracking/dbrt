@@ -38,10 +38,10 @@
 
 #include <robot_state_pub/robot_state_publisher.h>
 
-#include <brt/states/robot_state.hpp>
-#include <brt/utils/kinematics_from_urdf.hpp>
+#include <dbrt/robot_state.hpp>
+#include <dbrt/util/kinematics_from_urdf.hpp>
 
-namespace brt
+namespace dbrt
 {
 /**
  * \brief Abstract RobotTracker context

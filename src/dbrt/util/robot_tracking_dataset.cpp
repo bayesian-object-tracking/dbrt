@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot_ros/utils/ros_interface.hpp>
 #include <dbot_ros/utils/pcl_interface.hpp>
-#include <brt/utils/robot_tracking_dataset.hpp>
+#include <dbrt/util/robot_tracking_dataset.hpp>
 
 RobotTrackingDataset::RobotTrackingDataset(const std::string& path) : TrackingDataset(path),
                        ground_truth_joints_topic_("joint_states"),

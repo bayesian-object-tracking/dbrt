@@ -12,16 +12,16 @@
  */
 
 /**
- * \file robot_tracker_publisher.cpp
- * \date January 2016
+ * \file robot_tracker_node.hpp
+ * \date Januray 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
-#include <brt/robot_tracker_publisher.h>
-#include <brt/robot_tracker_publisher.hpp>
+#include <dbot_ros/tracker_node.h>
+#include <dbot_ros/tracker_node.hpp>
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 
-namespace brt
+namespace dbot
 {
-template class RobotTrackerPublisher<RbcParticleFilterRobotTracker>;
+template class TrackerNode<dbrt::RbcParticleFilterRobotTracker>;
 }

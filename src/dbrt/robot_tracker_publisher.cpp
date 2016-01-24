@@ -12,18 +12,16 @@
  */
 
 /**
- * \file robot_rb_observation_model_builder.cpp
+ * \file robot_tracker_publisher.cpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <brt/states/robot_state.hpp>
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/robot_tracker_publisher.hpp>
 
-#include <dbot/tracker/builder/rb_observation_model_builder.h>
-#include <dbot/tracker/builder/rb_observation_model_builder.hpp>
-
-
-namespace dbot
+namespace dbrt
 {
-template class RbObservationModelBuilder<brt::RobotState<>>;
+template class RobotTrackerPublisher<RbcParticleFilterRobotTracker>;
 }

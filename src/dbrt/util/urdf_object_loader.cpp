@@ -18,9 +18,9 @@
 
 #include <ros/ros.h>
 #include <fl/util/profiling.hpp>
-#include <brt/utils/urdf_object_loader.hpp>
+#include <dbrt/util/urdf_object_loader.hpp>
 
-namespace brt
+namespace dbrt
 {
 UrdfObjectModelLoader::UrdfObjectModelLoader(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)

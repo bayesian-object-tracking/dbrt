@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <brt/utils/kinematics_from_urdf.hpp>
+#include <dbrt/util/kinematics_from_urdf.hpp>
 #include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 

@@ -25,9 +25,9 @@
 
 #include <dbot/rao_blackwell_coordinate_particle_filter.hpp>
 
-#include <brt/trackers/robot_tracker.hpp>
+#include <dbrt/robot_tracker.hpp>
 
-namespace brt
+namespace dbrt
 {
 /**
  * \brief RbcParticleFilterRobotTracker

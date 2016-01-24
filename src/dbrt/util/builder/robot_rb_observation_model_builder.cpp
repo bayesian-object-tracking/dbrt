@@ -12,17 +12,18 @@
  */
 
 /**
- * \file robot_tracker_node.hpp
- * \date Januray 2016
+ * \file robot_rb_observation_model_builder.cpp
+ * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbot_ros/tracker_node.h>
-#include <dbot_ros/tracker_node.hpp>
-#include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/robot_state.hpp>
+
+#include <dbot/tracker/builder/rb_observation_model_builder.h>
+#include <dbot/tracker/builder/rb_observation_model_builder.hpp>
+
+
 namespace dbot
 {
-
-template class TrackerNode<brt::RbcParticleFilterRobotTracker>;
-
+template class RbObservationModelBuilder<dbrt::RobotState<>>;
 }

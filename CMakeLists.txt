@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(brt)
+project(dbrt)
 
 ############################
 # Options                  #
@@ -43,8 +43,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(/home/issac_local/.local/include)
-link_directories(/home/issac_local/.local/lib)
 
 ##########################################
 # Dealing with different assimp versions #
@@ -83,7 +81,7 @@ catkin_package(
     INCLUDE_DIRS
         include
     LIBRARIES
-        brt
+        dbrt
     CATKIN_DEPENDS
         roscpp
         roslib
@@ -116,15 +114,15 @@ file(GLOB_RECURSE headers include/${PROJECT_NAME}/*.hpp
 set(sources
     src/${PROJECT_NAME}/robot_tracker_node.cpp
     src/${PROJECT_NAME}/robot_tracker_publisher.cpp
-    src/${PROJECT_NAME}/trackers/robot_tracker.cpp
-    src/${PROJECT_NAME}/trackers/rbc_particle_filter_robot_tracker.cpp
-    src/${PROJECT_NAME}/trackers/builder/rbc_particle_filter_robot_tracker_builder.cpp
-    src/${PROJECT_NAME}/trackers/builder/robot_rb_observation_model_builder.cpp
-    src/${PROJECT_NAME}/utils/urdf_object_loader.cpp
-    src/${PROJECT_NAME}/utils/image_visualizer.cpp
-    src/${PROJECT_NAME}/utils/kinematics_from_urdf.cpp
-    src/${PROJECT_NAME}/utils/robot_tracking_dataset.cpp
-    src/${PROJECT_NAME}/utils/image_publisher.cpp)
+    src/${PROJECT_NAME}/robot_tracker.cpp
+    src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker.cpp
+    src/${PROJECT_NAME}/util/builder/rbc_particle_filter_robot_tracker_builder.cpp
+    src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
+    src/${PROJECT_NAME}/util/urdf_object_loader.cpp
+    src/${PROJECT_NAME}/util/image_visualizer.cpp
+    src/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
+    src/${PROJECT_NAME}/util/robot_tracking_dataset.cpp
+    src/${PROJECT_NAME}/util/image_publisher.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}
@@ -138,13 +136,12 @@ target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
 
 # robot_tracker
 add_executable(rbc_particle_filter_robot_tracker
-     src/${PROJECT_NAME}/trackers/rbc_particle_filter_robot_tracker_node.cpp)
+     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_node.cpp)
 target_link_libraries(rbc_particle_filter_robot_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
      ${PCL_LIBRARIES}
-     yaml-cpp
-     profiler)
+     yaml-cpp)
 
 

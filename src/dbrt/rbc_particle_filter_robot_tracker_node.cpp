@@ -29,15 +29,15 @@
 #include <dbot_ros/utils/ros_interface.hpp>
 #include <dbot_ros/utils/ros_camera_data_provider.hpp>
 
-#include <brt/utils/urdf_object_loader.hpp>
+#include <dbrt/util/urdf_object_loader.hpp>
 
-#include <brt/states/robot_state.hpp>
-#include <brt/trackers/robot_tracker.hpp>
+#include <dbrt/robot_state.hpp>
+#include <dbrt/robot_tracker.hpp>
 #include <dbot/util/rigid_body_renderer.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
-#include <brt/robot_tracker_publisher.h>
-#include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
-#include <brt/trackers/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
 
 int main(int argc, char** argv)
 {
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
         new KinematicsFromURDF());
 
     auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
-        new brt::UrdfObjectModelLoader(urdf_kinematics));
+        new dbrt::UrdfObjectModelLoader(urdf_kinematics));
 
     // Load the model usign the URDF loader
     auto object_model =
@@ -105,11 +105,11 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
-    brt::RobotState<>::kinematics_ = urdf_kinematics;
-    typedef brt::RobotState<> State;
+    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    typedef dbrt::RobotState<> State;
 
-    typedef brt::RbcParticleFilterRobotTracker Tracker;
-    typedef brt::RbcParticleFilterRobotTrackerBuilder<Tracker> TrackerBuilder;
+    typedef dbrt::RbcParticleFilterRobotTracker Tracker;
+    typedef dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker> TrackerBuilder;
     typedef TrackerBuilder::StateTransitionBuilder StateTransitionBuilder;
     typedef TrackerBuilder::ObservationModelBuilder ObservationModelBuilder;
 
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     // We will use a linear observation model built by the object transition
     // model builder. The linear model will generate a random walk.
-    brt::RobotJointTransitionModelBuilder<State>::Parameters params_state;
+    dbrt::RobotJointTransitionModelBuilder<State>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(pre + "joint_transition/joint_sigma", params_state.joint_sigma);
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder = std::shared_ptr<StateTransitionBuilder>(
-        new brt::RobotJointTransitionModelBuilder<State>(params_state));
+        new dbrt::RobotJointTransitionModelBuilder<State>(params_state));
 
     /* ------------------------------ */
     /* - Observation model          - */
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     nh.getParam(pre + "max_kl_divergence", params_tracker.max_kl_divergence);
 
     auto tracker_builder =
-        brt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
+        dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
                                                            state_trans_builder,
                                                            obsrv_model_builder,
                                                            object_model,
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
     /* - Tracker publisher          - */
     /* ------------------------------ */
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<Tracker>>(
-        new brt::RobotTrackerPublisher<Tracker>(
+        new dbrt::RobotTrackerPublisher<Tracker>(
              urdf_kinematics, obsrv_model_builder->create_renderer()));
 
     /* ------------------------------ */

@@ -14,9 +14,9 @@
 
 
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
-#include <brt/trackers/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
 
-namespace brt
+namespace dbrt
 {
 //RbcParticleFilterRobotTrackerBuilder::RbcParticleFilterRobotTrackerBuilder(
 //    const Parameters& param,
@@ -64,12 +64,12 @@ namespace brt
 //}
 
 //auto RbcParticleFilterRobotTrackerBuilder::create_state_transition_model(
-//    const brt::RobotJointTransitionModelBuilder<
+//    const dbrt::RobotJointTransitionModelBuilder<
 //        RbcParticleFilterRobotTrackerBuilder::State,
 //        RbcParticleFilterRobotTrackerBuilder::Input>::Parameters& param) const
 //    -> std::shared_ptr<StateTransition>
 //{
-//    brt::RobotJointTransitionModelBuilder<State, Input> process_builder(param);
+//    dbrt::RobotJointTransitionModelBuilder<State, Input> process_builder(param);
 //    std::shared_ptr<StateTransition> process = process_builder.build();
 
 //    return process;

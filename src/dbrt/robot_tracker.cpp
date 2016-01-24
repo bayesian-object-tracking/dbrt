@@ -20,9 +20,9 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <brt/trackers/robot_tracker.hpp>
+#include <dbrt/robot_tracker.hpp>
 
-namespace brt
+namespace dbrt
 {
 RobotTracker::RobotTracker(const std::shared_ptr<dbot::ObjectModel> &object_model,
                            const std::shared_ptr<dbot::CameraData> &camera_data)
@@ -48,7 +48,11 @@ auto RobotTracker::track(const Obsrv& image) -> State
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    return on_track(image);
+    INIT_PROFILING
+    auto state = on_track(image);
+    MEASURE_FLUSH("robot tracking: filter step");
+
+    return state;
 }
 
 RobotTracker::Input RobotTracker::zero_input() const

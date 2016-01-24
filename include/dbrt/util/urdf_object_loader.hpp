@@ -21,9 +21,9 @@
 #include <memory>
 
 #include <dbot/util/object_model_loader.hpp>
-#include <brt/utils/kinematics_from_urdf.hpp>
+#include <dbrt/util/kinematics_from_urdf.hpp>
 
-namespace brt
+namespace dbrt
 {
 class UrdfObjectModelLoader : public dbot::ObjectModelLoader
 {

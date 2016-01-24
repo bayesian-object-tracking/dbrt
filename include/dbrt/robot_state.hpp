@@ -37,9 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
-#include <brt/utils/kinematics_from_urdf.hpp>
+#include <dbrt/util/kinematics_from_urdf.hpp>
 
-namespace brt
+namespace dbrt
 {
 
 template <int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>

@@ -19,9 +19,9 @@
 
 #include <dbot/util/rigid_body_renderer.hpp>
 
-#include <brt/trackers/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 
-namespace brt
+namespace dbrt
 {
 RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
     const std::shared_ptr<Filter>& filter,

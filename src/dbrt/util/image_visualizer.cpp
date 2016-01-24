@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <dbot/util/helper_functions.hpp>
 
-#include <brt/utils/image_visualizer.hpp>
+#include <dbrt/util/image_visualizer.hpp>
 
 #include <cv.h>
 #include <highgui.h>
