@@ -224,7 +224,8 @@ int main(int argc, char** argv)
     /* - Tracker publisher          - */
     /* ------------------------------ */
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<Tracker>>(
-        new brt::RobotTrackerPublisher<Tracker>(urdf_kinematics));
+        new brt::RobotTrackerPublisher<Tracker>(
+             urdf_kinematics, obsrv_model_builder->create_renderer()));
 
     /* ------------------------------ */
     /* - Create tracker node        - */
@@ -245,10 +246,9 @@ int main(int argc, char** argv)
     //        ros::Rate(30).sleep();
     //    }
 
-
     sensor_msgs::JointState::ConstPtr joint_state;
 
-    while(!joint_state)
+    while (!joint_state)
     {
         joint_state = ros::topic::waitForMessage<sensor_msgs::JointState>(
             "/joint_states", nh, ros::Duration(1.));

@@ -51,9 +51,10 @@ public:
 
 public:
     RobotTrackerPublisher(
-        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
+        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
+        const std::shared_ptr<dbot::RigidBodyRenderer>& renderer);
 
-    void publish(const State& state,
+    void publish(State &state,
                  const sensor_msgs::Image& image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 

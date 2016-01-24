@@ -7,7 +7,7 @@
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find arm_robot_model)/models/DarpaRobot.urdf.xacro'" />
 
   <!-- Pose Estimation Node-->
-  <node name="rbc_particle_filter_robot_tracker" type="rbc_particle_filter_robot_tracker" pkg="brt" output="screen" respawn="false" launch-prefix="gdb --ex run --args">
+  <node name="rbc_particle_filter_robot_tracker" type="rbc_particle_filter_robot_tracker" pkg="brt" output="screen" respawn="false" launch-prefix="">
     <param name="robot_description_package_path" type="string" value="$(find arm_robot_model)" />
     <param name="camera_frame"  type="string"  value="$(arg camera)" />
 
