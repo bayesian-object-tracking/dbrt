@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef POSE_TRACKING_INTERFACE_UTILS_ROBOT_TRACKING_DATASET_HPP
 #define POSE_TRACKING_INTERFACE_UTILS_ROBOT_TRACKING_DATASET_HPP
 
-#include <dbot_ros/utils/tracking_dataset.hpp>
+#include <dbot_ros/utils/tracking_dataset.h>
 
 class RobotTrackingDataset :  public TrackingDataset
 {

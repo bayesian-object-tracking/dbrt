@@ -33,7 +33,7 @@ template <typename Tracker>
 RobotTrackerPublisher<Tracker>::RobotTrackerPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::RigidBodyRenderer>& renderer)
-    : node_handle_("~"), tf_prefix_("MEAN"), robot_renderer_(renderer)
+    : node_handle_("~"), tf_prefix_(""), robot_renderer_(renderer)
 {
     pub_point_cloud_ = std::shared_ptr<ros::Publisher>(new ros::Publisher());
 
@@ -91,9 +91,12 @@ void RobotTrackerPublisher<Tracker>::publish(
     robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
     // make sure there is a identity transformation between base of real
     // robot and estimated robot
-    publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
+    if (!tf_prefix_.empty())
+    {
+        publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
+    }
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_);
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
     // publish image
     sensor_msgs::Image overlay;
     image_viz.get_image(overlay);

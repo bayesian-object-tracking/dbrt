@@ -145,3 +145,11 @@ target_link_libraries(rbc_particle_filter_robot_tracker
      yaml-cpp)
 
 
+add_executable(rbc_particle_filter_robot_tracker_offline
+     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_offline_node.cpp)
+target_link_libraries(rbc_particle_filter_robot_tracker_offline
+     ${PROJECT_NAME}
+     ${catkin_LIBRARIES}
+     ${OpenCV_LIBS}
+     ${PCL_LIBRARIES}
+     yaml-cpp)
