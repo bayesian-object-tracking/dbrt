@@ -17,11 +17,13 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/robot_tracker_publisher.hpp>
 
 namespace dbrt
 {
-template class RobotTrackerPublisher<RbcParticleFilterRobotTracker>;
+template class RobotTrackerPublisher<RobotState<>>;
+
+
 }
