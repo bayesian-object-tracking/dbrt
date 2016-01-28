@@ -247,7 +247,7 @@ int main(int argc, char** argv)
         point_cloud.header.stamp = ros::Time::now();
         cloud_publisher.publish(point_cloud);
         MEASURE("Current frame");
-        usleep(1e6);
+//        usleep(1e6);
     }
 
     return 0;

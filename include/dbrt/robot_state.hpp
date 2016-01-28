@@ -97,10 +97,10 @@ public:
         }
     }
 
-    void recount(int new_count)
-    {
-        return this->resize(new_count);
-    }
+//    void recount(int new_count)
+//    {
+//        return this->resize(new_count);
+//    }
 
 private:
     virtual Vector position(const size_t& object_index = 0) const
