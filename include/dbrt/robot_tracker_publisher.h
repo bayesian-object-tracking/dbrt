@@ -43,33 +43,45 @@ namespace dbrt
  * \brief Represents the object tracker publisher. This publishes the object
  * estimated state and its marker.
  */
-template <typename Tracker>
-class RobotTrackerPublisher : public dbot::TrackerPublisher<Tracker>
+template <typename State>
+class RobotTrackerPublisher : public dbot::TrackerPublisher<State>
 {
-public:
-    typedef typename Tracker::State State;
-
 public:
     RobotTrackerPublisher(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<dbot::RigidBodyRenderer>& renderer);
+        const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
+        const std::string& tf_prefix);
 
-    void publish(State &state,
+    void publish(State& state,
                  const sensor_msgs::Image& image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
-
-    void publishImage(const ros::Time& time,
-                      const std::string& frame_id,
-                      sensor_msgs::Image& image);
 
     void publishTransform(const ros::Time& time,
                           const std::string& from,
                           const std::string& to);
 
-    void publishPointCloud(const Eigen::MatrixXd& image,
-                           const ros::Time& stamp,
-                           const std::string& frame_id,
-                           const Eigen::MatrixXd& camera_matrix);
+    void publishImage(const Eigen::VectorXd& depth_image,
+                      const std::shared_ptr<dbot::CameraData>& camera_data,
+                      const ros::Time& time,
+                      const std::string& tf_prefix);
+
+    void publishPointCloud(const Eigen::VectorXd& depth_image,
+                           const std::shared_ptr<dbot::CameraData>& camera_data,
+                           const ros::Time& time,
+                           const std::string& tf_prefix);
+
+    void convert_to_rgb_depth_image_msg(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const Eigen::VectorXd& depth_image,
+        sensor_msgs::Image& image);
+
+    void convert_to_depth_image_msg(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const Eigen::VectorXd& depth_image,
+        sensor_msgs::Image& image);
+
+    bool has_image_subscribers() const;
+    bool has_point_cloud_subscribers() const;
 
 protected:
     ros::NodeHandle node_handle_;
@@ -79,6 +91,7 @@ protected:
         robot_state_publisher_;
     std::shared_ptr<ros::Publisher> pub_point_cloud_;
     image_transport::Publisher pub_rgb_image_;
+    image_transport::Publisher pub_depth_image_;
     std::shared_ptr<dbot::RigidBodyRenderer> robot_renderer_;
 };
 }

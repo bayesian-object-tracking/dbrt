@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <sensor_msgs/fill_image.h>
+
 #include <fl/util/types.hpp>
 #include <fl/util/profiling.hpp>
 
@@ -29,20 +31,29 @@
 
 namespace dbrt
 {
-template <typename Tracker>
-RobotTrackerPublisher<Tracker>::RobotTrackerPublisher(
+class ObjectRenderTools
+{
+public:
+protected:
+};
+
+template <typename State>
+RobotTrackerPublisher<State>::RobotTrackerPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::shared_ptr<dbot::RigidBodyRenderer>& renderer)
-    : node_handle_("~"), tf_prefix_(""), robot_renderer_(renderer)
+    const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
+    const std::string& tf_prefix)
+    : node_handle_("~"), tf_prefix_(tf_prefix), robot_renderer_(renderer)
 {
     pub_point_cloud_ = std::shared_ptr<ros::Publisher>(new ros::Publisher());
 
     *pub_point_cloud_ = node_handle_.advertise<sensor_msgs::PointCloud2>(
-        "/XTION/depth/points", 5);
+        tf_prefix + "/XTION/depth/points", 0);
 
     boost::shared_ptr<image_transport::ImageTransport> it(
         new image_transport::ImageTransport(node_handle_));
-    pub_rgb_image_ = it->advertise("/XTION/depth/image_color", 5);
+
+    pub_depth_image_ = it->advertise(tf_prefix + "/XTION/depth/image", 0);
+    pub_rgb_image_ = it->advertise(tf_prefix + "/XTION/depth/image_color", 0);
 
     // get the name of the root frame
     root_ = urdf_kinematics->GetRootFrameID();
@@ -53,106 +64,146 @@ RobotTrackerPublisher<Tracker>::RobotTrackerPublisher(
             urdf_kinematics->GetTree());
 }
 
-template <typename Tracker>
-void RobotTrackerPublisher<Tracker>::publish(
+template <typename State>
+void RobotTrackerPublisher<State>::convert_to_rgb_depth_image_msg(
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const Eigen::VectorXd& depth_points,
+    sensor_msgs::Image& image)
+{
+    vis::ImageVisualizer image_viz(camera_data->resolution().height,
+                                   camera_data->resolution().width);
+
+    image_viz.add_points(depth_points);
+    image_viz.get_image(image);
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const Eigen::VectorXd& depth_image,
+    sensor_msgs::Image& image)
+{
+    Eigen::VectorXf float_vector = depth_image.cast<float>();
+
+    sensor_msgs::fillImage(image,
+                           sensor_msgs::image_encodings::TYPE_32FC1,
+                           camera_data->resolution().height,
+                           camera_data->resolution().width,
+                           camera_data->resolution().width * sizeof(float),
+                           float_vector.data());
+}
+
+template <typename State>
+bool RobotTrackerPublisher<State>::has_image_subscribers() const
+{
+    return pub_rgb_image_.getNumSubscribers() > 0 ||
+           pub_depth_image_.getNumSubscribers() > 0 ||
+           pub_point_cloud_->getNumSubscribers() > 0;
+}
+
+template <typename State>
+bool RobotTrackerPublisher<State>::has_point_cloud_subscribers() const
+{
+    return pub_point_cloud_->getNumSubscribers() > 0;
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish(
     State& state,
     const sensor_msgs::Image& image,
     const std::shared_ptr<dbot::CameraData>& camera_data)
 {
-    // DEBUG to see depth images
-    std::vector<Eigen::Matrix3d> rotations(state.count_parts());
-    std::vector<Eigen::Vector3d> translations(state.count_parts());
-    for (size_t i = 0; i < rotations.size(); i++)
-    {
-        rotations[i] = state.component(i).orientation().rotation_matrix();
-        translations[i] = state.component(i).position();
-    }
-
-
-    auto org_image = ri::Ros2Eigen<typename fl::Real>(
-        image, camera_data->downsampling_factor());
-    robot_renderer_->set_poses(rotations, translations);
-    std::vector<int> indices;
-    std::vector<float> depth;
-    robot_renderer_->Render(camera_data->camera_matrix(),
-                            org_image.rows(),
-                            org_image.cols(),
-                            indices,
-                            depth);
-    vis::ImageVisualizer image_viz(org_image.rows(), org_image.cols());
-    image_viz.set_image(org_image);
-    image_viz.add_points(indices, depth);
-
-    std::map<std::string, double> joint_positions;
-    state.GetJointState(joint_positions);
-
     ros::Time t = ros::Time::now();
-    // publish movable joints
-    robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
+
     // make sure there is a identity transformation between base of real
     // robot and estimated robot
-    if (!tf_prefix_.empty())
-    {
-        publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
-    }
+    publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
+
+    // publish movable joints
+    std::map<std::string, double> joint_positions;
+    state.GetJointState(joint_positions);
+    robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
+
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
-    // publish image
-    sensor_msgs::Image overlay;
-    image_viz.get_image(overlay);
-    publishImage(t, camera_data->frame_id(), overlay);
 
-    // publish point cloud
-    Eigen::MatrixXd full_image = ri::Ros2Eigen<fl::Real>(image, 1);
-    Eigen::MatrixXd temp_camera_matrix = camera_data->camera_matrix();
-    temp_camera_matrix.topLeftCorner(2, 3) *=
-        double(camera_data->downsampling_factor());
-    publishPointCloud(
-        full_image, t, camera_data->frame_id(), temp_camera_matrix);
+    if (!has_image_subscribers() && !has_point_cloud_subscribers()) return;
+
+    Eigen::VectorXd depth_image;
+    robot_renderer_->Render(
+        state, depth_image, std::numeric_limits<double>::quiet_NaN());
+
+    publishImage(depth_image, camera_data, t, tf_prefix_);
+    publishPointCloud(depth_image, camera_data, t, tf_prefix_);
 }
 
-template <typename Tracker>
-void RobotTrackerPublisher<Tracker>::publishImage(const ros::Time& time,
-                                                  const std::string& frame_id,
-                                                  sensor_msgs::Image& image)
+template <typename State>
+void RobotTrackerPublisher<State>::publishImage(
+    const Eigen::VectorXd& depth_image,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time,
+    const std::string& tf_prefix)
 {
-    image.header.frame_id = tf::resolve(tf_prefix_, frame_id);
-    image.header.stamp = time;
-    pub_rgb_image_.publish(image);
+
+    if (pub_rgb_image_.getNumSubscribers() > 0)
+    {
+        sensor_msgs::Image ros_image;
+        convert_to_rgb_depth_image_msg(camera_data, depth_image, ros_image);
+
+        ros_image.header.frame_id = tf_prefix + camera_data->frame_id();
+        ros_image.header.stamp = time;
+        pub_rgb_image_.publish(ros_image);
+    }
+
+    if (pub_depth_image_.getNumSubscribers() > 0)
+    {
+        sensor_msgs::Image ros_image;
+        convert_to_depth_image_msg(camera_data, depth_image, ros_image);
+
+        ros_image.header.frame_id = tf_prefix + camera_data->frame_id();
+        ros_image.header.stamp = time;
+        pub_depth_image_.publish(ros_image);
+    }
 }
 
-template <typename Tracker>
-void RobotTrackerPublisher<Tracker>::publishTransform(const ros::Time& time,
-                                                      const std::string& from,
-                                                      const std::string& to)
+template <typename State>
+void RobotTrackerPublisher<State>::publishTransform(const ros::Time& time,
+                                                    const std::string& from,
+                                                    const std::string& to)
 {
+    if (from.compare(to) == 0) return;
+
     static tf::TransformBroadcaster br;
     tf::Transform transform;
     transform.setIdentity();
     br.sendTransform(tf::StampedTransform(transform, time, from, to));
 }
 
-template <typename Tracker>
-void RobotTrackerPublisher<Tracker>::publishPointCloud(
-    const Eigen::MatrixXd& image,
-    const ros::Time& stamp,
-    const std::string& frame_id,
-    const Eigen::MatrixXd& camera_matrix)
+template <typename State>
+void RobotTrackerPublisher<State>::publishPointCloud(
+    const Eigen::VectorXd& depth_image,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time,
+    const std::string& tf_prefix)
 {
-    if (pub_point_cloud_->getNumSubscribers() == 0)
-    {
-        return;
-    }
+    Eigen::MatrixXd camera_matrix = camera_data->camera_matrix();
+    camera_matrix.topLeftCorner(2, 3) *=
+        double(camera_data->downsampling_factor());
 
     float bad_point = std::numeric_limits<float>::quiet_NaN();
 
     sensor_msgs::PointCloud2Ptr points =
         boost::make_shared<sensor_msgs::PointCloud2>();
 
-    points->header.frame_id = tf::resolve(tf_prefix_, frame_id);
-    points->header.stamp = stamp;
-    points->width = image.cols();
-    points->height = image.rows();
+    const int nRows = camera_data->resolution().height;
+    const int nCols = camera_data->resolution().width;
+
+    //    points->header.frame_id = tf::resolve(tf_prefix,
+    //    camera_data->frame_id());
+    points->header.frame_id = tf_prefix + camera_data->frame_id();
+    points->header.stamp = time;
+    points->width = nCols;
+    points->height = nRows;
     points->is_dense = false;
     points->is_bigendian = false;
     points->fields.resize(3);
@@ -172,12 +223,11 @@ void RobotTrackerPublisher<Tracker>::publishPointCloud(
 
     points->data.resize(points->width * points->height * points->point_step);
 
-    for (size_t u = 0, nRows = image.rows(), nCols = image.cols(); u < nCols;
-         ++u)
+    for (size_t v = 0; v < nRows; ++v)
     {
-        for (size_t v = 0; v < nRows; ++v)
+        for (size_t u = 0; u < nCols; ++u)
         {
-            float depth = image(v, u);
+            float depth = depth_image(v * nCols + u, 0);
             if (depth != depth)  // || depth==0.0)
             {
                 // depth is invalid
@@ -199,10 +249,12 @@ void RobotTrackerPublisher<Tracker>::publishPointCloud(
             }
             else
             {
+                int ux = u * camera_data->downsampling_factor();
+                int vx = v * camera_data->downsampling_factor();
                 // depth is valid
-                float x = ((float)u - camera_matrix(0, 2)) * depth /
+                float x = ((float)ux - camera_matrix(0, 2)) * depth /
                           camera_matrix(0, 0);
-                float y = ((float)v - camera_matrix(1, 2)) * depth /
+                float y = ((float)vx - camera_matrix(1, 2)) * depth /
                           camera_matrix(1, 1);
                 memcpy(&points->data[v * points->row_step +
                                      u * points->point_step +
