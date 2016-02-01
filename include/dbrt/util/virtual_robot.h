@@ -52,14 +52,10 @@ public:
         robot_tracker_publisher_simulated_ =
             std::make_shared<RobotTrackerPublisher<State>>(
                 urdf_kinematics_, renderer_, "/simulated");
-//        robot_tracker_publisher_estimated_ =
-//            std::make_shared<RobotTrackerPublisher<State>>(
-//                urdf_kinematics_, renderer_, "/estimated");
     }
 
-    void publish(State state)
+    State animate(State state)
     {
-
         for (int i = 6; i < 6 + 7; ++i)
         {
             state[i] += 0.1 * std::sin(t * 10.);
@@ -70,34 +66,41 @@ public:
             state[i] += 0.1 * std::sin(t * 10.);
         }
 
+        renderer_->Render(state, obsrv_vector_,
+                          std::numeric_limits<double>::quiet_NaN());
+
+        robot_tracker_publisher_simulated_->convert_to_depth_image_msg(
+                    camera_data_, obsrv_vector_, obsrv_);
+
+        t += 1.e-2;
+
+        return state;
+    }
+
+    void publish(State state)
+    {
         robot_tracker_publisher_simulated_->publish(
             state, sensor_msgs::Image(), camera_data_);
+    }
 
+    sensor_msgs::Image& observation()
+    {
+        return obsrv_;
+    }
 
-//        for (int i = 6; i < 6 + 7; ++i)
-//        {
-//            state[i] += 0.1 * std::sin(t * 10.);
-//        }
-
-//        for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
-//        {
-//            state[i] += 0.1 * std::sin(t * 10.);
-//        }
-
-
-        t += 1.e-3;
-
-//        robot_tracker_publisher_estimated_->publish(
-//            state, sensor_msgs::Image(), camera_data_);
+    Eigen::VectorXd& observation_vector()
+    {
+        return obsrv_vector_;
     }
 
 private:
     double t;
+    Eigen::VectorXd obsrv_vector_;
+    sensor_msgs::Image obsrv_;
     std::shared_ptr<dbot::ObjectModel> object_model_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
     std::shared_ptr<dbot::RigidBodyRenderer> renderer_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<RobotTrackerPublisher<State>> robot_tracker_publisher_simulated_;
-    std::shared_ptr<RobotTrackerPublisher<State>> robot_tracker_publisher_estimated_;
 };
 }

@@ -202,7 +202,9 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, obsrv_model_builder->create_renderer()));
+            urdf_kinematics,
+            obsrv_model_builder->create_renderer(),
+            "/estimated"));
 
     /* ------------------------------ */
     /* - Create tracker node        - */
@@ -219,35 +221,17 @@ int main(int argc, char** argv)
     {
         initial_states.push_back(state);
     }
-    tracker->initialize(initial_states, urdf_kinematics);
+    tracker->initialize(initial_states, camera_data->depth_image_vector());
 
     /* ------------------------------ */
     /* - Create and run tracker     - */
     /* - node                       - */
     /* ------------------------------ */
-    ros::Publisher image_publisher =
-        nh.advertise<sensor_msgs::Image>("/gt/XTION/depth/image", 0);
-    ros::Publisher cloud_publisher =
-        nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("/gt/XTION/depth/points",
-                                                     0);
     ROS_INFO("Start playback");
     for (size_t i = 1; i < data_set->Size() && ros::ok(); i++)
     {
-        ROS_INFO("tracking_callback");
-        INIT_PROFILING
-        auto image  = *data_set->GetImage(i);
-        image.header.frame_id = "/estimate/XTION";
-        image.header.stamp = ros::Time::now();
+        auto image = *data_set->GetImage(i);
         tracker_node.tracking_callback(image);
-        ROS_INFO("publish image");
-        image_publisher.publish(image);
-        ROS_INFO("publish cloud");
-        pcl::PointCloud<pcl::PointXYZ> point_cloud = *(data_set->GetPointCloud(i));
-        point_cloud.header.frame_id = "/estimate/XTION";
-        point_cloud.header.stamp = ros::Time::now();
-        cloud_publisher.publish(point_cloud);
-        MEASURE("Current frame");
-//        usleep(1e6);
     }
 
     return 0;

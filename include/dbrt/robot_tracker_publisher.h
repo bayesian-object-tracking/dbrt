@@ -50,7 +50,7 @@ public:
     RobotTrackerPublisher(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
-        const std::string& tf_prefix);
+        const std::string& tf_prefix = "");
 
     void publish(State& state,
                  const sensor_msgs::Image& image,

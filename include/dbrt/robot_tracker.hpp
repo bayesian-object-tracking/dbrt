@@ -82,7 +82,7 @@ public:
      */
     virtual State on_initialize(
         const std::vector<State>& initial_states,
-        std::shared_ptr<KinematicsFromURDF>& urdf_kinematics) = 0;
+        const Eigen::VectorXd& obsrv) = 0;
 
     /**
      * \brief perform a single filter step
@@ -99,7 +99,7 @@ public:
      * @param evaluation_count
      */
     void initialize(const std::vector<State>& initial_states,
-                    std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
+                    const Eigen::VectorXd& obsrv);
 
     /**
      * \brief Returns camera data

@@ -36,12 +36,12 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
 
 auto RbcParticleFilterRobotTracker::on_initialize(
     const std::vector<State>& initial_states,
-    std::shared_ptr<KinematicsFromURDF>& urdf_kinematics) -> State
+    const Eigen::VectorXd& obsrv) -> State
 {
     filter_->set_particles(initial_states);
-    filter_->filter(camera_data_->depth_image_vector(), zero_input());
+    filter_->filter(obsrv, zero_input());
 
-    // determine what is the number of sampling blocks
+    // TODO determine what is the number of sampling blocks
     // eval_count / sampling blocks
     filter_->resample(evaluation_count_ / initial_states[0].size());
 

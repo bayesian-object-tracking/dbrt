@@ -187,11 +187,11 @@ int main(int argc, char** argv)
 
     auto tracker_builder =
         dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
-                                                           state_trans_builder,
-                                                           obsrv_model_builder,
-                                                           object_model,
-                                                           camera_data,
-                                                           params_tracker);
+                                                            state_trans_builder,
+                                                            obsrv_model_builder,
+                                                            object_model,
+                                                            camera_data,
+                                                            params_tracker);
 
     auto tracker = tracker_builder.build();
 
@@ -200,7 +200,9 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-             urdf_kinematics, obsrv_model_builder->create_renderer()));
+            urdf_kinematics,
+            obsrv_model_builder->create_renderer(),
+            "/estimated"));
 
     /* ------------------------------ */
     /* - Create tracker node        - */
@@ -226,7 +228,7 @@ int main(int argc, char** argv)
     {
         initial_states.push_back(state);
     }
-    tracker->initialize(initial_states, urdf_kinematics);
+    tracker->initialize(initial_states, camera_data->depth_image_vector());
 
     /* ------------------------------ */
     /* - Create and run tracker     - */

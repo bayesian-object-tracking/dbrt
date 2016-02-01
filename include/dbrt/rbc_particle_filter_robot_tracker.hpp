@@ -75,7 +75,7 @@ public:
      * @param evaluation_count
      */
     State on_initialize(const std::vector<State>& initial_states,
-                        std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
+                        const Eigen::VectorXd& obsrv);
 
 private:
     std::shared_ptr<Filter> filter_;

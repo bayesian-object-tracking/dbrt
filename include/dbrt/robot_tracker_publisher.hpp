@@ -130,6 +130,9 @@ void RobotTrackerPublisher<State>::publish(
     if (!has_image_subscribers() && !has_point_cloud_subscribers()) return;
 
     Eigen::VectorXd depth_image;
+    robot_renderer_->parameters(camera_data->camera_matrix(),
+                                camera_data->resolution().height,
+                                camera_data->resolution().width);
     robot_renderer_->Render(
         state, depth_image, std::numeric_limits<double>::quiet_NaN());
 
@@ -144,7 +147,6 @@ void RobotTrackerPublisher<State>::publishImage(
     const ros::Time& time,
     const std::string& tf_prefix)
 {
-
     if (pub_rgb_image_.getNumSubscribers() > 0)
     {
         sensor_msgs::Image ros_image;
@@ -251,6 +253,7 @@ void RobotTrackerPublisher<State>::publishPointCloud(
             {
                 int ux = u * camera_data->downsampling_factor();
                 int vx = v * camera_data->downsampling_factor();
+
                 // depth is valid
                 float x = ((float)ux - camera_matrix(0, 2)) * depth /
                           camera_matrix(0, 0);

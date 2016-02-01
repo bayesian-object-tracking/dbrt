@@ -30,13 +30,12 @@ RobotTracker::RobotTracker(const std::shared_ptr<dbot::ObjectModel> &object_mode
 {
 }
 
-void RobotTracker::initialize(
-    const std::vector<State>& initial_states,
-    std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
+void RobotTracker::initialize(const std::vector<State>& initial_states,
+    const Eigen::VectorXd &obsrv)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    on_initialize(initial_states, urdf_kinematics);
+    on_initialize(initial_states, obsrv);
 }
 
 const std::shared_ptr<dbot::CameraData>& RobotTracker::camera_data() const
