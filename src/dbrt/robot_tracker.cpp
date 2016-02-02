@@ -46,11 +46,7 @@ const std::shared_ptr<dbot::CameraData>& RobotTracker::camera_data() const
 auto RobotTracker::track(const Obsrv& image) -> State
 {
     std::lock_guard<std::mutex> lock(mutex_);
-
-    INIT_PROFILING
     auto state = on_track(image);
-    MEASURE_FLUSH("robot tracking: filter step");
-
     return state;
 }
 

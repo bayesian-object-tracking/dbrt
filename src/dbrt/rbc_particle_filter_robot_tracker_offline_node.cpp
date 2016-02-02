@@ -206,6 +206,25 @@ int main(int argc, char** argv)
             obsrv_model_builder->create_renderer(),
             "/estimated"));
 
+    auto data_camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
+        new dbot::DataSetCameraDataProvider(data_set, 1));
+
+    // Create camera data from the DataSetCameraDataProvider which takes the
+    // data from the loaded tracking data set object
+    auto data_camera_data =
+        std::make_shared<dbot::CameraData>(data_camera_data_provider);
+
+    std::shared_ptr<dbot::RigidBodyRenderer> data_renderer(
+        new dbot::RigidBodyRenderer(object_model->vertices(),
+                                    object_model->triangle_indices(),
+                                    data_camera_data->camera_matrix(),
+                                    data_camera_data->resolution().height,
+                                    data_camera_data->resolution().width));
+
+    auto data_tracker_publisher =
+        std::make_shared<dbrt::RobotTrackerPublisher<State>>(
+            urdf_kinematics, data_renderer, "/sensors");
+
     /* ------------------------------ */
     /* - Create tracker node        - */
     /* ------------------------------ */
@@ -227,11 +246,16 @@ int main(int argc, char** argv)
     /* - Create and run tracker     - */
     /* - node                       - */
     /* ------------------------------ */
+
     ROS_INFO("Start playback");
     for (size_t i = 1; i < data_set->Size() && ros::ok(); i++)
     {
         auto image = *data_set->GetImage(i);
         tracker_node.tracking_callback(image);
+        data_tracker_publisher->publish(
+            tracker_node.current_state(), image, data_camera_data);
+
+        ros::spinOnce();
     }
 
     return 0;

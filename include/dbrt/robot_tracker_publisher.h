@@ -52,8 +52,8 @@ public:
         const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
         const std::string& tf_prefix = "");
 
-    void publish(State& state,
-                 const sensor_msgs::Image& image,
+    void publish(const State &state,
+                 const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
     void publishTransform(const ros::Time& time,
@@ -62,13 +62,15 @@ public:
 
     void publishImage(const Eigen::VectorXd& depth_image,
                       const std::shared_ptr<dbot::CameraData>& camera_data,
-                      const ros::Time& time,
-                      const std::string& tf_prefix);
+                      const ros::Time& time);
 
     void publishPointCloud(const Eigen::VectorXd& depth_image,
                            const std::shared_ptr<dbot::CameraData>& camera_data,
-                           const ros::Time& time,
-                           const std::string& tf_prefix);
+                           const ros::Time& time);
+
+    void publishPointCloud(const sensor_msgs::Image& image,
+                           const std::shared_ptr<dbot::CameraData>& camera_data,
+                           const ros::Time& time);
 
     void convert_to_rgb_depth_image_msg(
         const std::shared_ptr<dbot::CameraData>& camera_data,

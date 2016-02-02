@@ -15,8 +15,6 @@
     <rosparam command="load" file="$(arg camera_config)" />
   </node>
 
-  <!-- This frame has to be published as the camera info in the bag files are relative to XTION_RGB (which should be XTION_IR) -->
-  <!-- If this frame is not published, then the CameraDisplay in Rviz won't work-->
-  <node pkg="tf" type="static_transform_publisher" name="$(arg camera)_IR_base_link1" args="0 0 0 0 0 0  $(arg camera) /$(arg camera)_RGB 100" />
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find dbrt)/config/tracking.rviz"/>
 
 </launch>

@@ -85,7 +85,7 @@ public:
     }
 
     // TODO: SHOULD THIS FUNCITON BE IN HERE?
-    void GetJointState(std::map<std::string, double>& joint_positions)
+    void GetJointState(std::map<std::string, double>& joint_positions) const
     {
         CheckKinematics();
         std::vector<std::string> joint_map = kinematics_->GetJointMap();

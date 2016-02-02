@@ -1,9 +1,10 @@
 <launch>
+  <param name="use_sim_time" type="bool" value="false" />
+
   <arg name="filter_config" default="$(find dbrt)/config/rbc_particle_filter_tracker.yaml"/>
   <arg name="camera_config" default="$(find dbrt)/config/camera.yaml"/>
   <arg name="camera" default="XTION" />
 
-  <param name="use_sim_time" type="bool" value="false" />
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find arm_robot_model)/models/DarpaRobot.urdf.xacro'" />
 
   <!-- Pose Estimation Node-->
@@ -14,4 +15,7 @@
     <rosparam command="load" file="$(arg filter_config)" />
     <rosparam command="load" file="$(arg camera_config)" />
   </node>
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find dbrt)/config/tracking.rviz"/>
+
 </launch>

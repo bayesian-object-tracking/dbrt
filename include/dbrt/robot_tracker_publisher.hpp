@@ -109,8 +109,8 @@ bool RobotTrackerPublisher<State>::has_point_cloud_subscribers() const
 
 template <typename State>
 void RobotTrackerPublisher<State>::publish(
-    State& state,
-    const sensor_msgs::Image& image,
+    const State& state,
+    const sensor_msgs::Image& obsrv_image,
     const std::shared_ptr<dbot::CameraData>& camera_data)
 {
     ros::Time t = ros::Time::now();
@@ -127,32 +127,36 @@ void RobotTrackerPublisher<State>::publish(
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
 
-    if (!has_image_subscribers() && !has_point_cloud_subscribers()) return;
+    if (has_image_subscribers())
+    {
+        Eigen::VectorXd depth_image;
+        robot_renderer_->parameters(camera_data->camera_matrix(),
+                                    camera_data->resolution().height,
+                                    camera_data->resolution().width);
+        robot_renderer_->Render(
+            state, depth_image, std::numeric_limits<double>::quiet_NaN());
 
-    Eigen::VectorXd depth_image;
-    robot_renderer_->parameters(camera_data->camera_matrix(),
-                                camera_data->resolution().height,
-                                camera_data->resolution().width);
-    robot_renderer_->Render(
-        state, depth_image, std::numeric_limits<double>::quiet_NaN());
+        publishImage(depth_image, camera_data, t);
+    }
 
-    publishImage(depth_image, camera_data, t, tf_prefix_);
-    publishPointCloud(depth_image, camera_data, t, tf_prefix_);
+    if (has_point_cloud_subscribers())
+    {
+        publishPointCloud(obsrv_image, camera_data, t);
+    }
 }
 
 template <typename State>
 void RobotTrackerPublisher<State>::publishImage(
     const Eigen::VectorXd& depth_image,
     const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time,
-    const std::string& tf_prefix)
+    const ros::Time& time)
 {
     if (pub_rgb_image_.getNumSubscribers() > 0)
     {
         sensor_msgs::Image ros_image;
         convert_to_rgb_depth_image_msg(camera_data, depth_image, ros_image);
 
-        ros_image.header.frame_id = tf_prefix + camera_data->frame_id();
+        ros_image.header.frame_id = tf_prefix_ + camera_data->frame_id();
         ros_image.header.stamp = time;
         pub_rgb_image_.publish(ros_image);
     }
@@ -162,7 +166,7 @@ void RobotTrackerPublisher<State>::publishImage(
         sensor_msgs::Image ros_image;
         convert_to_depth_image_msg(camera_data, depth_image, ros_image);
 
-        ros_image.header.frame_id = tf_prefix + camera_data->frame_id();
+        ros_image.header.frame_id = tf_prefix_ + camera_data->frame_id();
         ros_image.header.stamp = time;
         pub_depth_image_.publish(ros_image);
     }
@@ -183,10 +187,21 @@ void RobotTrackerPublisher<State>::publishTransform(const ros::Time& time,
 
 template <typename State>
 void RobotTrackerPublisher<State>::publishPointCloud(
+    const sensor_msgs::Image& image,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
+{
+    Eigen::VectorXd depth_image =
+        ri::Ros2EigenVector<double>(image, camera_data->downsampling_factor());
+
+    publishPointCloud(depth_image, camera_data, time);
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publishPointCloud(
     const Eigen::VectorXd& depth_image,
     const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time,
-    const std::string& tf_prefix)
+    const ros::Time& time)
 {
     Eigen::MatrixXd camera_matrix = camera_data->camera_matrix();
     camera_matrix.topLeftCorner(2, 3) *=
@@ -200,9 +215,7 @@ void RobotTrackerPublisher<State>::publishPointCloud(
     const int nRows = camera_data->resolution().height;
     const int nCols = camera_data->resolution().width;
 
-    //    points->header.frame_id = tf::resolve(tf_prefix,
-    //    camera_data->frame_id());
-    points->header.frame_id = tf_prefix + camera_data->frame_id();
+    points->header.frame_id = tf_prefix_ + camera_data->frame_id();
     points->header.stamp = time;
     points->width = nCols;
     points->height = nRows;
