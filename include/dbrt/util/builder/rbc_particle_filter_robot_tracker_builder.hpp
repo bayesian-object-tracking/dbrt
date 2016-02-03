@@ -31,6 +31,20 @@
 
 namespace dbrt
 {
+/**
+ * \brief Represents an exception thrown if the number of indices in the
+ * sampling block does not match the state dimension.
+ */
+class InvalidNumberOfSamplingBlocksException : public std::exception
+{
+public:
+    const char* what() const noexcept
+    {
+        return "The number of indices in the sampling blocks does not match the "
+               "number of joints (joint state dimension) of the robot.";
+    }
+};
+
 template <typename Tracker>
 class RbcParticleFilterRobotTrackerBuilder
 {
@@ -59,6 +73,7 @@ public:
         int evaluation_count;
         double moving_average_update_rate;
         double max_kl_divergence;
+        std::vector<std::vector<int>> sampling_blocks;
     };
 
 public:
@@ -99,15 +114,22 @@ public:
         const std::shared_ptr<dbot::ObjectModel>& object_model,
         double max_kl_divergence)
     {
+        if (count_sampling_block_indices(params_.sampling_blocks) !=
+            urdf_kinematics_->num_joints())
+        {
+            throw InvalidNumberOfSamplingBlocksException();
+        }
+
         auto state_transition_model = this->state_transition_builder_->build();
         auto obsrv_model = this->obsrv_model_builder_->build();
 
-        auto sampling_blocks =
-            this->create_sampling_blocks(urdf_kinematics_->num_joints(), 1);
+        //        auto sampling_blocks =
+        //            this->create_sampling_blocks(urdf_kinematics_->num_joints(),
+        //            1);
 
         auto filter = std::make_shared<Filter>(state_transition_model,
                                                obsrv_model,
-                                               sampling_blocks,
+                                               params_.sampling_blocks,
                                                max_kl_divergence);
         return filter;
     }
@@ -132,6 +154,19 @@ public:
         }
 
         return sampling_blocks;
+    }
+
+    /**
+     * \brief Counts the number of indices in the sampling blocks
+     */
+    int count_sampling_block_indices(
+        const std::vector<std::vector<int>>& sampling_blocks) const
+    {
+        int index_count = 0;
+
+        for (auto& block : sampling_blocks) index_count += block.size();
+
+        return index_count;
     }
 
 protected:

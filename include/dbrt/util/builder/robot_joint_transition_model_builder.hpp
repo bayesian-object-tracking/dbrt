@@ -30,6 +30,21 @@
 
 namespace dbrt
 {
+
+/**
+ * \brief Represents an exception thrown if the number of joint sigmas in the
+ * of the joint_transition model does not match the state dimension.
+ */
+class InvalidNumberOfJointSigmasException : public std::exception
+{
+public:
+    const char* what() const noexcept
+    {
+        return "The number of joint sigmas does not match the number of joints "
+               "of the robot!";
+    }
+};
+
 template <typename State>
 struct RobotJointStateTrait
 {
@@ -64,7 +79,7 @@ public:
     struct Parameters
     {
         double joint_sigma;
-        double velocity_factor;
+        std::vector<double> joint_sigmas;
         int joint_count;
     };
 
@@ -79,6 +94,11 @@ public:
 
     virtual DerivedModel build_model() const
     {
+        if (param_.joint_count != param_.joint_sigmas.size())
+        {
+            throw InvalidNumberOfJointSigmasException();
+        }
+
         int total_state_dim = param_.joint_count;
         int total_noise_dim = total_state_dim;
 
@@ -102,56 +122,18 @@ public:
 
         for (int i = 0; i < param_.joint_count; ++i)
         {
-            A.block(i , i , 1, 1) = part_A;
-            if (i > 5)B.block(i , i , 1, 1) = part_B;
+            A.block(i, i, 1, 1) = part_A;
+            B(i, i) = param_.joint_sigmas[i];
         }
-
-        PV(A);
-        PV(B);
 
         model.dynamics_matrix(A);
         model.noise_matrix(B);
         model.input_matrix(C);
 
+        PV(model.dynamics_matrix());
+        PV(model.noise_matrix());
+
         return model;
-
-//        int total_state_dim = param_.joint_count * 2;
-//        int total_noise_dim = total_state_dim / 2;
-
-//        auto model = DerivedModel(total_state_dim, total_noise_dim, 1);
-
-//        auto A = model.create_dynamics_matrix();
-//        auto B = model.create_noise_matrix();
-//        auto C = model.create_input_matrix();
-
-//        auto part_A = Eigen::Matrix<fl::Real, 2, 2>();
-//        auto part_B = Eigen::Matrix<fl::Real, 2, 1>();
-
-//        A.setIdentity();
-//        B.setZero();
-//        C.setZero();
-
-//        part_A.setIdentity();
-//        part_A.topRightCorner(1, 1).setIdentity();
-//        part_A.rightCols(1) *= param_.velocity_factor;
-
-//        part_B.setOnes();
-//        part_B *= param_.joint_sigma;
-
-//        for (int i = 0; i < param_.joint_count; ++i)
-//        {
-//            A.block(i * 2, i * 2, 2, 2) = part_A;
-//            B.block(i * 2, i * 1, 2, 1) = part_B;
-//        }
-
-//        PV(A);
-//        PV(B);
-
-//        model.dynamics_matrix(A);
-//        model.noise_matrix(B);
-//        model.input_matrix(C);
-
-//        return model;
     }
 
 private:

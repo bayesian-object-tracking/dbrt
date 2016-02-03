@@ -30,62 +30,15 @@ particle_filter:
 
   observation:
     occlusion:
-      initial_occlusion_prob: 0.1 #0.1
-      p_occluded_visible: 0.1 #0.1
-      p_occluded_occluded: 0.7 #0.7
+      initial_occlusion_prob: 0.1
+      p_occluded_visible: 0.1
+      p_occluded_occluded: 0.7
     kinect:
-      tail_weight: 0.01 #0.01, 0.998
-      model_sigma: 0.015 #0.003, 0.005
-      sigma_factor: 0.0 #0.0014247
+      tail_weight: 0.01 
+      model_sigma: 0.015 
+      sigma_factor: 0.0 
 
   joint_transition:
     joint_sigma: 0.08
     velocity_factor: 0.0
 
-
-joints: [
-0.,
-0.,
-0.6,
-0.,
-0.,
-0.,
-
-# left arm
-1.9,
--0.7, 
--2.8, # !
-1.,   # !
-0.,
-0.,
-0.,
-
-# left hand
-0.,
-0.,
-0.,
-0.,
-0.,
-0.,
-0.,
-0.,
-
-# right arm
-1.5,
--0.8, 
--2.6, # !
-1.4,  # !
-0.,
-0.,
-0.,
-
-# right hand
-0.,
-0.,
-0.,
-0.,
-0.,
-0.,
-0.,
-0.
-]

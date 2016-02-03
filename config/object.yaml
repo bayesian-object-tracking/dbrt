@@ -1,7 +1,0 @@
-
-object:
-  package:    dbot_ros
-  directory:  object_models
-  meshes:     [ calib_obj.obj ]
-
-

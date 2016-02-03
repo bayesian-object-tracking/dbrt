@@ -124,9 +124,7 @@ int main(int argc, char** argv)
     dbrt::RobotJointTransitionModelBuilder<State>::Parameters params_state;
 
     // linear state transition parameters
-    nh.getParam(pre + "joint_transition/joint_sigma", params_state.joint_sigma);
-    nh.getParam(pre + "joint_transition/velocity_factor",
-                params_state.velocity_factor);
+    nh.getParam(pre + "joint_transition/joint_sigmas", params_state.joint_sigmas);
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder = std::shared_ptr<StateTransitionBuilder>(
@@ -184,6 +182,8 @@ int main(int argc, char** argv)
     nh.getParam(pre + "moving_average_update_rate",
                 params_tracker.moving_average_update_rate);
     nh.getParam(pre + "max_kl_divergence", params_tracker.max_kl_divergence);
+    ri::ReadParameter(
+        pre + "sampling_blocks", params_tracker.sampling_blocks, nh);
 
     auto tracker_builder =
         dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
