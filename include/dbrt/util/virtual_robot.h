@@ -66,6 +66,8 @@ public:
             state[i] += 0.1 * std::sin(t * 10.);
         }
 
+        state_ = state;
+
         renderer_->Render(
             state, obsrv_vector_, std::numeric_limits<double>::quiet_NaN());
 
@@ -83,10 +85,16 @@ public:
             state, observation(), camera_data_);
     }
 
+    Eigen::VectorXd joint_observation()
+    {
+        return state_;
+    }
+
     sensor_msgs::Image& observation() { return obsrv_image_; }
     Eigen::VectorXd& observation_vector() { return obsrv_vector_; }
 private:
     double t;
+    Eigen::VectorXd state_;
     Eigen::VectorXd obsrv_vector_;
     sensor_msgs::Image obsrv_image_;
     std::shared_ptr<dbot::ObjectModel> object_model_;

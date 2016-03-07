@@ -12,17 +12,18 @@
  */
 
 /**
- * \file robot_tracker_node.hpp
+ * \file fusion_tracker_node.hpp
  * \date Januray 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbot_ros/tracker_node.h>
-#include <dbot_ros/tracker_node.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/fusion_tracker_node.h>
+#include <dbrt/fusion_tracker_node.hpp>
 #include <dbrt/fusion_robot_tracker.h>
 
-namespace dbot
+namespace dbrt
 {
-template class TrackerNode<dbrt::RbcParticleFilterRobotTracker>;
+
+template class FusionTrackerNode<FusionRobotTracker>;
+
 }

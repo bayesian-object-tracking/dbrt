@@ -11,7 +11,7 @@
  */
 
 /**
- * \file robot_joint_transition_model_builder.hpp
+ * \file robot_joint_observation_model_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -22,7 +22,7 @@
 
 #include <fl/util/profiling.hpp>
 #include <fl/util/meta.hpp>
-#include <fl/model/process/linear_state_transition_model.hpp>
+#include <fl/model/observation/linear_gaussian_observation_model.hpp>
 
 #include <Eigen/Dense>
 
@@ -33,28 +33,30 @@
 
 namespace dbrt
 {
-class RobotJointTransitionModelBuilder
+
+class RobotJointObservationModelBuilder
 {
 public:
     enum Dimension
     {
         DimState = 1,
-        DimNoise = 1
+        DimObsrv = 1
     };
 
+    typedef Eigen::Matrix<fl::Real, DimObsrv, 1> Obsrv;
     typedef Eigen::Matrix<fl::Real, DimState, 1> State;
-    typedef Eigen::Matrix<fl::Real, DimNoise, 1> Noise;
-    typedef Eigen::Matrix<fl::Real, 1, 1> Input;
-    typedef fl::LinearStateTransitionModel<State, Noise, Input> Model;
+    typedef fl::LinearGaussianObservationModel<Obsrv, State> Model;
 
     struct Parameters
     {
-        double joint_sigma;
         std::vector<double> joint_sigmas;
         int joint_count;
     };
 
-    RobotJointTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    RobotJointObservationModelBuilder(const Parameters& param) : param_(param)
+    {
+    }
+
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())
@@ -67,19 +69,17 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
-        auto model = std::make_shared<Model>(DimState, DimNoise, 1);
+        auto model = std::make_shared<Model>(DimObsrv, DimObsrv);
 
-        auto A = model->create_dynamics_matrix();
-        auto B = model->create_noise_matrix();
-        auto C = model->create_input_matrix();
+        auto H = model->create_sensor_matrix();
+        auto R = model->create_noise_matrix();
 
-        A.setIdentity();
-        B.setIdentity();
-        B *= param_.joint_sigmas[joint_index];
+        H.setIdentity();
+        R.setIdentity();
+        R *= param_.joint_sigmas[joint_index];
 
-        model->dynamics_matrix(A);
-        model->noise_matrix(B);
-        model->input_matrix(C);
+        model->sensor_matrix(H);
+        model->noise_matrix(R);
 
         return model;
     }

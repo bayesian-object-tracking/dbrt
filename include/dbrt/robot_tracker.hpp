@@ -80,9 +80,8 @@ public:
      * \brief Hook function which is called during initialization
      * \return Initial belief state
      */
-    virtual State on_initialize(
-        const std::vector<State>& initial_states,
-        const Eigen::VectorXd& obsrv) = 0;
+    virtual State on_initialize(const std::vector<State>& initial_states,
+                                const Eigen::VectorXd& obsrv) = 0;
 
     /**
      * \brief perform a single filter step
@@ -90,7 +89,7 @@ public:
      * \param image
      *     Current observation image
      */
-    State track(const Obsrv& image);
+    virtual State track(const Obsrv& image);
 
     /**
      * \brief Initializes the particle filter with the given initial states and
@@ -104,7 +103,7 @@ public:
     /**
      * \brief Returns camera data
      */
-    const std::shared_ptr<dbot::CameraData> &camera_data() const;
+    const std::shared_ptr<dbot::CameraData>& camera_data() const;
 
     /**
      * \brief Shorthand for a zero input vector

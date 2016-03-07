@@ -115,6 +115,8 @@ set(sources
     src/${PROJECT_NAME}/robot_tracker_node.cpp
     src/${PROJECT_NAME}/robot_tracker_publisher.cpp
     src/${PROJECT_NAME}/robot_tracker.cpp
+    src/${PROJECT_NAME}/fusion_tracker_node.cpp
+    src/${PROJECT_NAME}/fusion_robot_tracker.cpp
     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/util/builder/rbc_particle_filter_robot_tracker_builder.cpp
     src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
@@ -144,7 +146,6 @@ target_link_libraries(rbc_particle_filter_robot_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-
 add_executable(rbc_particle_filter_robot_tracker_offline
      src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_offline_node.cpp)
 target_link_libraries(rbc_particle_filter_robot_tracker_offline
@@ -157,6 +158,15 @@ target_link_libraries(rbc_particle_filter_robot_tracker_offline
 add_executable(rbc_particle_filter_robot_tracker_simulation
      src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_simulation_node.cpp)
 target_link_libraries(rbc_particle_filter_robot_tracker_simulation
+     ${PROJECT_NAME}
+     ${catkin_LIBRARIES}
+     ${OpenCV_LIBS}
+     ${PCL_LIBRARIES}
+     yaml-cpp)
+
+add_executable(fusion_robot_tracker_simulation
+     src/${PROJECT_NAME}/fusion_robot_tracker_simulation_node.cpp)
+target_link_libraries(fusion_robot_tracker_simulation
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
