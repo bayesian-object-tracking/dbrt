@@ -11,7 +11,7 @@
  */
 
 /**
- * \file fusion_robot_tracker.hpp
+ * \file gaussian_joint_robot_tracker.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -32,31 +32,40 @@ namespace dbrt
 /**
  * \brief RbcParticleFilterRobotTracker
  */
-class FusionRobotTracker : public RobotTracker
+class GaussianJointFilterRobotTracker : public RobotTracker
 {
 public:
+    enum Dimension
+    {
+        JointStateDim = 1,
+        JointNoiseDim = 1,
+        JointObsrvDim = 1,
+        JointInputDim = 1,
+    };
+
     // single joint filter
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointState;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointNoise;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointObsrv;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointInput;
+    typedef Eigen::Matrix<fl::Real, JointStateDim, 1> JointState;
+    typedef Eigen::Matrix<fl::Real, JointNoiseDim, 1> JointNoise;
+    typedef Eigen::Matrix<fl::Real, JointObsrvDim, 1> JointObsrv;
+    typedef Eigen::Matrix<fl::Real, JointInputDim, 1> JointInput;
+
+    // Linear state transition function
     typedef fl::LinearStateTransitionModel<JointState, JointNoise, JointInput>
         JointStateModel;
+
+    // Linear observation function
     typedef fl::LinearGaussianObservationModel<JointObsrv, JointState>
         JointObsrvModel;
-    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> JointFilter;
 
-    // augmented joint observation
-    typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> JointsObsrv;
+    // Kalman filter for a single joint
+    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> Filter;
 
-    typedef typename JointFilter::Belief Belief;
+    // Belief representation of a single joint, i.e. a Gaussian
+    typedef typename Filter::Belief Belief;
 
 public:
-    FusionRobotTracker(
-        const std::shared_ptr<std::vector<JointFilter>>& joint_filter,
-        const std::shared_ptr<dbot::ObjectModel>& object_model,
-        const std::shared_ptr<dbot::CameraData>& camera_data);
-
+    GaussianJointFilterRobotTracker(
+        const std::shared_ptr<std::vector<Filter>>& joint_filters);
 
     /**
      * \brief perform a single filter step
@@ -64,34 +73,21 @@ public:
      * \param image
      *     Current observation image
      */
-    State track(const Obsrv& image, const JointsObsrv& joints_obsrv)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto state = on_track(image, joints_obsrv);
-        return state;
-    }
-
-    State on_track(const Obsrv& image) { }
-
-    /**
-     * \brief perform a single filter step
-     *
-     * \param image
-     *     Current observation image
-     */
-    State on_track(const Obsrv& image, const JointsObsrv& joints_obsrv);
+    State on_track(const Obsrv& joints_obsrv);
 
     /**
      * \brief Initializes the particle filter with the given initial states and
      *    the number of evaluations
-     * @param initial_states
-     * @param evaluation_count
+     * \param initial_states
+     *    initial set of states (in most cases a single state)
+     * \param obsrv
+     *    initial observation which may be required in
      */
     State on_initialize(const std::vector<State>& initial_states,
                         const Eigen::VectorXd& obsrv);
 
 private:
     std::vector<Belief> beliefs_;
-    std::shared_ptr<std::vector<JointFilter>> joint_filters_;
+    std::shared_ptr<std::vector<Filter>> joint_filters_;
 };
 }

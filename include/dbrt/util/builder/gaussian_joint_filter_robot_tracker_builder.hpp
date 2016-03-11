@@ -25,46 +25,31 @@
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 
-#include <dbrt/fusion_robot_tracker.h>
 #include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 #include <dbrt/util/builder/robot_joint_transition_model_builder.hpp>
 #include <dbrt/util/builder/robot_joint_observation_model_builder.hpp>
 
 namespace dbrt
 {
 template <typename Tracker>
-class FusionRobotTrackerBuilder
+class GaussianJointFilterRobotTrackerBuilder
 {
 public:
     typedef typename Tracker::State State;
     typedef typename Tracker::Noise Noise;
     typedef typename Tracker::Input Input;
-
-    /* == Model Builder Interfaces ========================================== */
-    typedef dbrt::RobotJointTransitionModelBuilder StateTransitionBuilder;
-    typedef dbrt::RobotJointObservationModelBuilder ObservationModelBuilder;
-
-    //    /* == Model Interfaces
-    //    ================================================== */
-    //    typedef fl::StateTransitionFunction<State, Noise, Input>
-    //    StateTransition;
-    //    typedef dbot::RbObservationModel<State> ObservationModel;
-    //    typedef typename ObservationModel::Observation Obsrv;
-
-    /* == Filter algorithm ================================================== */
-    typedef typename Tracker::JointFilter JointFilter;
+    typedef typename Tracker::Filter Filter;
 
 public:
-    FusionRobotTrackerBuilder(
+    GaussianJointFilterRobotTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<StateTransitionBuilder>& state_transition_builder,
-        const std::shared_ptr<ObservationModelBuilder>& obsrv_model_builder,
-        const std::shared_ptr<dbot::ObjectModel>& object_model,
-        const std::shared_ptr<dbot::CameraData>& camera_data)
+        const std::shared_ptr<RobotJointTransitionModelBuilder<Tracker>>&
+            state_transition_builder,
+        const std::shared_ptr<RobotJointObservationModelBuilder<Tracker>>&
+            obsrv_model_builder)
         : state_transition_builder_(state_transition_builder),
           obsrv_model_builder_(obsrv_model_builder),
-          object_model_(object_model),
-          camera_data_(camera_data),
           urdf_kinematics_(urdf_kinematics)
     {
     }
@@ -76,15 +61,14 @@ public:
     {
         auto joint_filters = create_joint_filters();
 
-        auto tracker = std::make_shared<Tracker>(
-            joint_filters, this->object_model_, this->camera_data_);
+        auto tracker = std::make_shared<Tracker>(joint_filters);
 
         return tracker;
     }
 
-    virtual std::shared_ptr<std::vector<JointFilter>> create_joint_filters()
+    virtual std::shared_ptr<std::vector<Filter>> create_joint_filters()
     {
-        auto joint_filters = std::make_shared<std::vector<JointFilter>>();
+        auto joint_filters = std::make_shared<std::vector<Filter>>();
 
         for (int i = 0; i < urdf_kinematics_->num_joints(); ++i)
         {
@@ -92,7 +76,7 @@ public:
                 this->state_transition_builder_->build(i);
             auto obsrv_model = this->obsrv_model_builder_->build(i);
 
-            auto filter = JointFilter(*state_transition_model, *obsrv_model);
+            auto filter = Filter(*state_transition_model, *obsrv_model);
 
             joint_filters->push_back(filter);
         }
@@ -100,10 +84,10 @@ public:
     }
 
 protected:
-    std::shared_ptr<StateTransitionBuilder> state_transition_builder_;
-    std::shared_ptr<ObservationModelBuilder> obsrv_model_builder_;
-    std::shared_ptr<dbot::ObjectModel> object_model_;
-    std::shared_ptr<dbot::CameraData> camera_data_;
+    std::shared_ptr<RobotJointTransitionModelBuilder<Tracker>>
+        state_transition_builder_;
+    std::shared_ptr<RobotJointObservationModelBuilder<Tracker>>
+        obsrv_model_builder_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
 };
 }

@@ -24,11 +24,6 @@
 
 namespace dbrt
 {
-RobotTracker::RobotTracker(const std::shared_ptr<dbot::ObjectModel> &object_model,
-                           const std::shared_ptr<dbot::CameraData> &camera_data)
-    : object_model_(object_model), camera_data_(camera_data)
-{
-}
 
 void RobotTracker::initialize(const std::vector<State>& initial_states,
     const Eigen::VectorXd &obsrv)
@@ -38,10 +33,6 @@ void RobotTracker::initialize(const std::vector<State>& initial_states,
     on_initialize(initial_states, obsrv);
 }
 
-const std::shared_ptr<dbot::CameraData>& RobotTracker::camera_data() const
-{
-    return camera_data_;
-}
 
 auto RobotTracker::track(const Obsrv& image) -> State
 {

@@ -34,18 +34,19 @@
 namespace dbrt
 {
 
+template <typename Tracker>
 class RobotJointObservationModelBuilder
 {
 public:
     enum Dimension
     {
-        DimState = 1,
-        DimObsrv = 1
+        StateDim = Tracker::JointStateDim,
+        ObsrvDim = Tracker::JointObsrvDim
     };
 
-    typedef Eigen::Matrix<fl::Real, DimObsrv, 1> Obsrv;
-    typedef Eigen::Matrix<fl::Real, DimState, 1> State;
-    typedef fl::LinearGaussianObservationModel<Obsrv, State> Model;
+    typedef typename Tracker::JointState State;
+    typedef typename Tracker::JointObsrv Obsrv;
+    typedef typename Tracker::JointObsrvModel Model;
 
     struct Parameters
     {
@@ -69,7 +70,7 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
-        auto model = std::make_shared<Model>(DimObsrv, DimObsrv);
+        auto model = std::make_shared<Model>(ObsrvDim, StateDim);
 
         auto H = model->create_sensor_matrix();
         auto R = model->create_noise_matrix();

@@ -34,7 +34,7 @@ public:
     typedef typename Tracker::State State;
     typedef typename Tracker::Obsrv Obsrv;
     typedef typename Tracker::JointObsrv JointObsrv;
-    typedef typename Tracker::JointsObsrv JointsObsrv;
+    typedef typename Tracker::Obsrv JointsObsrv;
 
 public:
     /**

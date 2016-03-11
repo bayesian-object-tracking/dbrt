@@ -38,141 +38,144 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbrt/fusion_robot_tracker.h>
 #include <dbrt/fusion_tracker_node.h>
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
-#include <dbrt/util/builder/fusion_robot_tracker_builder.hpp>
+#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/util/builder/gaussian_joint_filter_robot_tracker_builder.hpp>
+#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 
+/**
+ * \brief Create a gaussian filter tracking the robot joints based on joint
+ *     measurements
+ * \param prefix
+ *     parameter prefix, e.g. fusion_robot_tracker
+ * \param urdf_kinematics
+ *     URDF robot kinematics
+ */
+std::shared_ptr<dbrt::GaussianJointFilterRobotTracker>
+create_joint_robot_tracker(
+    const std::string& prefix,
+    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
+{
+    ros::NodeHandle nh("~");
+
+    typedef dbrt::GaussianJointFilterRobotTracker Tracker;
+
+    /* ------------------------------ */
+    /* - State transition function  - */
+    /* ------------------------------ */
+    dbrt::RobotJointTransitionModelBuilder<Tracker>::Parameters params_state;
+
+    // linear state transition parameters
+    nh.getParam(prefix + "joint_transition/joint_sigmas",
+                params_state.joint_sigmas);
+    params_state.joint_count = urdf_kinematics->num_joints();
+
+    auto state_trans_builder =
+        std::make_shared<dbrt::RobotJointTransitionModelBuilder<Tracker>>(
+            (params_state));
+
+    /* ------------------------------ */
+    /* - Observation model          - */
+    /* ------------------------------ */
+    dbrt::RobotJointObservationModelBuilder<Tracker>::Parameters
+        params_joint_obsrv;
+
+    nh.getParam(prefix + "joint_observation/joint_sigmas",
+                params_joint_obsrv.joint_sigmas);
+    params_joint_obsrv.joint_count = urdf_kinematics->num_joints();
+
+    auto joint_obsrv_model_builder =
+        std::make_shared<dbrt::RobotJointObservationModelBuilder<Tracker>>(
+            params_joint_obsrv);
+
+    /* ------------------------------ */
+    /* - Build the tracker          - */
+    /* ------------------------------ */
+    auto tracker_builder =
+        dbrt::GaussianJointFilterRobotTrackerBuilder<Tracker>(
+            urdf_kinematics, state_trans_builder, joint_obsrv_model_builder);
+
+    return tracker_builder.build();
+}
+
+/**
+ * \brief Node entry point
+ */
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "fusion_robot_tracker_simulation");
     ros::NodeHandle nh("~");
 
-    /* ------------------------------ */
-    /* - Create the robot model     - */
-    /* ------------------------------ */
-    // initialize the kinematics
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-        new KinematicsFromURDF());
+    // parameter shorthand prefix
+    std::string pre = "fusion_tracker/";
 
-    auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
-        new dbrt::UrdfObjectModelLoader(urdf_kinematics));
+    /* ------------------------------ */
+    /* - Create the robot kinematics- */
+    /* - and robot mesh model       - */
+    /* ------------------------------ */
+    auto urdf_kinematics = std::make_shared<KinematicsFromURDF>();
 
-    auto object_model =
-        std::make_shared<dbot::ObjectModel>(object_model_loader, false);
+    auto object_model = std::make_shared<dbot::ObjectModel>(
+        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
 
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
     int downsampling_factor;
     nh.getParam("downsampling_factor", downsampling_factor);
-
-    auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
-        new dbot::VirtualCameraDataProvider(downsampling_factor, "/XTION"));
-
-    auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
-
-    /* ------------------------------ */
-    /* - Few types we will be using - */
-    /* ------------------------------ */
-    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
-    typedef dbrt::RobotState<> State;
-
-    typedef dbrt::FusionRobotTracker Tracker;
-    typedef dbrt::FusionRobotTrackerBuilder<Tracker> TrackerBuilder;
-    typedef TrackerBuilder::StateTransitionBuilder StateTransitionBuilder;
-    typedef TrackerBuilder::ObservationModelBuilder ObservationModelBuilder;
-
-    // parameter shorthand prefix
-    std::string pre = "fusion_tracker/";
-
-    /* ------------------------------ */
-    /* - State transition function  - */
-    /* ------------------------------ */
-    // We will use a linear observation model built by the object transition
-    // model builder. The linear model will generate a random walk.
-    dbrt::RobotJointTransitionModelBuilder::Parameters params_state;
-
-    // linear state transition parameters
-    nh.getParam(pre + "joint_transition/joint_sigmas",
-                params_state.joint_sigmas);
-    params_state.joint_count = urdf_kinematics->num_joints();
-
-    auto state_trans_builder =
-        std::make_shared<StateTransitionBuilder>((params_state));
-
-    /* ------------------------------ */
-    /* - Observation model          - */
-    /* ------------------------------ */
-    dbrt::RobotJointObservationModelBuilder::Parameters
-        params_joint_obsrv;
-
-    nh.getParam(pre + "joint_observation/joint_sigmas",
-                params_joint_obsrv.joint_sigmas);
-    params_joint_obsrv.joint_count = urdf_kinematics->num_joints();
-
-    auto joint_obsrv_model_builder = std::shared_ptr<ObservationModelBuilder>(
-        new ObservationModelBuilder(params_joint_obsrv));
+    auto camera_data = std::make_shared<dbot::CameraData>(
+        std::make_shared<dbot::VirtualCameraDataProvider>(downsampling_factor,
+                                                          "/XTION"));
 
     /* ------------------------------ */
     /* - Robot renderer             - */
     /* ------------------------------ */
-    std::shared_ptr<dbot::RigidBodyRenderer> renderer(
-        new dbot::RigidBodyRenderer(object_model->vertices(),
-                                    object_model->triangle_indices(),
-                                    camera_data->camera_matrix(),
-                                    camera_data->resolution().height,
-                                    camera_data->resolution().width));
+    auto renderer = std::make_shared<dbot::RigidBodyRenderer>(
+        object_model->vertices(),
+        object_model->triangle_indices(),
+        camera_data->camera_matrix(),
+        camera_data->resolution().height,
+        camera_data->resolution().width);
 
     /* ------------------------------ */
-    /* - Create Filter & Tracker    - */
+    /* - Our state representation   - */
     /* ------------------------------ */
-    auto tracker_builder =
-        dbrt::FusionRobotTrackerBuilder<Tracker>(urdf_kinematics,
-                                                 state_trans_builder,
-                                                 joint_obsrv_model_builder,
-                                                 object_model,
-                                                 camera_data);
-    auto tracker = tracker_builder.build();
+    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
-    /* - Tracker publisher          - */
+    /* - Create Tracker and         - */
+    /* - tracker publisher          - */
     /* ------------------------------ */
+    auto tracker = create_joint_robot_tracker(pre, urdf_kinematics);
+
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
             urdf_kinematics, renderer, "/estimated"));
 
     /* ------------------------------ */
-    /* - Create tracker node        - */
+    /* - Setup Simulation           - */
     /* ------------------------------ */
-    dbrt::FusionTrackerNode<Tracker> tracker_node(tracker, tracker_publisher);
+    auto simulation_camera_data = std::make_shared<dbot::CameraData>(
+        std::make_shared<dbot::VirtualCameraDataProvider>(1, "/XTION"));
 
-    /* ------------------------------ */
-    /* - Simulation                 - */
-    /* ------------------------------ */
-    auto simulation_camera_data_provider =
-        std::shared_ptr<dbot::CameraDataProvider>(
-            new dbot::VirtualCameraDataProvider(1, "/XTION"));
-    auto simulation_camera_data =
-        std::make_shared<dbot::CameraData>(simulation_camera_data_provider);
-
-    std::shared_ptr<dbot::RigidBodyRenderer> simulation_renderer(
-        new dbot::RigidBodyRenderer(
+    auto simulation_renderer = std::make_shared<dbot::RigidBodyRenderer>(
             object_model->vertices(),
             object_model->triangle_indices(),
             simulation_camera_data->camera_matrix(),
             simulation_camera_data->resolution().height,
-            simulation_camera_data->resolution().width));
+            simulation_camera_data->resolution().width);
 
-    dbrt::VirtualRobot<State> robot(object_model,
+    auto robot = dbrt::VirtualRobot<State>(object_model,
                                     urdf_kinematics,
                                     simulation_renderer,
                                     simulation_camera_data);
 
     /* ------------------------------ */
-    /* - Initialize                 - */
+    /* - Initialize from config     - */
     /* ------------------------------ */
     std::vector<double> joints;
     nh.getParam("simulation/initial_state", joints);
@@ -183,16 +186,16 @@ int main(int argc, char** argv)
     tracker->initialize({init_state}, robot.observation_vector());
 
     /* ------------------------------ */
-    /* - Create and run tracker     - */
-    /* - node                       - */
+    /* - Run tracker node           - */
     /* ------------------------------ */
     while (ros::ok())
     {
         auto new_state = robot.animate(state);
         robot.publish(new_state);
 
-        tracker_node.tracking_callback(robot.observation(),
-                                       new_state);
+        auto current_state = tracker->track(new_state);
+        tracker_publisher->publish(
+            current_state, robot.observation(), camera_data);
         ros::spinOnce();
     }
 

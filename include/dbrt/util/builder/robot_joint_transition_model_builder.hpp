@@ -33,19 +33,21 @@
 
 namespace dbrt
 {
+template <typename Tracker>
 class RobotJointTransitionModelBuilder
 {
 public:
     enum Dimension
     {
-        DimState = 1,
-        DimNoise = 1
+        StateDim = Tracker::JointStateDim,
+        NoiseDim = Tracker::JointNoiseDim,
+        InputDim = Tracker::JointInputDim
     };
 
-    typedef Eigen::Matrix<fl::Real, DimState, 1> State;
-    typedef Eigen::Matrix<fl::Real, DimNoise, 1> Noise;
-    typedef Eigen::Matrix<fl::Real, 1, 1> Input;
-    typedef fl::LinearStateTransitionModel<State, Noise, Input> Model;
+    typedef typename Tracker::JointState State;
+    typedef typename Tracker::JointNoise Noise;
+    typedef typename Tracker::JointInput Input;
+    typedef typename Tracker::JointStateModel Model;
 
     struct Parameters
     {
@@ -67,7 +69,7 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
-        auto model = std::make_shared<Model>(DimState, DimNoise, 1);
+        auto model = std::make_shared<Model>(StateDim, NoiseDim, InputDim);
 
         auto A = model->create_dynamics_matrix();
         auto B = model->create_noise_matrix();
