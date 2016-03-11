@@ -116,7 +116,7 @@ set(sources
     src/${PROJECT_NAME}/robot_tracker_publisher.cpp
     src/${PROJECT_NAME}/robot_tracker.cpp
 #    src/${PROJECT_NAME}/fusion_tracker_node.cpp
-#    src/${PROJECT_NAME}/fusion_robot_tracker.cpp
+    src/${PROJECT_NAME}/fusion_robot_tracker.cpp
     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/gaussian_joint_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/util/builder/rbc_particle_filter_robot_tracker_builder.cpp

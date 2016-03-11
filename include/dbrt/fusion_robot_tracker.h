@@ -26,36 +26,24 @@
 #include <fl/model/process/linear_state_transition_model.hpp>
 #include <fl/model/process/interface/state_transition_function.hpp>
 #include <dbrt/robot_tracker.hpp>
+#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 
 namespace dbrt
 {
 /**
  * \brief RbcParticleFilterRobotTracker
  */
-class FusionRobotTracker : public RobotTracker
+class FusionRobotTracker
 {
 public:
-    // single joint filter
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointState;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointNoise;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointObsrv;
-    typedef Eigen::Matrix<fl::Real, 1, 1> JointInput;
-    typedef fl::LinearStateTransitionModel<JointState, JointNoise, JointInput>
-        JointStateModel;
-    typedef fl::LinearGaussianObservationModel<JointObsrv, JointState>
-        JointObsrvModel;
-    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> JointFilter;
-
-    // augmented joint observation
-    typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> JointsObsrv;
-
-    typedef typename JointFilter::Belief Belief;
+    typedef GaussianJointFilterRobotTracker::State State;
+    typedef GaussianJointFilterRobotTracker::Obsrv JointsObsrv;
+    typedef GaussianJointFilterRobotTracker::Belief GaussianJointTrackerBelief;
 
 public:
-    FusionRobotTracker(
-        const std::shared_ptr<std::vector<JointFilter>>& joint_filter,
-        const std::shared_ptr<dbot::ObjectModel>& object_model,
-        const std::shared_ptr<dbot::CameraData>& camera_data);
+    FusionRobotTracker(const std::shared_ptr<GaussianJointFilterRobotTracker>&
+                           gaussian_joint_tracker);
+
 
 
     /**
@@ -71,8 +59,7 @@ public:
         return state;
     }
 
-    State on_track(const Obsrv& image) { }
-
+    State on_track(const Obsrv& image) {}
     /**
      * \brief perform a single filter step
      *
@@ -91,7 +78,7 @@ public:
                         const Eigen::VectorXd& obsrv);
 
 private:
-    std::vector<Belief> beliefs_;
-    std::shared_ptr<std::vector<JointFilter>> joint_filters_;
+    std::vector<GaussianJointTrackerBelief> gaussian_joint_tracker_beliefs_;
+    std::shared_ptr<GaussianJointFilterRobotTracker> gaussian_joint_tracker_;
 };
 }
