@@ -105,7 +105,8 @@ public:
             filter,
             this->object_model_,
             this->camera_data_,
-            this->params_.evaluation_count);
+            this->params_.evaluation_count,
+            this->params_.sampling_blocks.size());
 
         return tracker;
     }

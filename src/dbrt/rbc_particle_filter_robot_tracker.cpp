@@ -27,10 +27,12 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
     const std::shared_ptr<Filter>& filter,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
     const std::shared_ptr<dbot::CameraData>& camera_data,
-    int evaluation_count)
+    int evaluation_count,
+    int block_count)
     : RobotTracker(object_model, camera_data),
       filter_(filter),
-      evaluation_count_(evaluation_count)
+      evaluation_count_(evaluation_count),
+      block_count_(block_count)
 {
 }
 
@@ -43,7 +45,7 @@ auto RbcParticleFilterRobotTracker::on_initialize(
 
     // TODO determine what is the number of sampling blocks
     // eval_count / sampling blocks
-    filter_->resample(evaluation_count_ / initial_states[0].size());
+    filter_->resample(evaluation_count_ / block_count_);
 
     State mean = filter_->belief().mean();
     return mean;
