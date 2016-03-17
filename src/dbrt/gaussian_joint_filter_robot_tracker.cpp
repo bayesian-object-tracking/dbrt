@@ -68,7 +68,7 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
     -> State
 {
 //    INIT_PROFILING
-    const int dim_joint = JointObsrv::SizeAtCompileTime;
+    const int dim_joint = JointState::SizeAtCompileTime;
     State state;
     state.resize(dim_joint * joint_filters_->size());
 
@@ -79,7 +79,7 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
 
         (*joint_filters_)[i].update(
             beliefs_[i],
-            joints_obsrv.middleRows(i * dim_joint, dim_joint),
+            joints_obsrv.middleRows(i, 1),
             beliefs_[i]);
 
         state.middleRows(i * dim_joint, dim_joint) = beliefs_[i].mean();
