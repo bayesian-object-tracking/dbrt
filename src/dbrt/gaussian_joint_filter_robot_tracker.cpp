@@ -84,9 +84,17 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
             joints_obsrv.middleRows(i, 1),
             beliefs_[i]);
 
-        state(i) = beliefs_[i].mean()(0);
 
+        state(i) = beliefs_[i].mean()(0);
     }
+
+//    static int i;
+
+//    std::cout << "covariance " << i << " ----------------" << std::endl;
+//    i++;
+//    std::cout << beliefs_[0].covariance() << std::endl;
+
+
 
     return state;
 }
