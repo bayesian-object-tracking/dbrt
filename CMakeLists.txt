@@ -4,7 +4,7 @@ project(dbrt)
 ############################
 # Options                  #
 ############################
-option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" OFF)
+option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" ON)
 
 if(DBOT_BUILD_GPU)
   add_definitions(-DDBOT_BUILD_GPU=1)
