@@ -124,7 +124,7 @@ public:
 	      original_transform_.translation() = Eigen::Vector3d(link_->visual->origin.position.x, 
 								  link_->visual->origin.position.y, 
 								  link_->visual->origin.position.z);
-	      std::cout << filename << std::endl;
+//	      std::cout << filename << std::endl;
 	      proper_=true;
 	    }
 	}

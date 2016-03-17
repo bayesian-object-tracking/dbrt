@@ -124,7 +124,7 @@ void KinematicsFromURDF::GetPartMeshes(std::vector<boost::shared_ptr<PartMeshMod
       if(part_ptr->proper_)
 	{
 	  // if the link has an actual mesh file to read
-	  std::cout << "link " << links[i]->name << " is descendant of " << tmp_link->name << std::endl;
+//	  std::cout << "link " << links[i]->name << " is descendant of " << tmp_link->name << std::endl;
 	  part_meshes.push_back(part_ptr);
 	  // Produces an index map for the links
 	  part_mesh_map_.push_back(part_ptr->get_name());
