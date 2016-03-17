@@ -38,8 +38,7 @@ public:
     enum Dimension
     {
         JointStateDim = 2,
-        sdfadfasdfsadfadfJointStateDim = 1,
-        JointNoiseDim = 1,
+        JointNoiseDim = 2,
         JointObsrvDim = 1,
         JointInputDim = 1,
     };
