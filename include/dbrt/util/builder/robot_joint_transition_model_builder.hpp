@@ -51,8 +51,10 @@ public:
 
     struct Parameters
     {
-        double joint_sigma;
+//        double joint_sigma;
         std::vector<double> joint_sigmas;
+        std::vector<double> bias_sigmas;
+        std::vector<double> bias_factors;
         int joint_count;
     };
 
@@ -60,6 +62,14 @@ public:
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())
+        {
+            throw InvalidNumberOfJointSigmasException();
+        }
+        if (param_.joint_count != param_.bias_sigmas.size())
+        {
+            throw InvalidNumberOfJointSigmasException();
+        }
+        if (param_.joint_count != param_.bias_factors.size())
         {
             throw InvalidNumberOfJointSigmasException();
         }

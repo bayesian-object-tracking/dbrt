@@ -74,6 +74,10 @@ create_joint_robot_tracker(
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
                 params_state.joint_sigmas);
+    nh.getParam(prefix + "joint_transition/bias_sigmas",
+                params_state.bias_sigmas);
+    nh.getParam(prefix + "joint_transition/bias_factors",
+                params_state.bias_factors);
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
