@@ -79,11 +79,16 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
+
         auto model = std::make_shared<Model>(StateDim, NoiseDim, InputDim);
 
         auto A = model->create_dynamics_matrix();
         auto B = model->create_noise_matrix();
         auto C = model->create_input_matrix();
+
+        PV(A);
+        PV(B);
+        PV(C);
 
         A.setIdentity();
         B.setIdentity();

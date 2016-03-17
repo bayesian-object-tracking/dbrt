@@ -37,7 +37,8 @@ class GaussianJointFilterRobotTracker : public RobotTracker
 public:
     enum Dimension
     {
-        JointStateDim = 1,
+        JointStateDim = 2,
+        sdfadfasdfsadfadfJointStateDim = 1,
         JointNoiseDim = 1,
         JointObsrvDim = 1,
         JointInputDim = 1,

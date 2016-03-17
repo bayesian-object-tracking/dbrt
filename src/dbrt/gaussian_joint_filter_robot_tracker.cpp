@@ -38,13 +38,13 @@ GaussianJointFilterRobotTracker::beliefs()
     return beliefs_;
 }
 
+/// todo: there should be no obsrv passed in this function
 auto GaussianJointFilterRobotTracker::on_initialize(
     const std::vector<State>& initial_states,
     const Eigen::VectorXd& obsrv) -> State
 {
-    const int dim_joint = JointObsrv::SizeAtCompileTime;
     State state;
-    state.resize(dim_joint * joint_filters_->size());
+    state.resize(joint_filters_->size());
 
     beliefs_.resize(joint_filters_->size());
 
@@ -54,23 +54,25 @@ auto GaussianJointFilterRobotTracker::on_initialize(
 
         auto cov = beliefs_[i].covariance();
         cov.setZero();
-        beliefs_[i].covariance(cov);
-        beliefs_[i].mean(
-            initial_states[0].middleRows(i * dim_joint, dim_joint));
+        auto mean = beliefs_[i].mean();
+        mean.setZero();
+        mean(0) = initial_states[0](i);
 
-        state.middleRows(i * dim_joint, dim_joint) = beliefs_[i].mean();
+        beliefs_[i].mean(mean);
+        beliefs_[i].covariance(cov);
+
+        state(i) = beliefs_[i].mean()(0);
     }
 
+    /// todo why do we have a return value?
     return state;
 }
 
 auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
     -> State
 {
-//    INIT_PROFILING
-    const int dim_joint = JointState::SizeAtCompileTime;
     State state;
-    state.resize(dim_joint * joint_filters_->size());
+    state.resize(joint_filters_->size());
 
     for (int i = 0; i < joint_filters_->size(); ++i)
     {
@@ -82,9 +84,9 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
             joints_obsrv.middleRows(i, 1),
             beliefs_[i]);
 
-        state.middleRows(i * dim_joint, dim_joint) = beliefs_[i].mean();
+        state(i) = beliefs_[i].mean()(0);
+
     }
-//    MEASURE_FLUSH("Track");
 
     return state;
 }
