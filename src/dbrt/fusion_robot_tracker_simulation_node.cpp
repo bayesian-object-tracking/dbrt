@@ -17,6 +17,8 @@
  */
 
 #include <memory>
+#include <thread>
+#include <functional>
 
 #include <cv.h>
 #include <cv_bridge/cv_bridge.h>
@@ -43,6 +45,7 @@
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/fusion_robot_tracker.h>
 #include <dbrt/util/builder/gaussian_joint_filter_robot_tracker_builder.hpp>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 
@@ -150,7 +153,10 @@ int main(int argc, char** argv)
     /* - Create Tracker and         - */
     /* - tracker publisher          - */
     /* ------------------------------ */
-    auto tracker = create_joint_robot_tracker(pre, urdf_kinematics);
+
+    ROS_INFO("creating trackers ... ");
+    auto joint_robot_tracker = create_joint_robot_tracker(pre, urdf_kinematics);
+    dbrt::FusionRobotTracker fusion_robot_tracker(joint_robot_tracker);
 
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
@@ -159,45 +165,79 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Setup Simulation           - */
     /* ------------------------------ */
+    ROS_INFO("setting up simulation ... ");
     auto simulation_camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::VirtualCameraDataProvider>(1, "/XTION"));
 
     auto simulation_renderer = std::make_shared<dbot::RigidBodyRenderer>(
-            object_model->vertices(),
-            object_model->triangle_indices(),
-            simulation_camera_data->camera_matrix(),
-            simulation_camera_data->resolution().height,
-            simulation_camera_data->resolution().width);
+        object_model->vertices(),
+        object_model->triangle_indices(),
+        simulation_camera_data->camera_matrix(),
+        simulation_camera_data->resolution().height,
+        simulation_camera_data->resolution().width);
 
-    auto robot = dbrt::VirtualRobot<State>(object_model,
+    std::vector<double> joints;
+    nh.getParam("simulation/initial_state", joints);
+    State state;
+    state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
+    ROS_INFO("creating virtual robot ... ");
+    dbrt::VirtualRobot<State> robot(object_model,
                                     urdf_kinematics,
                                     simulation_renderer,
-                                    simulation_camera_data);
+                                    simulation_camera_data,
+                                    1000., // joint sensor rate
+                                    30,    // visual sensor rate
+                                    state);
 
+    // register obsrv callbacks
+    robot.joint_sensor_callback(
+        [&](const State& state)
+        {
+            fusion_robot_tracker.joints_obsrv_callback(state);
+        });
+
+    robot.image_sensor_callback(
+        [&](const Eigen::VectorXd& depth_image)
+        {
+            fusion_robot_tracker.image_obsrv_callback(depth_image);
+        });
+
+    ROS_INFO("Initializing tracker ... ");
     /* ------------------------------ */
     /* - Initialize from config     - */
     /* ------------------------------ */
-    std::vector<double> joints;
-    nh.getParam("simulation/initial_state", joints);
-
-    State state;
-    state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
-    State init_state = robot.animate(state);
-    tracker->initialize({init_state}, robot.observation_vector());
+    fusion_robot_tracker.initialize({robot.state()},
+                                    robot.observation_vector());
 
     /* ------------------------------ */
     /* - Run tracker node           - */
     /* ------------------------------ */
+
+    ROS_INFO("Starting robot ... ");
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
+
+    robot.run();
+    ROS_INFO("Robot running ... ");
+
+    fusion_robot_tracker.run();
+
+    ros::Rate visualization_rate(24);
     while (ros::ok())
     {
-        auto new_state = robot.animate(state);
-        robot.publish(new_state);
+        visualization_rate.sleep();
+        auto current_state = fusion_robot_tracker.current_state();
 
-        auto current_state = tracker->track(new_state);
         tracker_publisher->publish(
             current_state, robot.observation(), camera_data);
+
         ros::spinOnce();
     }
+
+    ROS_INFO("Shutting down ...");
+
+    fusion_robot_tracker.shutdown();
+    robot.shutdown();
 
     return 0;
 }

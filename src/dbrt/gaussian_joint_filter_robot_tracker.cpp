@@ -21,9 +21,21 @@
 namespace dbrt
 {
 GaussianJointFilterRobotTracker::GaussianJointFilterRobotTracker(
-    const std::shared_ptr<std::vector<Filter>>& joint_filters)
+    const std::shared_ptr<std::vector<JointFilter>>& joint_filters)
     : joint_filters_(joint_filters)
 {
+}
+
+const std::vector<GaussianJointFilterRobotTracker::JointBelief>&
+GaussianJointFilterRobotTracker::beliefs() const
+{
+    return beliefs_;
+}
+
+std::vector<GaussianJointFilterRobotTracker::JointBelief>&
+GaussianJointFilterRobotTracker::beliefs()
+{
+    return beliefs_;
 }
 
 auto GaussianJointFilterRobotTracker::on_initialize(
@@ -55,7 +67,7 @@ auto GaussianJointFilterRobotTracker::on_initialize(
 auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
     -> State
 {
-    INIT_PROFILING
+//    INIT_PROFILING
     const int dim_joint = JointObsrv::SizeAtCompileTime;
     State state;
     state.resize(dim_joint * joint_filters_->size());
@@ -72,7 +84,7 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
 
         state.middleRows(i * dim_joint, dim_joint) = beliefs_[i].mean();
     }
-    MEASURE_FLUSH("Track");
+//    MEASURE_FLUSH("Track");
 
     return state;
 }

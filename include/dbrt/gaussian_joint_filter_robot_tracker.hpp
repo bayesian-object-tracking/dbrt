@@ -58,14 +58,14 @@ public:
         JointObsrvModel;
 
     // Kalman filter for a single joint
-    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> Filter;
+    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> JointFilter;
 
     // Belief representation of a single joint, i.e. a Gaussian
-    typedef typename Filter::Belief Belief;
+    typedef typename JointFilter::Belief JointBelief;
 
 public:
     GaussianJointFilterRobotTracker(
-        const std::shared_ptr<std::vector<Filter>>& joint_filters);
+        const std::shared_ptr<std::vector<JointFilter>>& joint_filters);
 
     /**
      * \brief perform a single filter step
@@ -86,8 +86,18 @@ public:
     State on_initialize(const std::vector<State>& initial_states,
                         const Eigen::VectorXd& obsrv);
 
+    /**
+     * \brief Returns immutable reference to all joint belliefs
+     */
+    const std::vector<JointBelief>& beliefs() const;
+
+    /**
+     * \brief Returns mutable reference to all joint belliefs
+     */
+    std::vector<JointBelief>& beliefs();
+
 private:
-    std::vector<Belief> beliefs_;
-    std::shared_ptr<std::vector<Filter>> joint_filters_;
+    std::vector<JointBelief> beliefs_;
+    std::shared_ptr<std::vector<JointFilter>> joint_filters_;
 };
 }

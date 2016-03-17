@@ -39,7 +39,7 @@ public:
     typedef typename Tracker::State State;
     typedef typename Tracker::Noise Noise;
     typedef typename Tracker::Input Input;
-    typedef typename Tracker::Filter Filter;
+    typedef typename Tracker::JointFilter JointFilter;
 
 public:
     GaussianJointFilterRobotTrackerBuilder(
@@ -66,9 +66,9 @@ public:
         return tracker;
     }
 
-    virtual std::shared_ptr<std::vector<Filter>> create_joint_filters()
+    virtual std::shared_ptr<std::vector<JointFilter>> create_joint_filters()
     {
-        auto joint_filters = std::make_shared<std::vector<Filter>>();
+        auto joint_filters = std::make_shared<std::vector<JointFilter>>();
 
         for (int i = 0; i < urdf_kinematics_->num_joints(); ++i)
         {
@@ -76,7 +76,7 @@ public:
                 this->state_transition_builder_->build(i);
             auto obsrv_model = this->obsrv_model_builder_->build(i);
 
-            auto filter = Filter(*state_transition_model, *obsrv_model);
+            auto filter = JointFilter(*state_transition_model, *obsrv_model);
 
             joint_filters->push_back(filter);
         }
