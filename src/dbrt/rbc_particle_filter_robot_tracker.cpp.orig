@@ -27,10 +27,15 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
     const std::shared_ptr<Filter>& filter,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
     const std::shared_ptr<dbot::CameraData>& camera_data,
+<<<<<<< HEAD
     int evaluation_count,
     int block_count)
+    : RobotTracker(object_model, camera_data),
+=======
+    int evaluation_count)
     : object_model_(object_model),
       camera_data_(camera_data),
+>>>>>>> joint_filters
       filter_(filter),
       evaluation_count_(evaluation_count),
       block_count_(block_count)
@@ -38,9 +43,11 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
 }
 
 auto RbcParticleFilterRobotTracker::on_initialize(
-    const std::vector<State>& initial_states) -> State
+    const std::vector<State>& initial_states,
+    const Eigen::VectorXd& obsrv) -> State
 {
     filter_->set_particles(initial_states);
+    filter_->filter(obsrv, zero_input());
 
     // TODO determine what is the number of sampling blocks
     // eval_count / sampling blocks

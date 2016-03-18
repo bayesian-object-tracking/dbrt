@@ -74,8 +74,7 @@ public:
      * @param initial_states
      * @param evaluation_count
      */
-    State on_initialize(const std::vector<State>& initial_states,
-                        const Eigen::VectorXd& obsrv);
+    State on_initialize(const std::vector<State>& initial_states);
 
     /**
      * \brief Returns camera data

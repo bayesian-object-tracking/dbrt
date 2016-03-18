@@ -78,8 +78,7 @@ public:
      * \brief Hook function which is called during initialization
      * \return Initial belief state
      */
-    virtual State on_initialize(const std::vector<State>& initial_states,
-                                const Eigen::VectorXd& obsrv) = 0;
+    virtual State on_initialize(const std::vector<State>& initial_states) = 0;
 
     /**
      * \brief perform a single filter step
@@ -95,8 +94,7 @@ public:
      * @param initial_states
      * @param evaluation_count
      */
-    void initialize(const std::vector<State>& initial_states,
-                    const Eigen::VectorXd& obsrv);
+    void initialize(const std::vector<State>& initial_states);
 
 
     /**

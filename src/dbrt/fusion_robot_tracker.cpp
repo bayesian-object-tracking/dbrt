@@ -33,11 +33,10 @@ FusionRobotTracker::FusionRobotTracker(
 {
 }
 
-void FusionRobotTracker::initialize(const std::vector<State>& initial_states,
-                                    const Eigen::VectorXd& obsrv)
+void FusionRobotTracker::initialize(const std::vector<State>& initial_states)
 {
     current_state_ = initial_states[0];
-    gaussian_joint_tracker_->initialize(initial_states, obsrv);
+    gaussian_joint_tracker_->initialize(initial_states);
 //    rbc_particle_filter_tracker_->ini
 }
 

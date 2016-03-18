@@ -25,12 +25,11 @@
 namespace dbrt
 {
 
-void RobotTracker::initialize(const std::vector<State>& initial_states,
-    const Eigen::VectorXd &obsrv)
+void RobotTracker::initialize(const std::vector<State>& initial_states)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    on_initialize(initial_states, obsrv);
+    on_initialize(initial_states);
 }
 
 

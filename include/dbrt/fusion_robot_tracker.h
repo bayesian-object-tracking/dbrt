@@ -59,8 +59,7 @@ public:
      * \brief Initializes the filters with the given initial states and
      *    the number of evaluations
      */
-    void initialize(const std::vector<State>& initial_states,
-                        const Eigen::VectorXd& obsrv);
+    void initialize(const std::vector<State>& initial_states);
 
     void run();
     void shutdown();

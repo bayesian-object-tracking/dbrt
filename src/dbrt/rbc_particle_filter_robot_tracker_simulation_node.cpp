@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Initialize                 - */
     /* ------------------------------ */
-    tracker->initialize({robot.state()}, robot.observation_vector());
+    tracker->initialize({robot.state()});
     robot.run();
 
     /* ------------------------------ */

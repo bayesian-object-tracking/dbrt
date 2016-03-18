@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     {
         initial_states.push_back(state);
     }
-    tracker->initialize(initial_states, camera_data->depth_image_vector());
+    tracker->initialize(initial_states);
 
     /* ------------------------------ */
     /* - Create and run tracker     - */

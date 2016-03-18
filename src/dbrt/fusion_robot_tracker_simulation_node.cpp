@@ -218,8 +218,8 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Initialize from config     - */
     /* ------------------------------ */
-    fusion_robot_tracker.initialize({robot.state()},
-                                    robot.observation_vector());
+    fusion_robot_tracker.initialize({robot.state()});
+
 
     /* ------------------------------ */
     /* - Run tracker node           - */

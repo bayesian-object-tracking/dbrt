@@ -87,9 +87,7 @@ public:
      * \param obsrv
      *    initial observation which may be required in
      */
-    State on_initialize(const std::vector<State>& initial_states,
-                        const Eigen::VectorXd& obsrv);
-
+    State on_initialize(const std::vector<State>& initial_states);
 
     std::vector<AngleBelief> angle_beliefs();
 
