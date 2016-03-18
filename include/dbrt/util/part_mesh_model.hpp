@@ -50,6 +50,8 @@
 #include "assimp/scene.h"
 #endif
 
+#include <boost/filesystem.hpp>
+
 class PartMeshModel
 {
 public:
@@ -70,16 +72,36 @@ public:
 	  (link_->collision->geometry->type == urdf::Geometry::MESH))
 	{ 
 	  boost::shared_ptr<urdf::Mesh> mesh = boost::dynamic_pointer_cast<urdf::Mesh> (link_->collision->geometry);
-	  std::string filename (mesh->filename);
-	  filename_ = filename;
+      std::string filename (mesh->filename);
+      filename_ = filename;
 
 	  if (filename.substr(filename.size() - 4 , 4) == ".stl" || 
 	      filename.substr(filename.size() - 4 , 4) == ".dae")
 	    {
 	      if (filename.substr(filename.size() - 4 , 4) == ".dae")
 		filename.replace(filename.size() - 4 , 4, ".stl");
-	      filename.erase(0,25);
-	      filename = p_description_path + filename;
+//	      filename.erase(0,25);
+//	      filename = p_description_path + filename;
+
+
+          // remove 'package://' from string
+          std::string to_be_removed = "package://";
+          std::string::size_type location = filename.find(to_be_removed);
+          if(location != std::string::npos)
+              filename.erase(location, to_be_removed.length());
+
+          // remove first folder
+          std::string::size_type location_2 = filename.find("/");
+          if(location_2 != std::string::npos)
+              filename.erase(0, location_2);
+
+          filename = p_description_path + filename;
+
+          if(!boost::filesystem::exists(filename))
+          {
+              std::cout << "mesh file " << filename << " does not exist" << std::endl;
+              exit(-1);
+          }
 	    	    
 	      scene_ =  aiImportFile(filename.c_str(),
 				     aiProcessPreset_TargetRealtime_Quality);
@@ -102,17 +124,35 @@ public:
 	  (link_->visual->geometry->type == urdf::Geometry::MESH))
 	{ 
 	  boost::shared_ptr<urdf::Mesh> mesh = boost::dynamic_pointer_cast<urdf::Mesh> (link_->visual->geometry);
-	  std::string filename (mesh->filename);
-	  filename_ = filename;
+      std::string filename (mesh->filename);
+      filename_ = filename;
 
 	  if (filename.substr(filename.size() - 4 , 4) == ".stl" || 
 	      filename.substr(filename.size() - 4 , 4) == ".dae")
 	    {
 	      if (filename.substr(filename.size() - 4 , 4) == ".dae")
 		filename.replace(filename.size() - 4 , 4, ".stl");
-	      filename.erase(0,25);
-	      filename = p_description_path + filename;
-	    	    
+
+          // remove 'package://' from string
+          std::string to_be_removed = "package://";
+          std::string::size_type location = filename.find(to_be_removed);
+          if(location != std::string::npos)
+              filename.erase(location, to_be_removed.length());
+
+          // remove first folder
+          std::string::size_type location_2 = filename.find("/");
+          if(location_2 != std::string::npos)
+              filename.erase(0, location_2);
+
+          filename = p_description_path + filename;
+
+          if(!boost::filesystem::exists(filename))
+          {
+              std::cout << "mesh file " << filename << " does not exist" << std::endl;
+              exit(-1);
+          }
+
+
 	      scene_ =  aiImportFile(filename.c_str(),
 				     aiProcessPreset_TargetRealtime_Quality);
 	      numFaces_ = scene_->mMeshes[0]->mNumFaces;
@@ -189,7 +229,7 @@ private:
   std::string name_;
 
   std::string filename_;
-  
+
 };
 
 
