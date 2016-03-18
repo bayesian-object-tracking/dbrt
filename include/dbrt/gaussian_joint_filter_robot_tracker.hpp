@@ -63,6 +63,10 @@ public:
     // Belief representation of a single joint, i.e. a Gaussian
     typedef typename JointFilter::Belief JointBelief;
 
+
+    typedef fl::Gaussian<Eigen::Matrix<fl::Real, 1, 1>> AngleBelief;
+
+
 public:
     GaussianJointFilterRobotTracker(
         const std::shared_ptr<std::vector<JointFilter>>& joint_filters);
@@ -85,6 +89,13 @@ public:
      */
     State on_initialize(const std::vector<State>& initial_states,
                         const Eigen::VectorXd& obsrv);
+
+
+    std::vector<AngleBelief> angle_beliefs();
+
+    void set_angle_beliefs(std::vector<AngleBelief> angle_beliefs);
+
+
 
     /**
      * \brief Returns immutable reference to all joint belliefs
