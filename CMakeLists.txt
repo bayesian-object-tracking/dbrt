@@ -120,6 +120,7 @@ set(sources
     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/gaussian_joint_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/util/builder/rbc_particle_filter_robot_tracker_builder.cpp
+    src/${PROJECT_NAME}/util/builder/ros_rbc_particle_filter_robot_tracker_factory.cpp
     src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
     src/${PROJECT_NAME}/util/urdf_object_loader.cpp
     src/${PROJECT_NAME}/util/image_visualizer.cpp
