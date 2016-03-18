@@ -141,7 +141,7 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
             beliefs_[i]);
 
 
-        state(i) = beliefs_[i].sample()(0);
+        state(i) = beliefs_[i].mean()(0);
     }
 
 //    auto angle_bels = angle_beliefs();

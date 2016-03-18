@@ -40,7 +40,6 @@
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 #include <dbrt/util/urdf_object_loader.hpp>
-//#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
 #include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
 
 int main(int argc, char** argv)

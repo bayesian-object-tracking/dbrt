@@ -21,10 +21,15 @@
 
 namespace dbrt
 {
+
 FusionRobotTracker::FusionRobotTracker(
     const std::shared_ptr<GaussianJointFilterRobotTracker>&
-        gaussian_joint_tracker)
-    : gaussian_joint_tracker_(gaussian_joint_tracker), running_(true)
+        gaussian_joint_tracker,
+    const std::shared_ptr<RbcParticleFilterRobotTracker>&
+        rbc_particle_filter_tracker)
+    : gaussian_joint_tracker_(gaussian_joint_tracker),
+      rbc_particle_filter_tracker_(rbc_particle_filter_tracker),
+      running_(true)
 {
 }
 
@@ -33,6 +38,7 @@ void FusionRobotTracker::initialize(const std::vector<State>& initial_states,
 {
     current_state_ = initial_states[0];
     gaussian_joint_tracker_->initialize(initial_states, obsrv);
+    rbc_particle_filter_tracker_->ini
 }
 
 void FusionRobotTracker::run_gaussian_tracker()
@@ -53,7 +59,7 @@ void FusionRobotTracker::run_gaussian_tracker()
             current_state = current_state_;
         }
 
-        for (auto joints_obsrv_entry: joints_obsrvs_buffer_copy)
+        for (auto joints_obsrv_entry : joints_obsrvs_buffer_copy)
         {
             // construct a joints belief entry which contains the following
             //  - the joints measurement values
@@ -88,6 +94,7 @@ void FusionRobotTracker::run_particle_tracker()
     while (running_)
     {
         usleep(1);
+
     }
 }
 

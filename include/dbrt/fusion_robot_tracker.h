@@ -31,6 +31,7 @@
 #include <fl/model/process/interface/state_transition_function.hpp>
 #include <dbrt/robot_tracker.hpp>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 
 namespace dbrt
 {
@@ -50,7 +51,9 @@ public:
 
 public:
     FusionRobotTracker(const std::shared_ptr<GaussianJointFilterRobotTracker>&
-                           gaussian_joint_tracker);
+                           gaussian_joint_tracker,
+                       const std::shared_ptr<RbcParticleFilterRobotTracker>&
+                           rbc_particle_filter_tracker);
 
     /**
      * \brief Initializes the filters with the given initial states and
@@ -99,6 +102,7 @@ private:
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
     std::shared_ptr<GaussianJointFilterRobotTracker> gaussian_joint_tracker_;
+    std::shared_ptr<RbcParticleFilterRobotTracker> rbc_particle_filter_tracker_;
 
     mutable std::mutex joints_obsrv_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;
