@@ -70,17 +70,29 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
+
+        if(StateDim != 2 || ObsrvDim != 1)
+        {
+            std::cout << "dawg you screwed up dimensions" << std::endl;
+            exit(-1);
+        }
+
         auto model = std::make_shared<Model>(ObsrvDim, StateDim);
 
         auto H = model->create_sensor_matrix();
         auto R = model->create_noise_matrix();
 
-        H.setIdentity();
+        H.setOnes();
         R.setIdentity();
         R *= param_.joint_sigmas[joint_index];
 
         model->sensor_matrix(H);
         model->noise_matrix(R);
+
+
+        PV(H);
+        PV(R);
+//        PV(C);
 
         return model;
     }
