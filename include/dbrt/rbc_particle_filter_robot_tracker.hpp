@@ -77,7 +77,14 @@ public:
     State on_initialize(const std::vector<State>& initial_states,
                         const Eigen::VectorXd& obsrv);
 
+    /**
+     * \brief Returns camera data
+     */
+    const std::shared_ptr<dbot::CameraData>& camera_data() const;
+
 private:
+    std::shared_ptr<dbot::ObjectModel> object_model_;
+    std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<Filter> filter_;
     int evaluation_count_;
     int block_count_;

@@ -40,7 +40,7 @@
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 #include <dbrt/util/urdf_object_loader.hpp>
-#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
 
 int main(int argc, char** argv)
 {
@@ -111,100 +111,13 @@ int main(int argc, char** argv)
     typedef dbrt::RobotState<> State;
 
     typedef dbrt::RbcParticleFilterRobotTracker Tracker;
-    typedef dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker> TrackerBuilder;
-    typedef TrackerBuilder::StateTransitionBuilder StateTransitionBuilder;
-    typedef TrackerBuilder::ObservationModelBuilder ObservationModelBuilder;
 
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
 
-    /* ------------------------------ */
-    /* - State transition function  - */
-    /* ------------------------------ */
-    // We will use a linear observation model built by the object transition
-    // model builder. The linear model will generate a random walk.
-    dbrt::RobotJointTransitionModelBuilder<State>::Parameters params_state;
+    auto tracker = dbrt::create_rbc_particle_filter_robot_tracker(
+        pre, urdf_kinematics, object_model, camera_data);
 
-    // linear state transition parameters
-    nh.getParam(pre + "joint_transition/joint_sigmas", params_state.joint_sigmas);
-    params_state.joint_count = urdf_kinematics->num_joints();
-
-    auto state_trans_builder = std::shared_ptr<StateTransitionBuilder>(
-        new dbrt::RobotJointTransitionModelBuilder<State>(params_state));
-
-    /* ------------------------------ */
-    /* - Observation model          - */
-    /* ------------------------------ */
-    dbot::RbObservationModelBuilder<State>::Parameters params_obsrv;
-    nh.getParam(pre + "use_gpu", params_obsrv.use_gpu);
-
-    if (params_obsrv.use_gpu)
-    {
-        nh.getParam(pre + "gpu/sample_count", params_obsrv.sample_count);
-    }
-    else
-    {
-        nh.getParam(pre + "cpu/sample_count", params_obsrv.sample_count);
-    }
-
-    nh.getParam(pre + "observation/occlusion/p_occluded_visible",
-                params_obsrv.occlusion.p_occluded_visible);
-    nh.getParam(pre + "observation/occlusion/p_occluded_occluded",
-                params_obsrv.occlusion.p_occluded_occluded);
-    nh.getParam(pre + "observation/occlusion/initial_occlusion_prob",
-                params_obsrv.occlusion.initial_occlusion_prob);
-
-    nh.getParam(pre + "observation/kinect/tail_weight",
-                params_obsrv.kinect.tail_weight);
-    nh.getParam(pre + "observation/kinect/model_sigma",
-                params_obsrv.kinect.model_sigma);
-    nh.getParam(pre + "observation/kinect/sigma_factor",
-                params_obsrv.kinect.sigma_factor);
-    params_obsrv.delta_time = 1. / 6.;
-
-    // gpu only parameters
-    nh.getParam(pre + "gpu/use_custom_shaders",
-                params_obsrv.use_custom_shaders);
-    nh.getParam(pre + "gpu/vertex_shader_file",
-                params_obsrv.vertex_shader_file);
-    nh.getParam(pre + "gpu/fragment_shader_file",
-                params_obsrv.fragment_shader_file);
-    nh.getParam(pre + "gpu/geometry_shader_file",
-                params_obsrv.geometry_shader_file);
-
-    auto obsrv_model_builder = std::shared_ptr<ObservationModelBuilder>(
-        new dbot::RbObservationModelBuilder<State>(
-            object_model, camera_data, params_obsrv));
-
-    /* ------------------------------ */
-    /* - Create Filter & Tracker    - */
-    /* ------------------------------ */
-    TrackerBuilder::Parameters params_tracker;
-    params_tracker.evaluation_count = params_obsrv.sample_count;
-    nh.getParam(pre + "moving_average_update_rate",
-                params_tracker.moving_average_update_rate);
-    nh.getParam(pre + "max_kl_divergence", params_tracker.max_kl_divergence);
-    ri::ReadParameter(
-        pre + "sampling_blocks", params_tracker.sampling_blocks, nh);
-
-    auto tracker_builder =
-        dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
-                                                            state_trans_builder,
-                                                            obsrv_model_builder,
-                                                            object_model,
-                                                            camera_data,
-                                                            params_tracker);
-
-    auto tracker = tracker_builder.build();
-
-    /* ------------------------------ */
-    /* - Tracker publisher          - */
-    /* ------------------------------ */
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
-        new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics,
-            obsrv_model_builder->create_renderer(),
-            "/estimated"));
 
     auto data_camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
         new dbot::DataSetCameraDataProvider(data_set, 1));
@@ -220,6 +133,15 @@ int main(int argc, char** argv)
                                     data_camera_data->camera_matrix(),
                                     data_camera_data->resolution().height,
                                     data_camera_data->resolution().width));
+
+    /* ------------------------------ */
+    /* - Tracker publisher          - */
+    /* ------------------------------ */
+    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+        new dbrt::RobotTrackerPublisher<State>(
+            urdf_kinematics,
+            data_renderer,
+            "/estimated"));
 
     auto data_tracker_publisher =
         std::make_shared<dbrt::RobotTrackerPublisher<State>>(

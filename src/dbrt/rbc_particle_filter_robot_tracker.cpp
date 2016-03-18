@@ -29,7 +29,8 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     int evaluation_count,
     int block_count)
-    : RobotTracker(object_model, camera_data),
+    : object_model_(object_model),
+      camera_data_(camera_data),
       filter_(filter),
       evaluation_count_(evaluation_count),
       block_count_(block_count)
@@ -59,4 +60,9 @@ auto RbcParticleFilterRobotTracker::on_track(const Obsrv& image) -> State
     return mean;
 }
 
+const std::shared_ptr<dbot::CameraData>&
+RbcParticleFilterRobotTracker::camera_data() const
+{
+    return camera_data_;
+}
 }

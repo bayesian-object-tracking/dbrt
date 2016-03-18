@@ -60,15 +60,13 @@ public:
      *
      * \param filter
      *     Rbc particle filter instance
-     * \param object_model
-     *     Object model instance
-     * \param camera_data
-     *     Camera data container
-     * \param update_rate
-     *     Moving average update rate
      */
-    RobotTracker(const std::shared_ptr<dbot::ObjectModel>& object_model,
-                 const std::shared_ptr<dbot::CameraData>& camera_data);
+    RobotTracker() { }
+
+    /**
+     * \brief Overridable default destructor
+     */
+    virtual ~RobotTracker() { }
 
     /**
      * \brief Hook function which is called during tracking
@@ -80,9 +78,8 @@ public:
      * \brief Hook function which is called during initialization
      * \return Initial belief state
      */
-    virtual State on_initialize(
-        const std::vector<State>& initial_states,
-        const Eigen::VectorXd& obsrv) = 0;
+    virtual State on_initialize(const std::vector<State>& initial_states,
+                                const Eigen::VectorXd& obsrv) = 0;
 
     /**
      * \brief perform a single filter step
@@ -90,7 +87,7 @@ public:
      * \param image
      *     Current observation image
      */
-    State track(const Obsrv& image);
+    virtual State track(const Obsrv& obsrv);
 
     /**
      * \brief Initializes the particle filter with the given initial states and
@@ -101,10 +98,6 @@ public:
     void initialize(const std::vector<State>& initial_states,
                     const Eigen::VectorXd& obsrv);
 
-    /**
-     * \brief Returns camera data
-     */
-    const std::shared_ptr<dbot::CameraData> &camera_data() const;
 
     /**
      * \brief Shorthand for a zero input vector
@@ -112,8 +105,6 @@ public:
     Input zero_input() const;
 
 protected:
-    std::shared_ptr<dbot::ObjectModel> object_model_;
-    std::shared_ptr<dbot::CameraData> camera_data_;
     std::mutex mutex_;
 };
 }

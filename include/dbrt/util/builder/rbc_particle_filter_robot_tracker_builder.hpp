@@ -27,23 +27,11 @@
 
 #include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 #include <dbrt/util/kinematics_from_urdf.hpp>
-#include <dbrt/util/builder/robot_joint_transition_model_builder.hpp>
+#include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
+#include <dbrt/util/builder/invalid_number_of_sampling_blocks_exception.hpp>
 
 namespace dbrt
 {
-/**
- * \brief Represents an exception thrown if the number of indices in the
- * sampling block does not match the state dimension.
- */
-class InvalidNumberOfSamplingBlocksException : public std::exception
-{
-public:
-    const char* what() const noexcept
-    {
-        return "The number of indices in the sampling blocks does not match the "
-               "number of joints (joint state dimension) of the robot.";
-    }
-};
 
 template <typename Tracker>
 class RbcParticleFilterRobotTrackerBuilder
@@ -54,7 +42,7 @@ public:
     typedef typename Tracker::Input Input;
 
     /* == Model Builder Interfaces ========================================== */
-    typedef dbot::StateTransitionFunctionBuilder<State, Noise, Input>
+    typedef dbrt::RobotStateTransitionModelBuilder<Tracker>
         StateTransitionBuilder;
     typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
 

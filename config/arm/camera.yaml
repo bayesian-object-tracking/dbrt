@@ -1,0 +1,9 @@
+depth_image_topic: /XTION/depth/image
+camera_info_topic: /XTION/depth/camera_info
+camera_frame_id: XTION
+
+resolution:
+  width: 640
+  height: 480
+
+downsampling_factor: 8 

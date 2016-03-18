@@ -4,7 +4,7 @@ project(dbrt)
 ############################
 # Options                  #
 ############################
-option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" OFF)
+option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" ON)
 
 if(DBOT_BUILD_GPU)
   add_definitions(-DDBOT_BUILD_GPU=1)
@@ -115,8 +115,12 @@ set(sources
     src/${PROJECT_NAME}/robot_tracker_node.cpp
     src/${PROJECT_NAME}/robot_tracker_publisher.cpp
     src/${PROJECT_NAME}/robot_tracker.cpp
+#    src/${PROJECT_NAME}/fusion_tracker_node.cpp
+    src/${PROJECT_NAME}/fusion_robot_tracker.cpp
     src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker.cpp
+    src/${PROJECT_NAME}/gaussian_joint_filter_robot_tracker.cpp
     src/${PROJECT_NAME}/util/builder/rbc_particle_filter_robot_tracker_builder.cpp
+    src/${PROJECT_NAME}/util/builder/ros_rbc_particle_filter_robot_tracker_factory.cpp
     src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
     src/${PROJECT_NAME}/util/urdf_object_loader.cpp
     src/${PROJECT_NAME}/util/image_visualizer.cpp
@@ -144,7 +148,6 @@ target_link_libraries(rbc_particle_filter_robot_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-
 add_executable(rbc_particle_filter_robot_tracker_offline
      src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_offline_node.cpp)
 target_link_libraries(rbc_particle_filter_robot_tracker_offline
@@ -157,6 +160,15 @@ target_link_libraries(rbc_particle_filter_robot_tracker_offline
 add_executable(rbc_particle_filter_robot_tracker_simulation
      src/${PROJECT_NAME}/rbc_particle_filter_robot_tracker_simulation_node.cpp)
 target_link_libraries(rbc_particle_filter_robot_tracker_simulation
+     ${PROJECT_NAME}
+     ${catkin_LIBRARIES}
+     ${OpenCV_LIBS}
+     ${PCL_LIBRARIES}
+     yaml-cpp)
+
+add_executable(fusion_robot_tracker_simulation
+     src/${PROJECT_NAME}/fusion_robot_tracker_simulation_node.cpp)
+target_link_libraries(fusion_robot_tracker_simulation
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}

@@ -22,116 +22,95 @@
 
 #include <fl/util/profiling.hpp>
 #include <fl/util/meta.hpp>
+#include <fl/model/process/linear_state_transition_model.hpp>
 
 #include <Eigen/Dense>
 
 #include <dbot/tracker/builder/state_transition_function_builder.hpp>
-#include <fl/model/process/linear_state_transition_model.hpp>
+
+#include <dbrt/util/builder/invalid_number_of_joint_sigmas_exception.hpp>
+#include <dbrt/util/builder/joint_index_out_of_bounds_exception.hpp>
 
 namespace dbrt
 {
-
-/**
- * \brief Represents an exception thrown if the number of joint sigmas in the
- * of the joint_transition model does not match the state dimension.
- */
-class InvalidNumberOfJointSigmasException : public std::exception
+template <typename Tracker>
+class RobotJointTransitionModelBuilder
 {
 public:
-    const char* what() const noexcept
+    enum Dimension
     {
-        return "The number of joint sigmas does not match the number of joints "
-               "of the robot!";
-    }
-};
-
-template <typename State>
-struct RobotJointStateTrait
-{
-    enum
-    {
-        NoiseDim = State::SizeAtCompileTime != -1 ? State::SizeAtCompileTime / 2
-                                                  : Eigen::Dynamic,
-        InputDim = Eigen::Dynamic
+        StateDim = Tracker::JointStateDim,
+        NoiseDim = Tracker::JointNoiseDim,
+        InputDim = Tracker::JointInputDim
     };
 
-    typedef Eigen::Matrix<typename State::Scalar, NoiseDim, 1> Noise;
-    typedef Eigen::Matrix<typename State::Scalar, InputDim, 1> Input;
-};
-
-template <typename State>
-class RobotJointTransitionModelBuilder
-    : public dbot::StateTransitionFunctionBuilder<
-          State,
-          typename RobotJointStateTrait<State>::Noise,
-          typename RobotJointStateTrait<State>::Input>
-{
-public:
-    typedef fl::StateTransitionFunction<
-        State,
-        typename RobotJointStateTrait<State>::Noise,
-        typename RobotJointStateTrait<State>::Input> Model;
-    typedef fl::LinearStateTransitionModel<
-        State,
-        typename RobotJointStateTrait<State>::Noise,
-        typename RobotJointStateTrait<State>::Input> DerivedModel;
+    typedef typename Tracker::JointState State;
+    typedef typename Tracker::JointNoise Noise;
+    typedef typename Tracker::JointInput Input;
+    typedef typename Tracker::JointStateModel Model;
 
     struct Parameters
     {
-        double joint_sigma;
+//        double joint_sigma;
         std::vector<double> joint_sigmas;
+        std::vector<double> bias_sigmas;
+        std::vector<double> bias_factors;
         int joint_count;
     };
 
     RobotJointTransitionModelBuilder(const Parameters& param) : param_(param) {}
-    virtual std::shared_ptr<Model> build() const
-    {
-        auto model =
-            std::shared_ptr<DerivedModel>(new DerivedModel(build_model()));
-
-        return std::static_pointer_cast<Model>(model);
-    }
-
-    virtual DerivedModel build_model() const
+    virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())
         {
             throw InvalidNumberOfJointSigmasException();
         }
-
-        int total_state_dim = param_.joint_count;
-        int total_noise_dim = total_state_dim;
-
-        auto model = DerivedModel(total_state_dim, total_noise_dim, 1);
-
-        auto A = model.create_dynamics_matrix();
-        auto B = model.create_noise_matrix();
-        auto C = model.create_input_matrix();
-
-        auto part_A = Eigen::Matrix<fl::Real, 1, 1>();
-        auto part_B = Eigen::Matrix<fl::Real, 1, 1>();
-
-        A.setZero();
-        B.setZero();
-        C.setZero();
-
-        part_A.setIdentity();
-
-        part_B.setIdentity();
-        part_B *= param_.joint_sigma;
-
-        for (int i = 0; i < param_.joint_count; ++i)
+        if (param_.joint_count != param_.bias_sigmas.size())
         {
-            A.block(i, i, 1, 1) = part_A;
-            B(i, i) = param_.joint_sigmas[i];
+            throw InvalidNumberOfJointSigmasException();
+        }
+        if (param_.joint_count != param_.bias_factors.size())
+        {
+            throw InvalidNumberOfJointSigmasException();
         }
 
-        model.dynamics_matrix(A);
-        model.noise_matrix(B);
-        model.input_matrix(C);
+        if (joint_index < 0 || joint_index >= param_.joint_count)
+        {
+            throw JointIndexOutOfBoundsException();
+        }
 
-        PV(model.dynamics_matrix());
-        PV(model.noise_matrix());
+
+        if(StateDim != 2 || NoiseDim != 2 || InputDim != 1)
+        {
+            std::cout << "damn you screwed up dimensions" << std::endl;
+            exit(-1);
+        }
+
+        auto model = std::make_shared<Model>(StateDim, NoiseDim, InputDim);
+
+        auto A = model->create_dynamics_matrix();
+        auto B = model->create_noise_matrix();
+        auto C = model->create_input_matrix();
+
+        A.setIdentity();
+        A(1,1) = param_.bias_factors[joint_index];
+
+        B.setIdentity();
+        B(0,0) = param_.joint_sigmas[joint_index];
+        B(1,1) = param_.bias_sigmas[joint_index];
+
+//        std::cout << "---------------------------------" << std::endl;
+//        std::cout << param_.bias_sigmas[joint_index] << std::endl;
+//        std::cout << "---------------------------------" << std::endl;
+
+        model->dynamics_matrix(A);
+        model->noise_matrix(B);
+        model->input_matrix(C);
+
+
+        PV(A);
+        PV(B);
+        PV(C);
 
         return model;
     }

@@ -75,6 +75,8 @@ public:
         return kinematics_->num_links();
     }
 
+    /// todo: why does this return a pose velocity vector, but not
+    /// set the velocity?
     virtual osr::PoseVelocityVector component(int index) const
     {
         osr::PoseVelocityVector vector;
