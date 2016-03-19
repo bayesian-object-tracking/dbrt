@@ -32,7 +32,7 @@ namespace dbrt
  * \brief Create a particle filter tracking the robot joints based on depth
  *     images measurements
  * \param prefix
- *     parameter prefix, e.g. fusion_robot_tracker
+ *     parameter prefix, e.g. fusion_tracker
  * \param urdf_kinematics
  *     URDF robot kinematics
  */

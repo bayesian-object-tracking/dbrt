@@ -26,7 +26,7 @@
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
 #include <dbrt/util/builder/factorized_transition_builder.hpp>
 #include <dbrt/util/builder/rotary_sensor_builder.hpp>
 

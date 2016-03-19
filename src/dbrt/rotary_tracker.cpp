@@ -16,7 +16,7 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
 
 #include <Eigen/Core>
 

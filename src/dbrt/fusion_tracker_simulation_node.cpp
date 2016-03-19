@@ -11,7 +11,7 @@
  */
 
 /**
- * \file fusion_robot_tracker_simulation_node.hpp
+ * \file fusion_tracker_simulation_node.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -44,9 +44,9 @@
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/fusion_robot_tracker.h>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/fusion_tracker.h>
+#include <dbrt/rotary_tracker.hpp>
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/builder/rotary_tracker_builder.hpp>
 #include <dbrt/util/builder/visual_tracker_factory.h>
@@ -55,7 +55,7 @@
  * \brief Create a gaussian filter tracking the robot joints based on joint
  *     measurements
  * \param prefix
- *     parameter prefix, e.g. fusion_robot_tracker
+ *     parameter prefix, e.g. fusion_tracker
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
@@ -115,7 +115,7 @@ create_joint_robot_tracker(
  */
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "fusion_robot_tracker_simulation");
+    ros::init(argc, argv, "fusion_tracker_simulation");
     ros::NodeHandle nh("~");
 
     // parameter shorthand prefix
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     ROS_INFO("creating trackers ... ");
     auto gaussian_joint_robot_tracker =
         create_joint_robot_tracker(pre, urdf_kinematics);
-    dbrt::FusionTracker fusion_robot_tracker(gaussian_joint_robot_tracker,
+    dbrt::FusionTracker fusion_tracker(gaussian_joint_robot_tracker,
                                                   particle_robot_tracker);
 
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
@@ -214,20 +214,20 @@ int main(int argc, char** argv)
     robot.joint_sensor_callback(
         [&](const State& state)
         {
-            fusion_robot_tracker.joints_obsrv_callback(state);
+            fusion_tracker.joints_obsrv_callback(state);
         });
 
     robot.image_sensor_callback(
         [&](const Eigen::VectorXd& depth_image)
         {
-            fusion_robot_tracker.image_obsrv_callback(depth_image);
+            fusion_tracker.image_obsrv_callback(depth_image);
         });
 
     ROS_INFO("Initializing tracker ... ");
     /* ------------------------------ */
     /* - Initialize from config     - */
     /* ------------------------------ */
-    fusion_robot_tracker.initialize({robot.state()});
+    fusion_tracker.initialize({robot.state()});
 
 
     /* ------------------------------ */
@@ -241,13 +241,13 @@ int main(int argc, char** argv)
     robot.run();
     ROS_INFO("Robot running ... ");
 
-    fusion_robot_tracker.run();
+    fusion_tracker.run();
 
     ros::Rate visualization_rate(24);
     while (ros::ok())
     {
         visualization_rate.sleep();
-        auto current_state = fusion_robot_tracker.current_state();
+        auto current_state = fusion_tracker.current_state();
 
         tracker_publisher->publish(
             current_state, robot.observation(), camera_data);
@@ -257,7 +257,7 @@ int main(int argc, char** argv)
 
     ROS_INFO("Shutting down ...");
 
-    fusion_robot_tracker.shutdown();
+    fusion_tracker.shutdown();
     robot.shutdown();
 
     return 0;

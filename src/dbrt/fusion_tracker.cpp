@@ -11,13 +11,13 @@
  */
 
 /**
- * \file fusion_robot_tracker.cpp
+ * \file fusion_tracker.cpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #include <ros/ros.h>
-#include <dbrt/fusion_robot_tracker.h>
+#include <dbrt/fusion_tracker.h>
 
 namespace dbrt
 {
