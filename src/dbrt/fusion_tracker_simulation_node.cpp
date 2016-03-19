@@ -176,9 +176,11 @@ int main(int argc, char** argv)
     auto rotary_tracker = create_rotary_tracker(pre, urdf_kinematics);
     dbrt::FusionTracker fusion_tracker(rotary_tracker, visual_tracker);
 
+
+    auto urdf_kinematics_for_publisher = std::make_shared<KinematicsFromURDF>();
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, renderer, "/estimated"));
+            urdf_kinematics_for_publisher, renderer, "/estimated"));
 
     /* ------------------------------ */
     /* - Setup Simulation           - */
