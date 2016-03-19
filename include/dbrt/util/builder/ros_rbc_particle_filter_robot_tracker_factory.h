@@ -39,7 +39,7 @@ namespace dbrt
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::VisualTracker>
-create_rbc_particle_filter_robot_tracker(
+create_visual_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::ObjectModel>& object_model,

@@ -37,7 +37,7 @@ namespace dbrt
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::VisualTracker>
-create_rbc_particle_filter_robot_tracker(
+create_visual_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
@@ -51,7 +51,7 @@ create_rbc_particle_filter_robot_tracker(
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::RobotStateTransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::TransitionModelBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -59,7 +59,7 @@ create_rbc_particle_filter_robot_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::RobotStateTransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::TransitionModelBuilder<Tracker>>(
             params_state);
 
     /* ------------------------------ */

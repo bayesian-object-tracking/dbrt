@@ -48,7 +48,7 @@ struct RobotJointStateTrait
 };
 
 template <typename Tracker>
-class RobotStateTransitionModelBuilder
+class TransitionModelBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -64,7 +64,7 @@ public:
         int joint_count;
     };
 
-    RobotStateTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    TransitionModelBuilder(const Parameters& param) : param_(param) {}
 
     virtual std::shared_ptr<Model> build() const
     {

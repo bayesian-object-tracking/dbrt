@@ -35,7 +35,7 @@ namespace dbrt
 {
 
 template <typename Tracker>
-class RobotJointObservationModelBuilder
+class RotaryObsrvModelBuilder
 {
 public:
     enum Dimension
@@ -54,7 +54,7 @@ public:
         int joint_count;
     };
 
-    RobotJointObservationModelBuilder(const Parameters& param) : param_(param)
+    RotaryObsrvModelBuilder(const Parameters& param) : param_(param)
     {
     }
 

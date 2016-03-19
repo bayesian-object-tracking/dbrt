@@ -42,7 +42,7 @@ public:
     typedef typename Tracker::Input Input;
 
     /* == Model Builder Interfaces ========================================== */
-    typedef dbrt::RobotStateTransitionModelBuilder<Tracker>
+    typedef dbrt::TransitionModelBuilder<Tracker>
         StateTransitionBuilder;
     typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
 

@@ -34,7 +34,7 @@
 namespace dbrt
 {
 template <typename Tracker>
-class RobotJointTransitionModelBuilder
+class FactorizedTransitionModelBuilder
 {
 public:
     enum Dimension
@@ -58,7 +58,7 @@ public:
         int joint_count;
     };
 
-    RobotJointTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    FactorizedTransitionModelBuilder(const Parameters& param) : param_(param) {}
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())

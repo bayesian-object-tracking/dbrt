@@ -44,9 +44,9 @@ public:
 public:
     RotaryTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<RobotJointTransitionModelBuilder<Tracker>>&
+        const std::shared_ptr<FactorizedTransitionModelBuilder<Tracker>>&
             state_transition_builder,
-        const std::shared_ptr<RobotJointObservationModelBuilder<Tracker>>&
+        const std::shared_ptr<RotaryObsrvModelBuilder<Tracker>>&
             obsrv_model_builder)
         : state_transition_builder_(state_transition_builder),
           obsrv_model_builder_(obsrv_model_builder),
@@ -84,9 +84,9 @@ public:
     }
 
 protected:
-    std::shared_ptr<RobotJointTransitionModelBuilder<Tracker>>
+    std::shared_ptr<FactorizedTransitionModelBuilder<Tracker>>
         state_transition_builder_;
-    std::shared_ptr<RobotJointObservationModelBuilder<Tracker>>
+    std::shared_ptr<RotaryObsrvModelBuilder<Tracker>>
         obsrv_model_builder_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
 };

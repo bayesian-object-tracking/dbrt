@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
 
-    auto tracker = dbrt::create_rbc_particle_filter_robot_tracker(
+    auto tracker = dbrt::create_visual_tracker(
         pre, urdf_kinematics, object_model, camera_data);
 
 

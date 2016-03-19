@@ -71,7 +71,7 @@ create_joint_robot_tracker(
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::RobotJointTransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::FactorizedTransitionModelBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -83,13 +83,13 @@ create_joint_robot_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::RobotJointTransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::FactorizedTransitionModelBuilder<Tracker>>(
             (params_state));
 
     /* ------------------------------ */
     /* - Observation model          - */
     /* ------------------------------ */
-    dbrt::RobotJointObservationModelBuilder<Tracker>::Parameters
+    dbrt::RotaryObsrvModelBuilder<Tracker>::Parameters
         params_joint_obsrv;
 
     nh.getParam(prefix + "joint_observation/joint_sigmas",
@@ -97,7 +97,7 @@ create_joint_robot_tracker(
     params_joint_obsrv.joint_count = urdf_kinematics->num_joints();
 
     auto joint_obsrv_model_builder =
-        std::make_shared<dbrt::RobotJointObservationModelBuilder<Tracker>>(
+        std::make_shared<dbrt::RotaryObsrvModelBuilder<Tracker>>(
             params_joint_obsrv);
 
     /* ------------------------------ */
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
 
     auto particle_robot_tracker =
-        dbrt::create_rbc_particle_filter_robot_tracker(
+        dbrt::create_visual_tracker(
             pre, urdf_kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
