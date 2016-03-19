@@ -104,7 +104,7 @@ create_rotary_tracker(
     /* ------------------------------ */
     auto tracker_builder =
         dbrt::RotaryTrackerBuilder<Tracker>(
-            urdf_kinematics, transition_builder, rotary_sensor_builder);
+            urdf_kinematics->num_joints(), transition_builder, rotary_sensor_builder);
 
     return tracker_builder.build();
 }
