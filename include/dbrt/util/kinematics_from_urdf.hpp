@@ -58,104 +58,107 @@
 class KinematicsFromURDF
 {
 public:
-  
-  KinematicsFromURDF();
-  ~KinematicsFromURDF();
-  
-  // outputs a list of mesh model objects
-  void GetPartMeshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes);
 
-  // Initialises the KDL data and specifically the camera pose
-  void InitKDLData(const Eigen::VectorXd& joint_state);
+    KinematicsFromURDF();
+    ~KinematicsFromURDF();
 
-  // Get the position of the robot link with index idx
-  Eigen::VectorXd GetLinkPosition( int idx);
+    // outputs a list of mesh model objects
+    void GetPartMeshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes);
 
-  // Get the orientation of the robot link with index idx
-  Eigen::Quaternion<double> GetLinkOrientation( int idx);
-  
-  // Get initial samples around input joint state
-  std::vector<Eigen::VectorXd> GetInitialSamples(const sensor_msgs::JointState &state,
-						 int initial_sample_count,
-						 float ratio_std = 0.1);
+    // Initialises the KDL data and specifically the camera pose
+    void InitKDLData(const Eigen::VectorXd& joint_state);
 
-  // Convert Joint message to Eigen vector
-  std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &state);
+    // Get the position of the robot link with index idx
+    Eigen::VectorXd GetLinkPosition( int idx);
 
-  // Get dependencies
-  void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
-  
-  // return the KDL kinematic tree
-  KDL::Tree GetTree();
-
-  // Get the number of joints
-  int num_joints();
-
-  int num_links();
+    // Get the orientation of the robot link with index idx
+    Eigen::Quaternion<double> GetLinkOrientation( int idx);
 
 
-  std::string GetLinkName(int idx);
+    /// \todo: this function should not be in this class
+    // Get initial samples around input joint state
+    std::vector<Eigen::VectorXd> GetInitialSamples(const sensor_msgs::JointState &state,
+                                                   int initial_sample_count,
+                                                   float ratio_std = 0.1);
 
-  std::vector<std::string> GetJointMap();
+    /// \todo this function shoudl not be in this class
+    // Convert Joint message to Eigen vector
+    std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &state);
 
-  std::string GetRootFrameID();
+    // Get dependencies
+    void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
+
+    // return the KDL kinematic tree
+    KDL::Tree GetTree();
+
+    // Get the number of joints
+    int num_joints();
+
+    int num_links();
 
 
-  // compute the transformations for all the links in one go
-  void ComputeLinkTransforms();
+    std::string GetLinkName(int idx);
+
+    std::vector<std::string> GetJointMap();
+
+    std::string GetRootFrameID();
+
+
+    // compute the transformations for all the links in one go
+    void ComputeLinkTransforms();
 
 private:
-  
-  // compute the camera frame for the current joint angles
-  void SetCameraTransform();
+
+    // compute the camera frame for the current joint angles
+    void SetCameraTransform();
 
     
-  // get the joint index in state array 
-  int GetJointIndex(const std::string &name);
-  
-  // get a random pertubation of a joint within its limits
-  double GetRandomPertubation(int jnt_index, double jnt_angle, double ratio);
+    // get the joint index in state array
+    int GetJointIndex(const std::string &name);
 
-  ros::NodeHandle nh_;
-  ros::NodeHandle nh_priv_;
-  //std::string tf_correction_root_;
-  std::string description_path_;
+    // get a random pertubation of a joint within its limits
+    double GetRandomPertubation(int jnt_index, double jnt_angle, double ratio);
 
-  // model as constructed form the robot urdf description
-  urdf::Model urdf_;
-  // KDL kinematic tree
-  KDL::Tree kin_tree_;
+    ros::NodeHandle nh_;
+    ros::NodeHandle nh_priv_;
+    //std::string tf_correction_root_;
+    std::string description_path_;
 
-  // maps joint indices to joint names and joint limits
-  std::vector<std::string> joint_map_;
-  std::vector<float> lower_limit_;
-  std::vector<float> upper_limit_;
+    // model as constructed form the robot urdf description
+    urdf::Model urdf_;
+    // KDL kinematic tree
+    KDL::Tree kin_tree_;
 
-  // maps mesh indices to link names
-  std::vector<std::string> part_mesh_map_;
-  // maps link names to KDL frames
-  std::map<std::string, KDL::Frame> frame_map_;
+    // maps joint indices to joint names and joint limits
+    std::vector<std::string> joint_map_;
+    std::vector<float> lower_limit_;
+    std::vector<float> upper_limit_;
 
-  // KDL segment map connecting link segments to joints
-  KDL::SegmentMap segment_map_;
-  // Forward kinematics solver
-  KDL::TreeFkSolverPos_recursive *tree_solver_;
+    // maps mesh indices to link names
+    std::vector<std::string> part_mesh_map_;
+    // maps link names to KDL frames
+    std::map<std::string, KDL::Frame> frame_map_;
 
-  // KDL copy of the joint state
-  KDL::JntArray jnt_array_;
-  // Contains Camera pose relative to base
-  KDL::Frame    cam_frame_;
-  std::string   cam_frame_name_;
+    // KDL segment map connecting link segments to joints
+    KDL::SegmentMap segment_map_;
+    // Forward kinematics solver
+    KDL::TreeFkSolverPos_recursive *tree_solver_;
 
-  // random generator for joint angle sampling
-  boost::mt19937 generator_;
+    // KDL copy of the joint state
+    KDL::JntArray jnt_array_;
+    // Contains Camera pose relative to base
+    KDL::Frame    cam_frame_;
+    std::string   cam_frame_name_;
 
-  // rendering roots for left and right arm to exclude occluding head meshes
-  std::string rendering_root_left_, rendering_root_right_;
-  
-  // whether to render only collision model or full mesh model
-  bool collision_;
-  
+    // random generator for joint angle sampling
+    boost::mt19937 generator_;
+
+    // rendering roots for left and right arm to exclude occluding head meshes
+    std::string rendering_root_left_, rendering_root_right_;
+
+    // whether to render only collision model or full mesh model
+    bool collision_;
+
 };
 
 #endif
