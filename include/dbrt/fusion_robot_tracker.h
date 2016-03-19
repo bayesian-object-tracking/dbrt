@@ -31,7 +31,7 @@
 #include <fl/model/process/interface/state_transition_function.hpp>
 #include <dbrt/robot_tracker.hpp>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {

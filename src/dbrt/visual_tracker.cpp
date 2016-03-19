@@ -11,7 +11,7 @@
  */
 
 /**
- * \file rbc_particle_filter_robot_tracker.cpp
+ * \file visual_tracker.cpp
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -19,7 +19,7 @@
 
 #include <dbot/util/rigid_body_renderer.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {

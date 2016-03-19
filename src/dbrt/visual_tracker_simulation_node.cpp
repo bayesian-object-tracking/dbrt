@@ -11,7 +11,7 @@
  */
 
 /**
- * \file rbc_particle_filter_robot_tracker_node.hpp
+ * \file visual_tracker_node.hpp
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -22,27 +22,32 @@
 #include <cv.h>
 #include <cv_bridge/cv_bridge.h>
 
+#include <ros/ros.h>
+#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Image.h>
+
+#include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot/util/virtual_camera_data_provider.hpp>
+#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_publisher.h>
 #include <dbot_ros/utils/ros_interface.hpp>
-#include <dbot_ros/utils/ros_camera_data_provider.hpp>
-
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbot_ros/utils/tracking_dataset.h>
+#include <dbot_ros/utils/data_set_camera_data_provider.hpp>
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbot/util/rigid_body_renderer.hpp>
 #include <dbrt/robot_tracker_publisher.h>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
+#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/util/virtual_robot.h>
 
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
-
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "rbc_particle_filter_robot_tracker");
+    ros::init(argc, argv, "visual_tracker_simulation");
     ros::NodeHandle nh("~");
 
     /* ---------------------------------------------------------------------- */
@@ -75,7 +80,6 @@ int main(int argc, char** argv)
     auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
         new dbrt::UrdfObjectModelLoader(urdf_kinematics));
 
-    // Load the model usign the URDF loader
     auto object_model =
         std::make_shared<dbot::ObjectModel>(object_model_loader, false);
 
@@ -83,24 +87,11 @@ int main(int argc, char** argv)
     /* - Setup camera data          - */
     /* ------------------------------ */
     int downsampling_factor;
-    std::string camera_info_topic;
-    std::string depth_image_topic;
-    dbot::CameraData::Resolution resolution;
-    nh.getParam("camera_info_topic", camera_info_topic);
-    nh.getParam("depth_image_topic", depth_image_topic);
     nh.getParam("downsampling_factor", downsampling_factor);
-    nh.getParam("resolution/width", resolution.width);
-    nh.getParam("resolution/height", resolution.height);
 
     auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
-        new dbot::RosCameraDataProvider(nh,
-                                        camera_info_topic,
-                                        depth_image_topic,
-                                        resolution,
-                                        downsampling_factor,
-                                        2.0));
-    // Create camera data from the RosCameraDataProvider which takes the data
-    // from a ros camera topic
+        new dbot::VirtualCameraDataProvider(downsampling_factor, "/XTION"));
+
     auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
 
     /* ------------------------------ */
@@ -120,7 +111,6 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
-
     std::shared_ptr<dbot::RigidBodyRenderer> renderer(
         new dbot::RigidBodyRenderer(object_model->vertices(),
                                     object_model->triangle_indices(),
@@ -130,9 +120,7 @@ int main(int argc, char** argv)
 
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics,
-            renderer,
-            "/estimated"));
+            urdf_kinematics, renderer, "/estimated"));
 
     /* ------------------------------ */
     /* - Create tracker node        - */
@@ -140,37 +128,52 @@ int main(int argc, char** argv)
     dbot::TrackerNode<Tracker> tracker_node(tracker, tracker_publisher);
 
     /* ------------------------------ */
-    /* - Initialize using joint msg - */
+    /* - Simulation                 - */
     /* ------------------------------ */
-    sensor_msgs::JointState::ConstPtr joint_state;
+    auto simulation_camera_data_provider =
+        std::shared_ptr<dbot::CameraDataProvider>(
+            new dbot::VirtualCameraDataProvider(1, "/XTION"));
+    auto simulation_camera_data =
+        std::make_shared<dbot::CameraData>(simulation_camera_data_provider);
 
-    while (!joint_state)
-    {
-        joint_state = ros::topic::waitForMessage<sensor_msgs::JointState>(
-            "/joint_states", nh, ros::Duration(1.));
-        ROS_INFO("Waiting for initial joint state");
-    }
+    std::shared_ptr<dbot::RigidBodyRenderer> simulation_renderer(
+        new dbot::RigidBodyRenderer(
+            object_model->vertices(),
+            object_model->triangle_indices(),
+            simulation_camera_data->camera_matrix(),
+            simulation_camera_data->resolution().height,
+            simulation_camera_data->resolution().width));
 
-    std::vector<Eigen::VectorXd> initial_states_vectors =
-        urdf_kinematics->GetInitialJoints(*joint_state);
-    std::vector<State> initial_states;
-    for (auto state : initial_states_vectors)
-    {
-        initial_states.push_back(state);
-    }
-    tracker->initialize(initial_states);
+
+    std::vector<double> joints;
+    nh.getParam("simulation/initial_state", joints);
+
+    State state;
+    state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
+
+    dbrt::VirtualRobot<State> robot(object_model,
+                                    urdf_kinematics,
+                                    simulation_renderer,
+                                    simulation_camera_data,
+                                    3,
+                                    3,
+                                    state);
+
+    /* ------------------------------ */
+    /* - Initialize                 - */
+    /* ------------------------------ */
+    tracker->initialize({robot.state()});
+    robot.run();
 
     /* ------------------------------ */
     /* - Create and run tracker     - */
     /* - node                       - */
     /* ------------------------------ */
-    ros::Subscriber subscriber =
-        nh.subscribe(depth_image_topic,
-                     1,
-                     &dbot::TrackerNode<Tracker>::tracking_callback,
-                     &tracker_node);
-
-    ros::spin();
+    while (ros::ok())
+    {
+        tracker_node.tracking_callback(robot.observation());
+        ros::spinOnce();
+    }
 
     return 0;
 }

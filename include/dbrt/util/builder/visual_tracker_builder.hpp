@@ -25,9 +25,9 @@
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/kinematics_from_urdf.hpp>
-#include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
+#include <dbrt/util/builder/transition_builder.hpp>
 #include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
@@ -42,7 +42,7 @@ public:
     typedef typename Tracker::Input Input;
 
     /* == Model Builder Interfaces ========================================== */
-    typedef dbrt::TransitionModelBuilder<Tracker>
+    typedef dbrt::TransitionBuilder<Tracker>
         StateTransitionBuilder;
     typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
 

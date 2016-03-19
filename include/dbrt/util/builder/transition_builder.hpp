@@ -11,7 +11,7 @@
  */
 
 /**
- * \file robot_state_transition_model_builder.hpp
+ * \file transition_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -48,7 +48,7 @@ struct RobotJointStateTrait
 };
 
 template <typename Tracker>
-class TransitionModelBuilder
+class TransitionBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -64,7 +64,7 @@ public:
         int joint_count;
     };
 
-    TransitionModelBuilder(const Parameters& param) : param_(param) {}
+    TransitionBuilder(const Parameters& param) : param_(param) {}
 
     virtual std::shared_ptr<Model> build() const
     {

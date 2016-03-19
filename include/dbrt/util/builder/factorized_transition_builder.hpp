@@ -11,7 +11,7 @@
  */
 
 /**
- * \file robot_joint_transition_model_builder.hpp
+ * \file factorized_transition_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -34,7 +34,7 @@
 namespace dbrt
 {
 template <typename Tracker>
-class FactorizedTransitionModelBuilder
+class FactorizedTransitionBuilder
 {
 public:
     enum Dimension
@@ -58,7 +58,7 @@ public:
         int joint_count;
     };
 
-    FactorizedTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    FactorizedTransitionBuilder(const Parameters& param) : param_(param) {}
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())

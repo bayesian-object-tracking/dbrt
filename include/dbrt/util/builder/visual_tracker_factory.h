@@ -26,7 +26,7 @@
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {

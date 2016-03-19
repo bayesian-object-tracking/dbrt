@@ -17,12 +17,12 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 #include <dbot_ros/utils/ros_interface.hpp>
 #include <dbot/tracker/builder/rb_observation_model_builder.h>
 
-#include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
+#include <dbrt/util/builder/transition_builder.hpp>
 #include <dbrt/util/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
@@ -51,7 +51,7 @@ create_visual_tracker(
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::TransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::TransitionBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -59,7 +59,7 @@ create_visual_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::TransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::TransitionBuilder<Tracker>>(
             params_state);
 
     /* ------------------------------ */

@@ -47,9 +47,9 @@
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 #include <dbrt/fusion_robot_tracker.h>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/builder/rotary_tracker_builder.hpp>
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 /**
  * \brief Create a gaussian filter tracking the robot joints based on joint
@@ -71,7 +71,7 @@ create_joint_robot_tracker(
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::FactorizedTransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -83,13 +83,13 @@ create_joint_robot_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::FactorizedTransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::FactorizedTransitionBuilder<Tracker>>(
             (params_state));
 
     /* ------------------------------ */
     /* - Observation model          - */
     /* ------------------------------ */
-    dbrt::RotaryObsrvModelBuilder<Tracker>::Parameters
+    dbrt::RotarySensorBuilder<Tracker>::Parameters
         params_joint_obsrv;
 
     nh.getParam(prefix + "joint_observation/joint_sigmas",
@@ -97,7 +97,7 @@ create_joint_robot_tracker(
     params_joint_obsrv.joint_count = urdf_kinematics->num_joints();
 
     auto joint_obsrv_model_builder =
-        std::make_shared<dbrt::RotaryObsrvModelBuilder<Tracker>>(
+        std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(
             params_joint_obsrv);
 
     /* ------------------------------ */

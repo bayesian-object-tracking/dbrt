@@ -27,8 +27,8 @@
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/util/builder/robot_joint_transition_model_builder.hpp>
-#include <dbrt/util/builder/robot_joint_observation_model_builder.hpp>
+#include <dbrt/util/builder/factorized_transition_builder.hpp>
+#include <dbrt/util/builder/rotary_sensor_builder.hpp>
 
 namespace dbrt
 {
@@ -44,9 +44,9 @@ public:
 public:
     RotaryTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<FactorizedTransitionModelBuilder<Tracker>>&
+        const std::shared_ptr<FactorizedTransitionBuilder<Tracker>>&
             state_transition_builder,
-        const std::shared_ptr<RotaryObsrvModelBuilder<Tracker>>&
+        const std::shared_ptr<RotarySensorBuilder<Tracker>>&
             obsrv_model_builder)
         : state_transition_builder_(state_transition_builder),
           obsrv_model_builder_(obsrv_model_builder),
@@ -84,9 +84,9 @@ public:
     }
 
 protected:
-    std::shared_ptr<FactorizedTransitionModelBuilder<Tracker>>
+    std::shared_ptr<FactorizedTransitionBuilder<Tracker>>
         state_transition_builder_;
-    std::shared_ptr<RotaryObsrvModelBuilder<Tracker>>
+    std::shared_ptr<RotarySensorBuilder<Tracker>>
         obsrv_model_builder_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
 };
