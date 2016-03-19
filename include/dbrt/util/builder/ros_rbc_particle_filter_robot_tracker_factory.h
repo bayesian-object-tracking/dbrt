@@ -38,7 +38,7 @@ namespace dbrt
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::RbcParticleFilterRobotTracker>
+std::shared_ptr<dbrt::VisualTracker>
 create_rbc_particle_filter_robot_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,

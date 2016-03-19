@@ -38,21 +38,21 @@ namespace dbrt
 /**
  * \brief RbcParticleFilterRobotTracker
  */
-class FusionRobotTracker
+class FusionTracker
 {
 public:
     // entire state and joint observation space
-    typedef GaussianJointFilterRobotTracker::State State;
-    typedef GaussianJointFilterRobotTracker::Obsrv JointsObsrv;
-    typedef GaussianJointFilterRobotTracker::JointBelief JointBelief;
+    typedef RotaryTracker::State State;
+    typedef RotaryTracker::Obsrv JointsObsrv;
+    typedef RotaryTracker::JointBelief JointBelief;
 
     // single joint observation space
-    typedef GaussianJointFilterRobotTracker::JointObsrv JointObsrv;
+    typedef RotaryTracker::JointObsrv JointObsrv;
 
 public:
-    FusionRobotTracker(const std::shared_ptr<GaussianJointFilterRobotTracker>&
+    FusionTracker(const std::shared_ptr<RotaryTracker>&
                            gaussian_joint_tracker,
-                       const std::shared_ptr<RbcParticleFilterRobotTracker>&
+                       const std::shared_ptr<VisualTracker>&
                            rbc_particle_filter_tracker);
 
     /**
@@ -100,8 +100,8 @@ private:
     Eigen::VectorXd image_obsrv_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
-    std::shared_ptr<GaussianJointFilterRobotTracker> gaussian_joint_tracker_;
-    std::shared_ptr<RbcParticleFilterRobotTracker> rbc_particle_filter_tracker_;
+    std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
+    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
 
     mutable std::mutex joints_obsrv_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;

@@ -33,7 +33,7 @@
 namespace dbrt
 {
 template <typename Tracker>
-class GaussianJointFilterRobotTrackerBuilder
+class RotaryTrackerBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -42,7 +42,7 @@ public:
     typedef typename Tracker::JointFilter JointFilter;
 
 public:
-    GaussianJointFilterRobotTrackerBuilder(
+    RotaryTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::shared_ptr<RobotJointTransitionModelBuilder<Tracker>>&
             state_transition_builder,

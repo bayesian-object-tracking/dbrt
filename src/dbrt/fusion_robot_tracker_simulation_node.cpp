@@ -59,14 +59,14 @@
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::GaussianJointFilterRobotTracker>
+std::shared_ptr<dbrt::RotaryTracker>
 create_joint_robot_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
 {
     ros::NodeHandle nh("~");
 
-    typedef dbrt::GaussianJointFilterRobotTracker Tracker;
+    typedef dbrt::RotaryTracker Tracker;
 
     /* ------------------------------ */
     /* - State transition function  - */
@@ -104,7 +104,7 @@ create_joint_robot_tracker(
     /* - Build the tracker          - */
     /* ------------------------------ */
     auto tracker_builder =
-        dbrt::GaussianJointFilterRobotTrackerBuilder<Tracker>(
+        dbrt::RotaryTrackerBuilder<Tracker>(
             urdf_kinematics, state_trans_builder, joint_obsrv_model_builder);
 
     return tracker_builder.build();
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     ROS_INFO("creating trackers ... ");
     auto gaussian_joint_robot_tracker =
         create_joint_robot_tracker(pre, urdf_kinematics);
-    dbrt::FusionRobotTracker fusion_robot_tracker(gaussian_joint_robot_tracker,
+    dbrt::FusionTracker fusion_robot_tracker(gaussian_joint_robot_tracker,
                                                   particle_robot_tracker);
 
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(

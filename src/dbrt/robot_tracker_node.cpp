@@ -23,5 +23,5 @@
 
 namespace dbot
 {
-template class TrackerNode<dbrt::RbcParticleFilterRobotTracker>;
+template class TrackerNode<dbrt::VisualTracker>;
 }

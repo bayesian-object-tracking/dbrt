@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     typedef dbrt::RobotState<> State;
 
-    typedef dbrt::RbcParticleFilterRobotTracker Tracker;
+    typedef dbrt::VisualTracker Tracker;
 
     // parameter shorthand prefix
     std::string pre = "particle_filter/";

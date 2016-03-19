@@ -22,10 +22,10 @@
 namespace dbrt
 {
 
-FusionRobotTracker::FusionRobotTracker(
-    const std::shared_ptr<GaussianJointFilterRobotTracker>&
+FusionTracker::FusionTracker(
+    const std::shared_ptr<RotaryTracker>&
         gaussian_joint_tracker,
-    const std::shared_ptr<RbcParticleFilterRobotTracker>&
+    const std::shared_ptr<VisualTracker>&
         rbc_particle_filter_tracker)
     : gaussian_joint_tracker_(gaussian_joint_tracker),
       rbc_particle_filter_tracker_(rbc_particle_filter_tracker),
@@ -33,14 +33,14 @@ FusionRobotTracker::FusionRobotTracker(
 {
 }
 
-void FusionRobotTracker::initialize(const std::vector<State>& initial_states)
+void FusionTracker::initialize(const std::vector<State>& initial_states)
 {
     current_state_ = initial_states[0];
     gaussian_joint_tracker_->initialize(initial_states);
 //    rbc_particle_filter_tracker_->ini
 }
 
-void FusionRobotTracker::run_gaussian_tracker()
+void FusionTracker::run_gaussian_tracker()
 {
     while (running_)
     {
@@ -88,7 +88,7 @@ void FusionRobotTracker::run_gaussian_tracker()
     }
 }
 
-void FusionRobotTracker::run_particle_tracker()
+void FusionTracker::run_particle_tracker()
 {
     while (running_)
     {
@@ -97,27 +97,27 @@ void FusionRobotTracker::run_particle_tracker()
     }
 }
 
-void FusionRobotTracker::run()
+void FusionTracker::run()
 {
     running_ = true;
     gaussian_tracker_thread_ =
-        std::thread(&FusionRobotTracker::run_gaussian_tracker, this);
+        std::thread(&FusionTracker::run_gaussian_tracker, this);
 }
 
-void FusionRobotTracker::shutdown()
+void FusionTracker::shutdown()
 {
     running_ = false;
     gaussian_tracker_thread_.join();
 }
 
-FusionRobotTracker::State FusionRobotTracker::current_state() const
+FusionTracker::State FusionTracker::current_state() const
 {
     std::lock_guard<std::mutex> state_lock(current_state_mutex_);
     return current_state_;
 }
 
-void FusionRobotTracker::joints_obsrv_callback(
-    const FusionRobotTracker::JointsObsrv& joints_obsrv)
+void FusionTracker::joints_obsrv_callback(
+    const FusionTracker::JointsObsrv& joints_obsrv)
 {
     std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
 
@@ -129,15 +129,15 @@ void FusionRobotTracker::joints_obsrv_callback(
     if (joints_obsrvs_buffer_.size() > 10000) joints_obsrvs_buffer_.pop_front();
 }
 
-void FusionRobotTracker::image_obsrv_callback(
+void FusionTracker::image_obsrv_callback(
     const Eigen::VectorXd& image_obsrv)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
     image_obsrv_ = image_obsrv;
 }
 
-auto FusionRobotTracker::update_with_joints(
-    const FusionRobotTracker::JointsObsrv& joints_obsrv) -> State
+auto FusionTracker::update_with_joints(
+    const FusionTracker::JointsObsrv& joints_obsrv) -> State
 {
     return gaussian_joint_tracker_->track(joints_obsrv);
 }

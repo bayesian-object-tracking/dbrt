@@ -32,7 +32,7 @@ namespace dbrt
 /**
  * \brief RbcParticleFilterRobotTracker
  */
-class GaussianJointFilterRobotTracker : public RobotTracker
+class RotaryTracker : public RobotTracker
 {
 public:
     enum Dimension
@@ -68,7 +68,7 @@ public:
 
 
 public:
-    GaussianJointFilterRobotTracker(
+    RotaryTracker(
         const std::shared_ptr<std::vector<JointFilter>>& joint_filters);
 
     /**

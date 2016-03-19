@@ -84,12 +84,12 @@ public:
     /**
      * \brief Builds the Rbc PF tracker
      */
-    std::shared_ptr<RbcParticleFilterRobotTracker> build()
+    std::shared_ptr<VisualTracker> build()
     {
         auto filter =
             create_filter(this->object_model_, this->params_.max_kl_divergence);
 
-        auto tracker = std::make_shared<RbcParticleFilterRobotTracker>(
+        auto tracker = std::make_shared<VisualTracker>(
             filter,
             this->object_model_,
             this->camera_data_,
