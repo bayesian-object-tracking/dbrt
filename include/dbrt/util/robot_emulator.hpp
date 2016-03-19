@@ -34,36 +34,41 @@
 
 namespace dbrt
 {
-template <typename State>
-class VirtualRobot
+class RobotAnimator
 {
 public:
-    typedef std::function<void(const Eigen::VectorXd&)> JointSensorCallback;
-    typedef std::function<void(const sensor_msgs::Image&)> ImageSensorCallback;
+    virtual void animate(const Eigen::VectorXd& current,
+                         double dt,
+                         Eigen::VectorXd& next) = 0;
+};
 
+template <typename State>
+class RobotEmulator
+{
 public:
     /**
      * \brief Creates a VirtualRobot
      */
-    VirtualRobot(const std::shared_ptr<dbot::ObjectModel>& object_model,
-                 const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-                 const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
-                 const std::shared_ptr<dbot::CameraData>& camera_data,
-                 double joint_sensors_rate,
-                 double visual_sensor_rate,
-                 const State& initial_state)
+    RobotEmulator(const std::shared_ptr<dbot::ObjectModel>& object_model,
+                  const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
+                  const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
+                  const std::shared_ptr<dbot::CameraData>& camera_data,
+                  const std::shared_ptr<RobotAnimator>& robot_animator,
+                  double joint_sensors_rate,
+                  double visual_sensor_rate,
+                  const State& initial_state)
         : state_(initial_state),
           object_model_(object_model),
           urdf_kinematics_(urdf_kinematics),
           renderer_(renderer),
           camera_data_(camera_data),
+          robot_animator_(robot_animator),
           joint_sensors_rate_(joint_sensors_rate),
           visual_sensor_rate_(visual_sensor_rate)
     {
-        t = 0.0;
         robot_tracker_publisher_simulated_ =
             std::make_shared<RobotTrackerPublisher<State>>(
-                urdf_kinematics_, renderer_, "/sensors");
+                urdf_kinematics_, renderer_, "/robot_emulator");
 
         render_and_publish();
     }
@@ -72,9 +77,9 @@ public:
     {
         running_ = true;
         joint_sensor_thread_ =
-            std::thread(&VirtualRobot::run_joint_sensors, this);
+            std::thread(&RobotEmulator::run_joint_sensors, this);
         visual_sensor_thread_ =
-            std::thread(&VirtualRobot::run_visual_sensors, this);
+            std::thread(&RobotEmulator::run_visual_sensors, this);
     }
 
     void shutdown()
@@ -92,29 +97,8 @@ public:
         {
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
-
-//            for(int i = 0; i < state_.size(); i++)
-//            {
-//                state_[i] = 0;
-//            }
-
-            /// \todo this simulation is specific to the arm robot
-            for (int i = 6; i < 6 + 7; ++i)
-            {
-                state_[i] += 0.1 / rate * std::sin(t);
-            }
-
-            for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
-            {
-                state_[i] += 0.1 / rate * std::sin(t);
-            }
-
-            t += 1. / rate;
-
-            if (joint_sensor_callback_)
-            {
-                joint_sensor_callback_(state_);
-            }
+            robot_animator_->animate(state_, 1. / rate, state_);
+            robot_tracker_publisher_simulated_->publish_joint_state(state_);
         }
     }
 
@@ -125,11 +109,6 @@ public:
         {
             image_rate.sleep();
             render_and_publish();
-
-            if (image_sensor_callback_)
-            {
-                image_sensor_callback_(obsrv_image_);
-            }
         }
     }
 
@@ -157,16 +136,6 @@ public:
         return obsrv_vector_;
     }
 
-    void joint_sensor_callback(const JointSensorCallback& callback)
-    {
-        joint_sensor_callback_ = callback;
-    }
-
-    void image_sensor_callback(const ImageSensorCallback& callback)
-    {
-        image_sensor_callback_ = callback;
-    }
-
 private:
     void render_and_publish()
     {
@@ -175,8 +144,9 @@ private:
         std::lock_guard<std::mutex> image_lock(image_mutex_);
 
         // render observation image
-        renderer_->Render(
-            current_state, obsrv_vector_, std::numeric_limits<double>::quiet_NaN());
+        renderer_->Render(current_state,
+                          obsrv_vector_,
+                          std::numeric_limits<double>::quiet_NaN());
 
         // convert image vector to ros image message
         robot_tracker_publisher_simulated_->convert_to_depth_image_msg(
@@ -188,7 +158,6 @@ private:
     }
 
 private:
-    double t;
     Eigen::VectorXd state_;
     Eigen::VectorXd obsrv_vector_;
     sensor_msgs::Image obsrv_image_;
@@ -196,6 +165,7 @@ private:
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
     std::shared_ptr<dbot::RigidBodyRenderer> renderer_;
     std::shared_ptr<dbot::CameraData> camera_data_;
+    std::shared_ptr<RobotAnimator> robot_animator_;
     std::shared_ptr<RobotTrackerPublisher<State>>
         robot_tracker_publisher_simulated_;
     double joint_sensors_rate_;
@@ -206,7 +176,5 @@ private:
     mutable std::mutex image_mutex_;
     std::thread joint_sensor_thread_;
     std::thread visual_sensor_thread_;
-    JointSensorCallback joint_sensor_callback_;
-    ImageSensorCallback image_sensor_callback_;
 };
 }
