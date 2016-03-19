@@ -48,7 +48,7 @@
 #include <dbrt/fusion_robot_tracker.h>
 #include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
 #include <dbrt/rbc_particle_filter_robot_tracker.hpp>
-#include <dbrt/util/builder/gaussian_joint_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/rotary_tracker_builder.hpp>
 #include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
 
 /**

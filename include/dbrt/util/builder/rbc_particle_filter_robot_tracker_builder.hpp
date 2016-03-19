@@ -28,7 +28,7 @@
 #include <dbrt/rbc_particle_filter_robot_tracker.hpp>
 #include <dbrt/util/kinematics_from_urdf.hpp>
 #include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
-#include <dbrt/util/builder/invalid_number_of_sampling_blocks_exception.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
