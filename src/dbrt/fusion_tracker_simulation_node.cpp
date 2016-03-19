@@ -60,7 +60,7 @@
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::RotaryTracker>
-create_joint_robot_tracker(
+create_rotary_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
 {
@@ -169,15 +169,12 @@ int main(int argc, char** argv)
     /* - tracker publisher          - */
     /* ------------------------------ */
 
-    auto particle_robot_tracker =
-        dbrt::create_visual_tracker(
+    auto visual_tracker = dbrt::create_visual_tracker(
             pre, urdf_kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
-    auto gaussian_joint_robot_tracker =
-        create_joint_robot_tracker(pre, urdf_kinematics);
-    dbrt::FusionTracker fusion_tracker(gaussian_joint_robot_tracker,
-                                                  particle_robot_tracker);
+    auto rotary_tracker = create_rotary_tracker(pre, urdf_kinematics);
+    dbrt::FusionTracker fusion_tracker(rotary_tracker, visual_tracker);
 
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
