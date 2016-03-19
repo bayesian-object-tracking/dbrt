@@ -104,9 +104,6 @@ public:
         model->noise_matrix(B);
         model->input_matrix(C);
 
-        PV(model->dynamics_matrix());
-        PV(model->noise_matrix());
-
         return model;
     }
 

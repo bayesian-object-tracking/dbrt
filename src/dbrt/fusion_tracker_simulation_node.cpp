@@ -165,14 +165,12 @@ int main(int argc, char** argv)
     /* - Create Tracker and         - */
     /* - tracker publisher          - */
     /* ------------------------------ */
-
-    auto visual_tracker = dbrt::create_visual_tracker(
-            pre, kinematics, object_model, camera_data);
-
     ROS_INFO("creating trackers ... ");
+
+    auto visual_tracker = dbrt::create_visual_tracker(pre, kinematics,
+                                                      object_model, camera_data);
     auto rotary_tracker = create_rotary_tracker(pre, kinematics->num_joints());
     dbrt::FusionTracker fusion_tracker(rotary_tracker, visual_tracker);
-
 
     auto kinematics_for_publisher = std::make_shared<KinematicsFromURDF>();
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(

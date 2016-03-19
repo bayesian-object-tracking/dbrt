@@ -51,80 +51,78 @@ create_visual_tracker(
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::TransitionBuilder<Tracker>::Parameters params_state;
+    dbrt::TransitionBuilder<Tracker>::Parameters transition_parameters;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
-                params_state.joint_sigmas);
-    params_state.joint_count = urdf_kinematics->num_joints();
+                transition_parameters.joint_sigmas);
+    transition_parameters.joint_count = urdf_kinematics->num_joints();
 
-    auto state_trans_builder =
-        std::make_shared<dbrt::TransitionBuilder<Tracker>>(
-            params_state);
+    auto transition_builder =
+      std::make_shared<dbrt::TransitionBuilder<Tracker>>(transition_parameters);
 
     /* ------------------------------ */
     /* - Observation model          - */
     /* ------------------------------ */
-    dbot::RbObservationModelBuilder<State>::Parameters params_obsrv;
-    nh.getParam(prefix + "use_gpu", params_obsrv.use_gpu);
+    dbot::RbObservationModelBuilder<State>::Parameters sensor_parameters;
+    nh.getParam(prefix + "use_gpu", sensor_parameters.use_gpu);
 
-    if (params_obsrv.use_gpu)
+    if (sensor_parameters.use_gpu)
     {
-        nh.getParam(prefix + "gpu/sample_count", params_obsrv.sample_count);
+        nh.getParam(prefix + "gpu/sample_count", sensor_parameters.sample_count);
     }
     else
     {
-        nh.getParam(prefix + "cpu/sample_count", params_obsrv.sample_count);
+        nh.getParam(prefix + "cpu/sample_count", sensor_parameters.sample_count);
     }
 
     nh.getParam(prefix + "observation/occlusion/p_occluded_visible",
-                params_obsrv.occlusion.p_occluded_visible);
+                sensor_parameters.occlusion.p_occluded_visible);
     nh.getParam(prefix + "observation/occlusion/p_occluded_occluded",
-                params_obsrv.occlusion.p_occluded_occluded);
+                sensor_parameters.occlusion.p_occluded_occluded);
     nh.getParam(prefix + "observation/occlusion/initial_occlusion_prob",
-                params_obsrv.occlusion.initial_occlusion_prob);
+                sensor_parameters.occlusion.initial_occlusion_prob);
 
     nh.getParam(prefix + "observation/kinect/tail_weight",
-                params_obsrv.kinect.tail_weight);
+                sensor_parameters.kinect.tail_weight);
     nh.getParam(prefix + "observation/kinect/model_sigma",
-                params_obsrv.kinect.model_sigma);
+                sensor_parameters.kinect.model_sigma);
     nh.getParam(prefix + "observation/kinect/sigma_factor",
-                params_obsrv.kinect.sigma_factor);
-    params_obsrv.delta_time = 1. / 6.;
+                sensor_parameters.kinect.sigma_factor);
+    sensor_parameters.delta_time = 1. / 6.;
 
     // gpu only parameters
     nh.getParam(prefix + "gpu/use_custom_shaders",
-                params_obsrv.use_custom_shaders);
+                sensor_parameters.use_custom_shaders);
     nh.getParam(prefix + "gpu/vertex_shader_file",
-                params_obsrv.vertex_shader_file);
+                sensor_parameters.vertex_shader_file);
     nh.getParam(prefix + "gpu/fragment_shader_file",
-                params_obsrv.fragment_shader_file);
+                sensor_parameters.fragment_shader_file);
     nh.getParam(prefix + "gpu/geometry_shader_file",
-                params_obsrv.geometry_shader_file);
+                sensor_parameters.geometry_shader_file);
 
-    auto obsrv_model_builder =
+    auto sensor_builder =
         std::make_shared<dbot::RbObservationModelBuilder<State>>(
-            object_model, camera_data, params_obsrv);
+            object_model, camera_data, sensor_parameters);
 
     /* ------------------------------ */
     /* - Create Filter & Tracker    - */
     /* ------------------------------ */
-    dbrt::VisualTrackerBuilder<Tracker>::Parameters
-        params_tracker;
-    params_tracker.evaluation_count = params_obsrv.sample_count;
+    dbrt::VisualTrackerBuilder<Tracker>::Parameters tracker_parameters;
+    tracker_parameters.evaluation_count = sensor_parameters.sample_count;
     nh.getParam(prefix + "moving_average_update_rate",
-                params_tracker.moving_average_update_rate);
-    nh.getParam(prefix + "max_kl_divergence", params_tracker.max_kl_divergence);
+                tracker_parameters.moving_average_update_rate);
+    nh.getParam(prefix + "max_kl_divergence", tracker_parameters.max_kl_divergence);
     ri::ReadParameter(
-        prefix + "sampling_blocks", params_tracker.sampling_blocks, nh);
+        prefix + "sampling_blocks", tracker_parameters.sampling_blocks, nh);
 
     auto tracker_builder =
         dbrt::VisualTrackerBuilder<Tracker>(urdf_kinematics,
-                                                            state_trans_builder,
-                                                            obsrv_model_builder,
-                                                            object_model,
-                                                            camera_data,
-                                                            params_tracker);
+                                            transition_builder,
+                                            sensor_builder,
+                                            object_model,
+                                            camera_data,
+                                            tracker_parameters);
 
     return tracker_builder.build();
 }
