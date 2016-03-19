@@ -47,13 +47,16 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     pub_point_cloud_ = std::shared_ptr<ros::Publisher>(new ros::Publisher());
 
     *pub_point_cloud_ = node_handle_.advertise<sensor_msgs::PointCloud2>(
-        tf_prefix + "/XTION/depth/points", 0);
+        "/XTION/depth/points", 0);
+
+    pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
+        "/joint_states", 0);
 
     boost::shared_ptr<image_transport::ImageTransport> it(
         new image_transport::ImageTransport(node_handle_));
 
-    pub_depth_image_ = it->advertise(tf_prefix + "/XTION/depth/image", 0);
-    pub_rgb_image_ = it->advertise(tf_prefix + "/XTION/depth/image_color", 0);
+    pub_depth_image_ = it->advertise("/XTION/depth/image", 0);
+    pub_rgb_image_ = it->advertise("/XTION/depth/image_color", 0);
 
     // get the name of the root frame
     root_ = urdf_kinematics->GetRootFrameID();
@@ -62,7 +65,19 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     robot_state_publisher_ =
         std::make_shared<robot_state_pub::RobotStatePublisher>(
             urdf_kinematics->GetTree());
+
+    // setup basic joint state message
+    auto joint_names = urdf_kinematics->GetJointMap();
+    joint_state_.position.resize(joint_names.size());
+    joint_state_.effort.resize(joint_names.size());
+    joint_state_.velocity.resize(joint_names.size());
+    for (int i = 0; i < joint_names.size(); ++i)
+    {
+        joint_state_.name.push_back(joint_names[i]);
+    }
 }
+
+
 
 template <typename State>
 void RobotTrackerPublisher<State>::convert_to_rgb_depth_image_msg(
@@ -105,6 +120,23 @@ template <typename State>
 bool RobotTrackerPublisher<State>::has_point_cloud_subscribers() const
 {
     return pub_point_cloud_->getNumSubscribers() > 0;
+}
+
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_joint_state(
+    const State& state)
+{
+    ROS_FATAL_COND(joint_state_.position.size() != state.size(),
+                   "Joint state message and robot state sizes do not match");
+
+    joint_state_.header.stamp = ros::Time::now();
+    for (int i = 0; i < state.size(); ++i)
+    {
+        joint_state_.position[i] = state(i, 0);
+    }
+
+    pub_joint_state_.publish(joint_state_);
 }
 
 template <typename State>

@@ -52,6 +52,8 @@ public:
         const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
         const std::string& tf_prefix = "");
 
+    void publish_joint_state(const State& state);
+
     void publish(const State &state,
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
@@ -86,12 +88,14 @@ public:
     bool has_point_cloud_subscribers() const;
 
 protected:
+    sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
     std::string tf_prefix_;
     std::string root_;
     std::shared_ptr<robot_state_pub::RobotStatePublisher>
         robot_state_publisher_;
     std::shared_ptr<ros::Publisher> pub_point_cloud_;
+    ros::Publisher pub_joint_state_;
     image_transport::Publisher pub_rgb_image_;
     image_transport::Publisher pub_depth_image_;
     std::shared_ptr<dbot::RigidBodyRenderer> robot_renderer_;
