@@ -99,18 +99,9 @@ public:
         B(0,0) = param_.joint_sigmas[joint_index];
         B(1,1) = param_.bias_sigmas[joint_index];
 
-//        std::cout << "---------------------------------" << std::endl;
-//        std::cout << param_.bias_sigmas[joint_index] << std::endl;
-//        std::cout << "---------------------------------" << std::endl;
-
         model->dynamics_matrix(A);
         model->noise_matrix(B);
         model->input_matrix(C);
-
-
-        PV(A);
-        PV(B);
-        PV(C);
 
         return model;
     }

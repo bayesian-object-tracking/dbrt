@@ -73,7 +73,7 @@ public:
     State update_with_joints(const JointsObsrv& joints_obsrv);
 
     void joints_obsrv_callback(const JointsObsrv& joints_obsrv);
-    void image_obsrv_callback(const Eigen::VectorXd& image_obsrv);
+    void image_obsrv_callback(const sensor_msgs::Image &ros_image);
 
     State current_state() const;
 
@@ -98,6 +98,7 @@ private:
     bool running_;
     State current_state_;
     Eigen::VectorXd image_obsrv_;
+    sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
     std::shared_ptr<GaussianJointFilterRobotTracker> gaussian_joint_tracker_;
@@ -107,6 +108,6 @@ private:
     mutable std::mutex image_obsrvs_mutex_;
     mutable std::mutex current_state_mutex_;
     std::thread gaussian_tracker_thread_;
-    std::thread particle_tracker__thread_;
+    std::thread particle_tracker_thread_;
 };
 }

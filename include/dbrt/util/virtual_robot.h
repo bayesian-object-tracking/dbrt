@@ -27,6 +27,7 @@
 #include <dbot/util/camera_data.hpp>
 #include <dbot/util/object_model.hpp>
 #include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot_ros/utils/ros_interface.hpp>
 
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/util/kinematics_from_urdf.hpp>
@@ -37,8 +38,8 @@ template <typename State>
 class VirtualRobot
 {
 public:
-    typedef std::function<void(const Eigen::MatrixXd&)> JointSensorCallback;
-    typedef std::function<void(const Eigen::MatrixXd&)> ImageSensorCallback;
+    typedef std::function<void(const Eigen::VectorXd&)> JointSensorCallback;
+    typedef std::function<void(const sensor_msgs::Image&)> ImageSensorCallback;
 
 public:
     /**
@@ -120,7 +121,7 @@ public:
 
             if (image_sensor_callback_)
             {
-                image_sensor_callback_(obsrv_vector_);
+                image_sensor_callback_(obsrv_image_);
             }
         }
     }
@@ -137,13 +138,13 @@ public:
         return state_;
     }
 
-    sensor_msgs::Image& observation()
+    const sensor_msgs::Image& observation()
     {
         std::lock_guard<std::mutex> image_lock(image_mutex_);
         return obsrv_image_;
     }
 
-    Eigen::VectorXd& observation_vector()
+    const Eigen::VectorXd& observation_vector()
     {
         std::lock_guard<std::mutex> image_lock(image_mutex_);
         return obsrv_vector_;
@@ -162,18 +163,13 @@ public:
 private:
     void render_and_publish()
     {
-        State state;
-        {
-            std::lock_guard<std::mutex> state_lock(state_mutex_);
-            state = state_;
-        }
+        State current_state = state();
 
-        {
-            std::lock_guard<std::mutex> image_lock(image_mutex_);
-            // render observation image
-            renderer_->Render(
-                state, obsrv_vector_, std::numeric_limits<double>::quiet_NaN());
-        }
+        std::lock_guard<std::mutex> image_lock(image_mutex_);
+
+        // render observation image
+        renderer_->Render(
+            current_state, obsrv_vector_, std::numeric_limits<double>::quiet_NaN());
 
         // convert image vector to ros image message
         robot_tracker_publisher_simulated_->convert_to_depth_image_msg(
@@ -181,7 +177,7 @@ private:
 
         // publish observation image and point cloud
         robot_tracker_publisher_simulated_->publish(
-            state, obsrv_image_, camera_data_);
+            current_state, obsrv_image_, camera_data_);
     }
 
 private:

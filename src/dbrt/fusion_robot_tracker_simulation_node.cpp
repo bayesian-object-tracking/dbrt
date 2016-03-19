@@ -29,6 +29,7 @@
 
 #include <fl/util/profiling.hpp>
 
+#include <dbot_ros/tracker_node.h>
 #include <dbot/util/rigid_body_renderer.hpp>
 #include <dbot/util/virtual_camera_data_provider.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh("~");
 
     // parameter shorthand prefix
-    std::string pre = "fusion_tracker/";
+    std::string prefix = "fusion_tracker/";
 
     /* ------------------------------ */
     /* - Create the robot kinematics- */
@@ -156,23 +157,26 @@ int main(int argc, char** argv)
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
+    /* - Tracker publisher          - */
+    /* ------------------------------ */
+        auto tracker_publisher =
+        std::shared_ptr<dbot::TrackerPublisher<State>>(
+            new dbrt::RobotTrackerPublisher<State>(
+                urdf_kinematics, renderer, "/estimated"));
+
+    /* ------------------------------ */
     /* - Create Tracker and         - */
     /* - tracker publisher          - */
     /* ------------------------------ */
-
     auto particle_robot_tracker =
         dbrt::create_rbc_particle_filter_robot_tracker(
-            pre, urdf_kinematics, object_model, camera_data);
+            prefix, urdf_kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
     auto gaussian_joint_robot_tracker =
-        create_joint_robot_tracker(pre, urdf_kinematics);
+        create_joint_robot_tracker(prefix, urdf_kinematics);
     dbrt::FusionRobotTracker fusion_robot_tracker(gaussian_joint_robot_tracker,
                                                   particle_robot_tracker);
-
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
-        new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, renderer, "/estimated"));
 
     /* ------------------------------ */
     /* - Setup Simulation           - */
@@ -180,7 +184,6 @@ int main(int argc, char** argv)
     ROS_INFO("setting up simulation ... ");
     auto simulation_camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::VirtualCameraDataProvider>(1, "/XTION"));
-
     auto simulation_renderer = std::make_shared<dbot::RigidBodyRenderer>(
         object_model->vertices(),
         object_model->triangle_indices(),
@@ -190,8 +193,10 @@ int main(int argc, char** argv)
 
     std::vector<double> joints;
     nh.getParam("simulation/initial_state", joints);
+
     State state;
     state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
+
     ROS_INFO("creating virtual robot ... ");
     dbrt::VirtualRobot<State> robot(object_model,
                                     urdf_kinematics,
@@ -209,22 +214,34 @@ int main(int argc, char** argv)
         });
 
     robot.image_sensor_callback(
-        [&](const Eigen::VectorXd& depth_image)
+        [&](const sensor_msgs::Image& ros_image)
         {
-            fusion_robot_tracker.image_obsrv_callback(depth_image);
+            fusion_robot_tracker.image_obsrv_callback(ros_image);
         });
 
-    ROS_INFO("Initializing tracker ... ");
     /* ------------------------------ */
-    /* - Initialize from config     - */
+    /* - Initialize                 - */
     /* ------------------------------ */
     fusion_robot_tracker.initialize({robot.state()});
 
+    /* ------------------------------ */
+    /* - Tracker publisher          - */
+    /* ------------------------------ */
+//    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+//        new dbrt::RobotTrackerPublisher<State>(
+//            urdf_kinematics, renderer, "/estimated"));
+
+    /* ------------------------------ */
+    /* - Create tracker node        - */
+    /* ------------------------------ */
+
+//    dbot::TrackerNode<dbrt::RbcParticleFilterRobotTracker> tracker_node(
+//        particle_robot_tracker, tracker_publisher);
+//    particle_robot_tracker->initialize({robot.state()});
 
     /* ------------------------------ */
     /* - Run tracker node           - */
     /* ------------------------------ */
-
     ROS_INFO("Starting robot ... ");
     ros::AsyncSpinner spinner(4);
     spinner.start();
@@ -235,13 +252,15 @@ int main(int argc, char** argv)
     fusion_robot_tracker.run();
 
     ros::Rate visualization_rate(24);
+
     while (ros::ok())
     {
         visualization_rate.sleep();
         auto current_state = fusion_robot_tracker.current_state();
 
+//        tracker_node.tracking_callback(robot.observation());
         tracker_publisher->publish(
-            current_state, robot.observation(), camera_data);
+                current_state, robot.observation(), camera_data);
 
         ros::spinOnce();
     }

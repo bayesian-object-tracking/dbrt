@@ -89,11 +89,6 @@ public:
         model->sensor_matrix(H);
         model->noise_matrix(R);
 
-
-        PV(H);
-        PV(R);
-//        PV(C);
-
         return model;
     }
 

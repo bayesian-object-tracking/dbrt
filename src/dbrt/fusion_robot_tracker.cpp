@@ -19,9 +19,10 @@
 #include <ros/ros.h>
 #include <dbrt/fusion_robot_tracker.h>
 
+#include <dbot_ros/utils/ros_interface.hpp>
+
 namespace dbrt
 {
-
 FusionRobotTracker::FusionRobotTracker(
     const std::shared_ptr<GaussianJointFilterRobotTracker>&
         gaussian_joint_tracker,
@@ -37,7 +38,7 @@ void FusionRobotTracker::initialize(const std::vector<State>& initial_states)
 {
     current_state_ = initial_states[0];
     gaussian_joint_tracker_->initialize(initial_states);
-//    rbc_particle_filter_tracker_->ini
+    rbc_particle_filter_tracker_->initialize(initial_states);
 }
 
 void FusionRobotTracker::run_gaussian_tracker()
@@ -83,7 +84,7 @@ void FusionRobotTracker::run_gaussian_tracker()
 
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-            current_state_ = current_state;
+            //            current_state_ = current_state;
         }
     }
 }
@@ -92,8 +93,29 @@ void FusionRobotTracker::run_particle_tracker()
 {
     while (running_)
     {
-        usleep(1);
+        // here is where the magic happens
 
+        usleep(33000);
+//        // obtain latest image obsrv copy
+        sensor_msgs::Image ros_image;
+        {
+            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
+            ros_image = ros_image_;
+        }
+
+        if (ros_image.height == 0 || ros_image.width == 0) continue;
+
+        auto image = ri::Ros2EigenVector<double>(
+            ros_image,
+            rbc_particle_filter_tracker_->camera_data()->downsampling_factor());
+
+        State current_state;
+        current_state = rbc_particle_filter_tracker_->track(image);
+
+//        {
+//            std::lock_guard<std::mutex> state_lock(current_state_mutex_);
+//            current_state_ = current_state;
+//        }
     }
 }
 
@@ -102,12 +124,15 @@ void FusionRobotTracker::run()
     running_ = true;
     gaussian_tracker_thread_ =
         std::thread(&FusionRobotTracker::run_gaussian_tracker, this);
+    particle_tracker_thread_ =
+        std::thread(&FusionRobotTracker::run_particle_tracker, this);
 }
 
 void FusionRobotTracker::shutdown()
 {
     running_ = false;
     gaussian_tracker_thread_.join();
+    particle_tracker_thread_.join();
 }
 
 FusionRobotTracker::State FusionRobotTracker::current_state() const
@@ -130,10 +155,11 @@ void FusionRobotTracker::joints_obsrv_callback(
 }
 
 void FusionRobotTracker::image_obsrv_callback(
-    const Eigen::VectorXd& image_obsrv)
+    const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
-    image_obsrv_ = image_obsrv;
+    //    image_obsrv_ = image_obsrv;
+    ros_image_ = ros_image;
 }
 
 auto FusionRobotTracker::update_with_joints(
