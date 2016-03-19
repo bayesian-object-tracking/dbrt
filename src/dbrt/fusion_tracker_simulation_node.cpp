@@ -56,14 +56,12 @@
  *     measurements
  * \param prefix
  *     parameter prefix, e.g. fusion_tracker
- * \param urdf_kinematics
+ * \param kinematics
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::RotaryTracker>
-create_rotary_tracker(
-    const std::string& prefix,
-//    const int& joint_count,
-    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
+create_rotary_tracker(const std::string& prefix,
+                      const int& joint_count)
 {
     ros::NodeHandle nh("~");
 
@@ -81,7 +79,7 @@ create_rotary_tracker(
                 transition_parameters.bias_sigmas);
     nh.getParam(prefix + "joint_transition/bias_factors",
                 transition_parameters.bias_factors);
-    transition_parameters.joint_count = urdf_kinematics->num_joints();
+    transition_parameters.joint_count = joint_count;
 
     auto transition_builder =
         std::make_shared<dbrt::FactorizedTransitionBuilder<Tracker>>(
@@ -94,7 +92,7 @@ create_rotary_tracker(
 
     nh.getParam(prefix + "joint_observation/joint_sigmas",
                 sensor_parameters.joint_sigmas);
-    sensor_parameters.joint_count = urdf_kinematics->num_joints();
+    sensor_parameters.joint_count = joint_count;
 
     auto rotary_sensor_builder =
         std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(sensor_parameters);
@@ -104,7 +102,7 @@ create_rotary_tracker(
     /* ------------------------------ */
     auto tracker_builder =
         dbrt::RotaryTrackerBuilder<Tracker>(
-            urdf_kinematics->num_joints(), transition_builder, rotary_sensor_builder);
+            joint_count, transition_builder, rotary_sensor_builder);
 
     return tracker_builder.build();
 }
@@ -127,10 +125,10 @@ int main(int argc, char** argv)
 
     /// \todo: the robot parameters should not be loaded inside
     /// of the URDF class, but outside, and then passed
-    auto urdf_kinematics = std::make_shared<KinematicsFromURDF>();
+    auto kinematics = std::make_shared<KinematicsFromURDF>();
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
-        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
+        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
 
     /* ------------------------------ */
     /* - Setup camera data          - */
@@ -154,12 +152,12 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Our state representation   - */
     /* ------------------------------ */
-    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    dbrt::RobotState<>::kinematics_ = kinematics;
 
 
     /// \todo: somehow the two lines here make it kind of work...
-    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
-    std::cout << urdf_kinematics->GetLinkPosition(3) << std::endl;
+    kinematics->InitKDLData(Eigen::VectorXd::Zero(kinematics->num_joints()));
+    std::cout << kinematics->GetLinkPosition(3) << std::endl;
 
     typedef dbrt::RobotState<> State;
 
@@ -169,17 +167,17 @@ int main(int argc, char** argv)
     /* ------------------------------ */
 
     auto visual_tracker = dbrt::create_visual_tracker(
-            pre, urdf_kinematics, object_model, camera_data);
+            pre, kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
-    auto rotary_tracker = create_rotary_tracker(pre, urdf_kinematics);
+    auto rotary_tracker = create_rotary_tracker(pre, kinematics->num_joints());
     dbrt::FusionTracker fusion_tracker(rotary_tracker, visual_tracker);
 
 
-    auto urdf_kinematics_for_publisher = std::make_shared<KinematicsFromURDF>();
+    auto kinematics_for_publisher = std::make_shared<KinematicsFromURDF>();
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics_for_publisher, renderer, "/estimated"));
+            kinematics_for_publisher, renderer, "/estimated"));
 
     /* ------------------------------ */
     /* - Setup Simulation           - */
@@ -201,7 +199,7 @@ int main(int argc, char** argv)
     state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
     ROS_INFO("creating virtual robot ... ");
     dbrt::VirtualRobot<State> robot(object_model,
-                                    urdf_kinematics,
+                                    kinematics,
                                     simulation_renderer,
                                     simulation_camera_data,
                                     1000.,  // joint sensor rate
