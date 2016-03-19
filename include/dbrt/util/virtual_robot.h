@@ -91,15 +91,22 @@ public:
         {
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
-            for (int i = 6; i < 6 + 7; ++i)
+
+            for(int i = 0; i < state_.size(); i++)
             {
-                state_[i] += 0.1 / rate * std::sin(t);
+                state_[i] = 0;
             }
 
-            for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
-            {
-                state_[i] += 0.1 / rate * std::sin(t);
-            }
+            /// \todo this simulation is specific to the arm robot
+//            for (int i = 6; i < 6 + 7; ++i)
+//            {
+//                state_[i] += 0.1 / rate * std::sin(t);
+//            }
+
+//            for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
+//            {
+//                state_[i] += 0.1 / rate * std::sin(t);
+//            }
 
             t += 1. / rate;
 

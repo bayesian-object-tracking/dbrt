@@ -125,6 +125,9 @@ int main(int argc, char** argv)
     /* - Create the robot kinematics- */
     /* - and robot mesh model       - */
     /* ------------------------------ */
+
+    /// \todo: the robot parameters should not be loaded inside
+    /// of the URDF class, but outside, and then passed
     auto urdf_kinematics = std::make_shared<KinematicsFromURDF>();
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
@@ -153,6 +156,12 @@ int main(int argc, char** argv)
     /* - Our state representation   - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+
+
+    /// \todo: somehow the two lines here make it kind of work...
+    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
+    std::cout << urdf_kinematics->GetLinkPosition(3) << std::endl;
+
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
