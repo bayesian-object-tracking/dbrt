@@ -23,7 +23,7 @@
 #include <dbot/tracker/builder/rb_observation_model_builder.h>
 
 #include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
-#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
 {
@@ -109,7 +109,7 @@ create_rbc_particle_filter_robot_tracker(
     /* ------------------------------ */
     /* - Create Filter & Tracker    - */
     /* ------------------------------ */
-    dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>::Parameters
+    dbrt::VisualTrackerBuilder<Tracker>::Parameters
         params_tracker;
     params_tracker.evaluation_count = params_obsrv.sample_count;
     nh.getParam(prefix + "moving_average_update_rate",
@@ -119,7 +119,7 @@ create_rbc_particle_filter_robot_tracker(
         prefix + "sampling_blocks", params_tracker.sampling_blocks, nh);
 
     auto tracker_builder =
-        dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
+        dbrt::VisualTrackerBuilder<Tracker>(urdf_kinematics,
                                                             state_trans_builder,
                                                             obsrv_model_builder,
                                                             object_model,

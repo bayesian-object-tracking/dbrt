@@ -34,7 +34,7 @@ namespace dbrt
 {
 
 template <typename Tracker>
-class RbcParticleFilterRobotTrackerBuilder
+class VisualTrackerBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -65,7 +65,7 @@ public:
     };
 
 public:
-    RbcParticleFilterRobotTrackerBuilder(
+    VisualTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::shared_ptr<StateTransitionBuilder>& state_transition_builder,
         const std::shared_ptr<ObservationModelBuilder>& obsrv_model_builder,

@@ -36,7 +36,7 @@
 namespace dbrt
 {
 /**
- * \brief RbcParticleFilterRobotTracker
+ * \brief VisualTracker
  */
 class FusionTracker
 {

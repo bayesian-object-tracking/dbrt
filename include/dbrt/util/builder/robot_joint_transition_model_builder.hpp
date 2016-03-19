@@ -29,7 +29,7 @@
 #include <dbot/tracker/builder/state_transition_function_builder.hpp>
 
 #include <dbrt/util/builder/exceptions.hpp>
-#include <dbrt/util/builder/joint_index_out_of_bounds_exception.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {

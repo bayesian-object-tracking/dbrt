@@ -30,7 +30,7 @@
 namespace dbrt
 {
 /**
- * \brief RbcParticleFilterRobotTracker
+ * \brief VisualTracker
  */
 class VisualTracker : public RobotTracker
 {
