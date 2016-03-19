@@ -86,7 +86,7 @@ public:
     std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &state);
 
     // Get dependencies
-    void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
+//    void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
 
     // return the KDL kinematic tree
     KDL::Tree GetTree();
@@ -97,6 +97,7 @@ public:
     int num_links();
 
 
+
     std::string GetLinkName(int idx);
 
     std::vector<std::string> GetJointMap();
@@ -104,10 +105,12 @@ public:
     std::string GetRootFrameID();
 
 
+    void print_joints();
+    void print_links();
     // compute the transformations for all the links in one go
-    void ComputeLinkTransforms();
 
 private:
+    void ComputeLinkTransforms();
 
     // compute the camera frame for the current joint angles
     void SetCameraTransform();
@@ -135,7 +138,7 @@ private:
     std::vector<float> upper_limit_;
 
     // maps mesh indices to link names
-    std::vector<std::string> part_mesh_map_;
+    std::vector<std::string> mesh_names_;
     // maps link names to KDL frames
     std::map<std::string, KDL::Frame> frame_map_;
 

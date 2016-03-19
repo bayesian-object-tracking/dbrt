@@ -123,12 +123,13 @@ int main(int argc, char** argv)
     /* - and robot mesh model       - */
     /* ------------------------------ */
 
-    /// \todo: the robot parameters should not be loaded inside
-    /// of the URDF class, but outside, and then passed
     auto kinematics = std::make_shared<KinematicsFromURDF>();
-
-    auto object_model = std::make_shared<dbot::ObjectModel>(
+    auto mesh_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
+
+
+    kinematics->print_joints();
+    kinematics->print_links();
 
     /* ------------------------------ */
     /* - Setup camera data          - */
@@ -143,8 +144,8 @@ int main(int argc, char** argv)
     /* - Robot renderer             - */
     /* ------------------------------ */
     auto renderer = std::make_shared<dbot::RigidBodyRenderer>(
-        object_model->vertices(),
-        object_model->triangle_indices(),
+        mesh_model->vertices(),
+        mesh_model->triangle_indices(),
         camera_data->camera_matrix(),
         camera_data->resolution().height,
         camera_data->resolution().width);
@@ -168,7 +169,7 @@ int main(int argc, char** argv)
     ROS_INFO("creating trackers ... ");
 
     auto visual_tracker = dbrt::create_visual_tracker(pre, kinematics,
-                                                      object_model, camera_data);
+                                                      mesh_model, camera_data);
     auto rotary_tracker = create_rotary_tracker(pre, kinematics->num_joints());
     dbrt::FusionTracker fusion_tracker(rotary_tracker, visual_tracker);
 
@@ -185,8 +186,8 @@ int main(int argc, char** argv)
         std::make_shared<dbot::VirtualCameraDataProvider>(1, "/XTION"));
 
     auto simulation_renderer = std::make_shared<dbot::RigidBodyRenderer>(
-        object_model->vertices(),
-        object_model->triangle_indices(),
+        mesh_model->vertices(),
+        mesh_model->triangle_indices(),
         simulation_camera_data->camera_matrix(),
         simulation_camera_data->resolution().height,
         simulation_camera_data->resolution().width);
@@ -196,7 +197,7 @@ int main(int argc, char** argv)
     State state;
     state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
     ROS_INFO("creating virtual robot ... ");
-    dbrt::VirtualRobot<State> robot(object_model,
+    dbrt::VirtualRobot<State> robot(mesh_model,
                                     kinematics,
                                     simulation_renderer,
                                     simulation_camera_data,

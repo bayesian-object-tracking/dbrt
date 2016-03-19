@@ -39,6 +39,11 @@
 KinematicsFromURDF::KinematicsFromURDF()
     : nh_priv_("~")
 {
+
+    /// \todo: the robot parameters should not be loaded inside
+    /// of the URDF class, but outside, and then passed
+
+
     // Load robot description from parameter server
     std::string desc_string;
     if(!nh_.getParam("robot_description", desc_string))
@@ -89,6 +94,10 @@ KinematicsFromURDF::KinematicsFromURDF()
         }
     }
 
+
+    /// \todo: actually the camera frame we care about is "XTION_IR", but
+    /// this is not currently part of the robot model. this has to be fixed
+    /// at some point, because XTION and XTION_IR are shifted by about 2.5 cm.
     nh_priv_.param<std::string>("camera_frame", cam_frame_name_, "XTION");
 
     // initialise kinematic tree solver
@@ -110,9 +119,9 @@ void KinematicsFromURDF::GetPartMeshes(std::vector<boost::shared_ptr<PartMeshMod
     {
         // keep only the links descending from our root
         boost::shared_ptr<urdf::Link> tmp_link = links[i];
-        while(tmp_link->name.compare(rendering_root_left_)!=0 &&
-              tmp_link->name.compare(rendering_root_right_)!=0 &&
-              tmp_link->name.compare(global_root)!=0)
+        while(tmp_link->name.compare(rendering_root_left_) == 0 &&
+              tmp_link->name.compare(rendering_root_right_) == 0 &&
+              tmp_link->name.compare(global_root) == 0)
         {
             tmp_link = tmp_link->getParent();
         }
@@ -121,13 +130,14 @@ void KinematicsFromURDF::GetPartMeshes(std::vector<boost::shared_ptr<PartMeshMod
             continue;
 
         boost::shared_ptr<PartMeshModel> part_ptr(new PartMeshModel(links[i], description_path_, i, collision_));
-        if(part_ptr->proper_)
+
+
+        if(part_ptr->proper_) // if the link has an actual mesh file to read
         {
-            // if the link has an actual mesh file to read
             //	  std::cout << "link " << links[i]->name << " is descendant of " << tmp_link->name << std::endl;
             part_meshes.push_back(part_ptr);
             // Produces an index map for the links
-            part_mesh_map_.push_back(part_ptr->get_name());
+            mesh_names_.push_back(part_ptr->get_name());
         }
     }
 }
@@ -162,9 +172,9 @@ void KinematicsFromURDF::ComputeLinkTransforms( )
     for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin();
          seg_it != segment_map_.end(); ++seg_it)
     {
-        if (std::find(part_mesh_map_.begin(),
-                      part_mesh_map_.end(),
-                      seg_it->second.segment.getName()) != part_mesh_map_.end())
+        if (std::find(mesh_names_.begin(),
+                      mesh_names_.end(),
+                      seg_it->second.segment.getName()) != mesh_names_.end())
         {
             KDL::Frame frame;
             if(tree_solver_->JntToCart(jnt_array_, frame, seg_it->second.segment.getName())<0)
@@ -179,15 +189,39 @@ Eigen::VectorXd KinematicsFromURDF::GetLinkPosition( int idx)
 {
     Eigen::VectorXd pos(3);
 
-    KDL::Frame& frame = frame_map_[part_mesh_map_[idx]];
+    KDL::Frame& frame = frame_map_[mesh_names_[idx]];
     pos << frame.p.x(), frame.p.y(),frame.p.z();
     return pos;
 }
 
+void KinematicsFromURDF::print_joints()
+{
+    std::cout << "robot joints: " << std::endl;
+    for(size_t i = 0; i < joint_map_.size(); i++)
+    {
+        std::cout << "(" << i << " : " << joint_map_[i] << ")  " << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void KinematicsFromURDF::print_links()
+{
+    std::vector<boost::shared_ptr<urdf::Link> > links;
+    urdf_.getLinks(links);
+
+    std::cout << "robot links: " << std::endl;
+    for(size_t i = 0; i < links.size(); i++)
+    {
+        std::cout << "(" << i << " : " << links[i]->name << ")  " << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+
 Eigen::Quaternion<double> KinematicsFromURDF::GetLinkOrientation( int idx)
 {
     Eigen::Quaternion<double> quat;
-    frame_map_[part_mesh_map_[idx]].M.GetQuaternion(quat.x(), quat.y(), quat.z(), quat.w());
+    frame_map_[mesh_names_[idx]].M.GetQuaternion(quat.x(), quat.y(), quat.z(), quat.w());
     return quat;
 }
 
@@ -244,14 +278,14 @@ std::vector<Eigen::VectorXd> KinematicsFromURDF::GetInitialJoints(const sensor_m
     return samples;
 }
 
-void KinematicsFromURDF::GetDependencies(std::vector<std::vector<size_t> >& dependencies)
-{
-    // only one fully dependent object -> the robot
-    std::vector<size_t> robot_deps;
-    for(int i=0; i<num_joints(); ++i)
-        robot_deps.push_back(i);
-    dependencies.push_back(robot_deps);
-}
+//void KinematicsFromURDF::GetDependencies(std::vector<std::vector<size_t> >& dependencies)
+//{
+//    // only one fully dependent object -> the robot
+//    std::vector<size_t> robot_deps;
+//    for(int i=0; i<num_joints(); ++i)
+//        robot_deps.push_back(i);
+//    dependencies.push_back(robot_deps);
+//}
 
 KDL::Tree KinematicsFromURDF::GetTree()
 {
@@ -287,7 +321,7 @@ int KinematicsFromURDF::GetJointIndex(const std::string &name)
 
 std::string KinematicsFromURDF::GetLinkName(int idx)
 {
-    return part_mesh_map_[idx];
+    return mesh_names_[idx];
 }
 
 int KinematicsFromURDF::num_joints()
@@ -297,7 +331,7 @@ int KinematicsFromURDF::num_joints()
 
 int KinematicsFromURDF::num_links()
 {
-    return part_mesh_map_.size();
+    return mesh_names_.size();
 }
 
 
