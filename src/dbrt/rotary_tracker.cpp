@@ -16,26 +16,26 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
 
 #include <Eigen/Core>
 
 namespace dbrt
 {
-GaussianJointFilterRobotTracker::GaussianJointFilterRobotTracker(
+RotaryTracker::RotaryTracker(
     const std::shared_ptr<std::vector<JointFilter>>& joint_filters)
     : joint_filters_(joint_filters)
 {
 }
 
-const std::vector<GaussianJointFilterRobotTracker::JointBelief>&
-GaussianJointFilterRobotTracker::beliefs() const
+const std::vector<RotaryTracker::JointBelief>&
+RotaryTracker::beliefs() const
 {
     return beliefs_;
 }
 
-std::vector<GaussianJointFilterRobotTracker::AngleBelief>
-GaussianJointFilterRobotTracker::angle_beliefs()
+std::vector<RotaryTracker::AngleBelief>
+RotaryTracker::angle_beliefs()
 {
     std::vector<AngleBelief> beliefs(beliefs_.size());
 
@@ -48,8 +48,8 @@ GaussianJointFilterRobotTracker::angle_beliefs()
     return beliefs;
 }
 
-void GaussianJointFilterRobotTracker::set_angle_beliefs(
-    std::vector<GaussianJointFilterRobotTracker::AngleBelief> angle_beliefs)
+void RotaryTracker::set_angle_beliefs(
+    std::vector<RotaryTracker::AngleBelief> angle_beliefs)
 {
     if (beliefs_.size() != angle_beliefs.size())
     {
@@ -83,14 +83,14 @@ void GaussianJointFilterRobotTracker::set_angle_beliefs(
     }
 }
 
-std::vector<GaussianJointFilterRobotTracker::JointBelief>&
-GaussianJointFilterRobotTracker::beliefs()
+std::vector<RotaryTracker::JointBelief>&
+RotaryTracker::beliefs()
 {
     return beliefs_;
 }
 
 /// todo: there should be no obsrv passed in this function
-auto GaussianJointFilterRobotTracker::on_initialize(
+auto RotaryTracker::on_initialize(
     const std::vector<State>& initial_states) -> State
 {
     State state;
@@ -118,7 +118,7 @@ auto GaussianJointFilterRobotTracker::on_initialize(
     return state;
 }
 
-auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
+auto RotaryTracker::on_track(const Obsrv& joints_obsrv)
     -> State
 {
     State state;
@@ -132,7 +132,7 @@ auto GaussianJointFilterRobotTracker::on_track(const Obsrv& joints_obsrv)
         (*joint_filters_)[i].update(
             beliefs_[i], joints_obsrv.middleRows(i, 1), beliefs_[i]);
 
-        state(i) = beliefs_[i].mean()(0);
+        state(i) = beliefs_[i].sample()(0);
     }
 
     //    auto angle_bels = angle_beliefs();

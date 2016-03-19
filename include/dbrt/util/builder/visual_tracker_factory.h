@@ -26,7 +26,7 @@
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {
@@ -34,12 +34,12 @@ namespace dbrt
  * \brief Create a particle filter tracking the robot joints based on depth
  *     images measurements
  * \param prefix
- *     parameter prefix, e.g. fusion_robot_tracker
+ *     parameter prefix, e.g. fusion_tracker
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::RbcParticleFilterRobotTracker>
-create_rbc_particle_filter_robot_tracker(
+std::shared_ptr<dbrt::VisualTracker>
+create_visual_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::ObjectModel>& object_model,

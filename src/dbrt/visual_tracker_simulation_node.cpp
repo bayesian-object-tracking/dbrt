@@ -11,7 +11,7 @@
  */
 
 /**
- * \file rbc_particle_filter_robot_tracker_node.hpp
+ * \file visual_tracker_node.hpp
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -39,15 +39,15 @@
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
 #include <dbrt/robot_tracker_publisher.h>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
 
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "rbc_particle_filter_robot_tracker_simulation");
+    ros::init(argc, argv, "visual_tracker_simulation");
     ros::NodeHandle nh("~");
 
     /* ---------------------------------------------------------------------- */
@@ -100,12 +100,12 @@ int main(int argc, char** argv)
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     typedef dbrt::RobotState<> State;
 
-    typedef dbrt::RbcParticleFilterRobotTracker Tracker;
+    typedef dbrt::VisualTracker Tracker;
 
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
 
-    auto tracker = dbrt::create_rbc_particle_filter_robot_tracker(
+    auto tracker = dbrt::create_visual_tracker(
         pre, urdf_kinematics, object_model, camera_data);
 
     /* ------------------------------ */

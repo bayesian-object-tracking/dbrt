@@ -11,7 +11,7 @@
  */
 
 /**
- * \file robot_joint_transition_model_builder.hpp
+ * \file factorized_transition_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -28,13 +28,13 @@
 
 #include <dbot/tracker/builder/state_transition_function_builder.hpp>
 
-#include <dbrt/util/builder/invalid_number_of_joint_sigmas_exception.hpp>
-#include <dbrt/util/builder/joint_index_out_of_bounds_exception.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
 template <typename Tracker>
-class RobotJointTransitionModelBuilder
+class FactorizedTransitionBuilder
 {
 public:
     enum Dimension
@@ -58,7 +58,7 @@ public:
         int joint_count;
     };
 
-    RobotJointTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    FactorizedTransitionBuilder(const Parameters& param) : param_(param) {}
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())

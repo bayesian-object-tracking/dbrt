@@ -110,7 +110,9 @@ private:
         assert(this->size() > 0);
         CheckKinematics();
         kinematics_->InitKDLData(*this);
-        return kinematics_->GetLinkPosition(object_index);
+
+        Vector v = kinematics_->GetLinkPosition(object_index);
+        return v;
     }
 
     virtual osr::EulerVector euler_vector(const size_t& object_index = 0) const

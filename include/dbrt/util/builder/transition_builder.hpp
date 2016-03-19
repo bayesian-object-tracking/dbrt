@@ -11,7 +11,7 @@
  */
 
 /**
- * \file robot_state_transition_model_builder.hpp
+ * \file transition_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -28,7 +28,7 @@
 #include <dbot/tracker/builder/state_transition_function_builder.hpp>
 #include <fl/model/process/linear_state_transition_model.hpp>
 
-#include <dbrt/util/builder/invalid_number_of_joint_sigmas_exception.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
@@ -48,7 +48,7 @@ struct RobotJointStateTrait
 };
 
 template <typename Tracker>
-class RobotStateTransitionModelBuilder
+class TransitionBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -64,7 +64,7 @@ public:
         int joint_count;
     };
 
-    RobotStateTransitionModelBuilder(const Parameters& param) : param_(param) {}
+    TransitionBuilder(const Parameters& param) : param_(param) {}
 
     virtual std::shared_ptr<Model> build() const
     {

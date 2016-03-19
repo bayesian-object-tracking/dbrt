@@ -11,7 +11,7 @@
  */
 
 /**
- * \file rbc_particle_filter_robot_tracker.hpp
+ * \file visual_tracker.hpp
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -30,9 +30,9 @@
 namespace dbrt
 {
 /**
- * \brief RbcParticleFilterRobotTracker
+ * \brief VisualTracker
  */
-class RbcParticleFilterRobotTracker : public RobotTracker
+class VisualTracker : public RobotTracker
 {
 public:
     typedef fl::StateTransitionFunction<State, Noise, Input> StateTransition;
@@ -54,7 +54,7 @@ public:
      * \param update_rate
      *     Moving average update rate
      */
-    RbcParticleFilterRobotTracker(const std::shared_ptr<Filter>& filter,
+    VisualTracker(const std::shared_ptr<Filter>& filter,
         const std::shared_ptr<dbot::ObjectModel>& object_model,
         const std::shared_ptr<dbot::CameraData>& camera_data,
         int evaluation_count,

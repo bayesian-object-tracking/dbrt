@@ -28,14 +28,14 @@
 
 #include <dbot/tracker/builder/state_transition_function_builder.hpp>
 
-#include <dbrt/util/builder/invalid_number_of_joint_sigmas_exception.hpp>
-#include <dbrt/util/builder/joint_index_out_of_bounds_exception.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
 
 template <typename Tracker>
-class RobotJointObservationModelBuilder
+class RotarySensorBuilder
 {
 public:
     enum Dimension
@@ -54,7 +54,7 @@ public:
         int joint_count;
     };
 
-    RobotJointObservationModelBuilder(const Parameters& param) : param_(param)
+    RotarySensorBuilder(const Parameters& param) : param_(param)
     {
     }
 

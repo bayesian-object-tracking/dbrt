@@ -17,13 +17,13 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 #include <dbot_ros/utils/ros_interface.hpp>
 #include <dbot/tracker/builder/rb_observation_model_builder.h>
 
-#include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
-#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/transition_builder.hpp>
+#include <dbrt/util/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
 {
@@ -32,12 +32,12 @@ namespace dbrt
  * \brief Create a particle filter tracking the robot joints based on depth
  *     images measurements
  * \param prefix
- *     parameter prefix, e.g. fusion_robot_tracker
+ *     parameter prefix, e.g. fusion_tracker
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::RbcParticleFilterRobotTracker>
-create_rbc_particle_filter_robot_tracker(
+std::shared_ptr<dbrt::VisualTracker>
+create_visual_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
@@ -45,13 +45,13 @@ create_rbc_particle_filter_robot_tracker(
 {
     ros::NodeHandle nh("~");
 
-    typedef dbrt::RbcParticleFilterRobotTracker Tracker;
+    typedef dbrt::VisualTracker Tracker;
     typedef Tracker::State State;
 
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::RobotStateTransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::TransitionBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -59,7 +59,7 @@ create_rbc_particle_filter_robot_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::RobotStateTransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::TransitionBuilder<Tracker>>(
             params_state);
 
     /* ------------------------------ */
@@ -109,7 +109,7 @@ create_rbc_particle_filter_robot_tracker(
     /* ------------------------------ */
     /* - Create Filter & Tracker    - */
     /* ------------------------------ */
-    dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>::Parameters
+    dbrt::VisualTrackerBuilder<Tracker>::Parameters
         params_tracker;
     params_tracker.evaluation_count = params_obsrv.sample_count;
     nh.getParam(prefix + "moving_average_update_rate",
@@ -119,7 +119,7 @@ create_rbc_particle_filter_robot_tracker(
         prefix + "sampling_blocks", params_tracker.sampling_blocks, nh);
 
     auto tracker_builder =
-        dbrt::RbcParticleFilterRobotTrackerBuilder<Tracker>(urdf_kinematics,
+        dbrt::VisualTrackerBuilder<Tracker>(urdf_kinematics,
                                                             state_trans_builder,
                                                             obsrv_model_builder,
                                                             object_model,

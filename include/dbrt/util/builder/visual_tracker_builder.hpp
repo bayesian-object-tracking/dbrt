@@ -25,16 +25,16 @@
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/kinematics_from_urdf.hpp>
-#include <dbrt/util/builder/robot_state_transition_model_builder.hpp>
-#include <dbrt/util/builder/invalid_number_of_sampling_blocks_exception.hpp>
+#include <dbrt/util/builder/transition_builder.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
 
 template <typename Tracker>
-class RbcParticleFilterRobotTrackerBuilder
+class VisualTrackerBuilder
 {
 public:
     typedef typename Tracker::State State;
@@ -42,7 +42,7 @@ public:
     typedef typename Tracker::Input Input;
 
     /* == Model Builder Interfaces ========================================== */
-    typedef dbrt::RobotStateTransitionModelBuilder<Tracker>
+    typedef dbrt::TransitionBuilder<Tracker>
         StateTransitionBuilder;
     typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
 
@@ -65,7 +65,7 @@ public:
     };
 
 public:
-    RbcParticleFilterRobotTrackerBuilder(
+    VisualTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::shared_ptr<StateTransitionBuilder>& state_transition_builder,
         const std::shared_ptr<ObservationModelBuilder>& obsrv_model_builder,
@@ -84,12 +84,12 @@ public:
     /**
      * \brief Builds the Rbc PF tracker
      */
-    std::shared_ptr<RbcParticleFilterRobotTracker> build()
+    std::shared_ptr<VisualTracker> build()
     {
         auto filter =
             create_filter(this->object_model_, this->params_.max_kl_divergence);
 
-        auto tracker = std::make_shared<RbcParticleFilterRobotTracker>(
+        auto tracker = std::make_shared<VisualTracker>(
             filter,
             this->object_model_,
             this->camera_data_,

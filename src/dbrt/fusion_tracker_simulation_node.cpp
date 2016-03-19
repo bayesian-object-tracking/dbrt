@@ -11,7 +11,7 @@
  */
 
 /**
- * \file fusion_robot_tracker_simulation_node.hpp
+ * \file fusion_tracker_simulation_node.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -45,34 +45,34 @@
 #include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/fusion_robot_tracker.h>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
-#include <dbrt/util/builder/gaussian_joint_filter_robot_tracker_builder.hpp>
-#include <dbrt/util/builder/ros_rbc_particle_filter_robot_tracker_factory.h>
+#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/fusion_tracker.h>
+#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
+#include <dbrt/util/builder/rotary_tracker_builder.hpp>
+#include <dbrt/util/builder/visual_tracker_factory.h>
 
 /**
  * \brief Create a gaussian filter tracking the robot joints based on joint
  *     measurements
  * \param prefix
- *     parameter prefix, e.g. fusion_robot_tracker
+ *     parameter prefix, e.g. fusion_tracker
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::GaussianJointFilterRobotTracker>
+std::shared_ptr<dbrt::RotaryTracker>
 create_joint_robot_tracker(
     const std::string& prefix,
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
 {
     ros::NodeHandle nh("~");
 
-    typedef dbrt::GaussianJointFilterRobotTracker Tracker;
+    typedef dbrt::RotaryTracker Tracker;
 
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::RobotJointTransitionModelBuilder<Tracker>::Parameters params_state;
+    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters params_state;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -84,13 +84,13 @@ create_joint_robot_tracker(
     params_state.joint_count = urdf_kinematics->num_joints();
 
     auto state_trans_builder =
-        std::make_shared<dbrt::RobotJointTransitionModelBuilder<Tracker>>(
+        std::make_shared<dbrt::FactorizedTransitionBuilder<Tracker>>(
             (params_state));
 
     /* ------------------------------ */
     /* - Observation model          - */
     /* ------------------------------ */
-    dbrt::RobotJointObservationModelBuilder<Tracker>::Parameters
+    dbrt::RotarySensorBuilder<Tracker>::Parameters
         params_joint_obsrv;
 
     nh.getParam(prefix + "joint_observation/joint_sigmas",
@@ -98,14 +98,14 @@ create_joint_robot_tracker(
     params_joint_obsrv.joint_count = urdf_kinematics->num_joints();
 
     auto joint_obsrv_model_builder =
-        std::make_shared<dbrt::RobotJointObservationModelBuilder<Tracker>>(
+        std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(
             params_joint_obsrv);
 
     /* ------------------------------ */
     /* - Build the tracker          - */
     /* ------------------------------ */
     auto tracker_builder =
-        dbrt::GaussianJointFilterRobotTrackerBuilder<Tracker>(
+        dbrt::RotaryTrackerBuilder<Tracker>(
             urdf_kinematics, state_trans_builder, joint_obsrv_model_builder);
 
     return tracker_builder.build();
@@ -116,7 +116,7 @@ create_joint_robot_tracker(
  */
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "fusion_robot_tracker_simulation");
+    ros::init(argc, argv, "fusion_tracker_simulation");
     ros::NodeHandle nh("~");
 
     // parameter shorthand prefix
@@ -126,6 +126,9 @@ int main(int argc, char** argv)
     /* - Create the robot kinematics- */
     /* - and robot mesh model       - */
     /* ------------------------------ */
+
+    /// \todo: the robot parameters should not be loaded inside
+    /// of the URDF class, but outside, and then passed
     auto urdf_kinematics = std::make_shared<KinematicsFromURDF>();
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
@@ -154,6 +157,12 @@ int main(int argc, char** argv)
     /* - Our state representation   - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+
+
+    /// \todo: somehow the two lines here make it kind of work...
+    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
+    std::cout << urdf_kinematics->GetLinkPosition(3) << std::endl;
+
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
@@ -169,13 +178,13 @@ int main(int argc, char** argv)
     /* - tracker publisher          - */
     /* ------------------------------ */
     auto particle_robot_tracker =
-        dbrt::create_rbc_particle_filter_robot_tracker(
+        dbrt::create_visual_tracker(
             prefix, urdf_kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
     auto gaussian_joint_robot_tracker =
         create_joint_robot_tracker(prefix, urdf_kinematics);
-    dbrt::FusionRobotTracker fusion_robot_tracker(gaussian_joint_robot_tracker,
+    dbrt::FusionTracker fusion_tracker(gaussian_joint_robot_tracker,
                                                   particle_robot_tracker);
 
     /* ------------------------------ */
@@ -210,19 +219,19 @@ int main(int argc, char** argv)
     robot.joint_sensor_callback(
         [&](const State& state)
         {
-            fusion_robot_tracker.joints_obsrv_callback(state);
+            fusion_tracker.joints_obsrv_callback(state);
         });
 
     robot.image_sensor_callback(
         [&](const sensor_msgs::Image& ros_image)
         {
-            fusion_robot_tracker.image_obsrv_callback(ros_image);
+            fusion_tracker.image_obsrv_callback(ros_image);
         });
 
     /* ------------------------------ */
     /* - Initialize                 - */
     /* ------------------------------ */
-    fusion_robot_tracker.initialize({robot.state()});
+    fusion_tracker.initialize({robot.state()});
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
@@ -249,14 +258,14 @@ int main(int argc, char** argv)
     robot.run();
     ROS_INFO("Robot running ... ");
 
-    fusion_robot_tracker.run();
+    fusion_tracker.run();
 
     ros::Rate visualization_rate(24);
 
     while (ros::ok())
     {
         visualization_rate.sleep();
-        auto current_state = fusion_robot_tracker.current_state();
+        auto current_state = fusion_tracker.current_state();
 
 //        tracker_node.tracking_callback(robot.observation());
         tracker_publisher->publish(
@@ -267,7 +276,7 @@ int main(int argc, char** argv)
 
     ROS_INFO("Shutting down ...");
 
-    fusion_robot_tracker.shutdown();
+    fusion_tracker.shutdown();
     robot.shutdown();
 
     return 0;

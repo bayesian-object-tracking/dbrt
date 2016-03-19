@@ -11,7 +11,7 @@
  */
 
 /**
- * \file rbc_particle_filter_robot_tracker.cpp
+ * \file visual_tracker.cpp
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -19,11 +19,11 @@
 
 #include <dbot/util/rigid_body_renderer.hpp>
 
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {
-RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
+VisualTracker::VisualTracker(
     const std::shared_ptr<Filter>& filter,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
     const std::shared_ptr<dbot::CameraData>& camera_data,
@@ -37,7 +37,7 @@ RbcParticleFilterRobotTracker::RbcParticleFilterRobotTracker(
 {
 }
 
-auto RbcParticleFilterRobotTracker::on_initialize(
+auto VisualTracker::on_initialize(
     const std::vector<State>& initial_states) -> State
 {
     filter_->set_particles(initial_states);
@@ -50,7 +50,7 @@ auto RbcParticleFilterRobotTracker::on_initialize(
     return mean;
 }
 
-auto RbcParticleFilterRobotTracker::on_track(const Obsrv& image) -> State
+auto VisualTracker::on_track(const Obsrv& image) -> State
 {
     filter_->filter(image, zero_input());
 
@@ -59,7 +59,7 @@ auto RbcParticleFilterRobotTracker::on_track(const Obsrv& image) -> State
 }
 
 const std::shared_ptr<dbot::CameraData>&
-RbcParticleFilterRobotTracker::camera_data() const
+VisualTracker::camera_data() const
 {
     return camera_data_;
 }

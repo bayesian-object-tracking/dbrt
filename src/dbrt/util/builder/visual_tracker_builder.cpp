@@ -14,11 +14,11 @@
 
 
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
-#include <dbrt/util/builder/rbc_particle_filter_robot_tracker_builder.hpp>
+#include <dbrt/util/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
 {
-//RbcParticleFilterRobotTrackerBuilder::RbcParticleFilterRobotTrackerBuilder(
+//VisualTrackerBuilder::VisualTrackerBuilder(
 //    const Parameters& param,
 //    const dbot::CameraData& camera_data,
 //    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics)
@@ -28,13 +28,13 @@ namespace dbrt
 //{
 //}
 
-//std::shared_ptr<RbcParticleFilterRobotTracker>
-//RbcParticleFilterRobotTrackerBuilder::build()
+//std::shared_ptr<VisualTracker>
+//VisualTrackerBuilder::build()
 //{
 //    auto object_model = create_object_model();
 //    auto filter = create_filter(object_model, param_.tracker.max_kl_divergence);
 
-//    auto tracker = std::make_shared<RbcParticleFilterRobotTracker>(
+//    auto tracker = std::make_shared<VisualTracker>(
 //        filter,
 //        object_model,
 //        camera_data_,
@@ -43,7 +43,7 @@ namespace dbrt
 //    return tracker;
 //}
 
-//auto RbcParticleFilterRobotTrackerBuilder::create_filter(
+//auto VisualTrackerBuilder::create_filter(
 //    const dbot::ObjectModel& object_model,
 //    double max_kl_divergence) -> std::shared_ptr<Filter>
 //{
@@ -63,10 +63,10 @@ namespace dbrt
 //    return filter;
 //}
 
-//auto RbcParticleFilterRobotTrackerBuilder::create_state_transition_model(
+//auto VisualTrackerBuilder::create_state_transition_model(
 //    const dbrt::RobotJointTransitionModelBuilder<
-//        RbcParticleFilterRobotTrackerBuilder::State,
-//        RbcParticleFilterRobotTrackerBuilder::Input>::Parameters& param) const
+//        VisualTrackerBuilder::State,
+//        VisualTrackerBuilder::Input>::Parameters& param) const
 //    -> std::shared_ptr<StateTransition>
 //{
 //    dbrt::RobotJointTransitionModelBuilder<State, Input> process_builder(param);
@@ -75,7 +75,7 @@ namespace dbrt
 //    return process;
 //}
 
-//auto RbcParticleFilterRobotTrackerBuilder::create_obsrv_model(
+//auto VisualTrackerBuilder::create_obsrv_model(
 //    bool use_gpu,
 //    const dbot::ObjectModel& object_model,
 //    const dbot::CameraData& camera_data,
@@ -104,7 +104,7 @@ namespace dbrt
 //    return obsrv_model;
 //}
 
-//dbot::ObjectModel RbcParticleFilterRobotTrackerBuilder::create_object_model()
+//dbot::ObjectModel VisualTrackerBuilder::create_object_model()
 //    const
 //{
 //    dbot::ObjectModel object_model;
@@ -117,7 +117,7 @@ namespace dbrt
 //}
 
 //std::vector<std::vector<size_t>>
-//RbcParticleFilterRobotTrackerBuilder::create_sampling_blocks(int blocks) const
+//VisualTrackerBuilder::create_sampling_blocks(int blocks) const
 //{
 //    int block_size = 1;
 //    std::vector<std::vector<size_t>> sampling_blocks(blocks);

@@ -19,9 +19,9 @@
 
 #include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_node.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbot
 {
-template class TrackerNode<dbrt::RbcParticleFilterRobotTracker>;
+template class TrackerNode<dbrt::VisualTracker>;
 }

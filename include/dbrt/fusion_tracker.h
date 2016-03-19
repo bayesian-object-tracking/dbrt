@@ -11,7 +11,7 @@
  */
 
 /**
- * \file fusion_robot_tracker.hpp
+ * \file fusion_tracker.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -30,29 +30,29 @@
 #include <fl/model/process/linear_state_transition_model.hpp>
 #include <fl/model/process/interface/state_transition_function.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbrt/gaussian_joint_filter_robot_tracker.hpp>
-#include <dbrt/rbc_particle_filter_robot_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/visual_tracker.hpp>
 
 namespace dbrt
 {
 /**
- * \brief RbcParticleFilterRobotTracker
+ * \brief VisualTracker
  */
-class FusionRobotTracker
+class FusionTracker
 {
 public:
     // entire state and joint observation space
-    typedef GaussianJointFilterRobotTracker::State State;
-    typedef GaussianJointFilterRobotTracker::Obsrv JointsObsrv;
-    typedef GaussianJointFilterRobotTracker::JointBelief JointBelief;
+    typedef RotaryTracker::State State;
+    typedef RotaryTracker::Obsrv JointsObsrv;
+    typedef RotaryTracker::JointBelief JointBelief;
 
     // single joint observation space
-    typedef GaussianJointFilterRobotTracker::JointObsrv JointObsrv;
+    typedef RotaryTracker::JointObsrv JointObsrv;
 
 public:
-    FusionRobotTracker(const std::shared_ptr<GaussianJointFilterRobotTracker>&
+    FusionTracker(const std::shared_ptr<RotaryTracker>&
                            gaussian_joint_tracker,
-                       const std::shared_ptr<RbcParticleFilterRobotTracker>&
+                       const std::shared_ptr<VisualTracker>&
                            rbc_particle_filter_tracker);
 
     /**
@@ -101,8 +101,8 @@ private:
     sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
-    std::shared_ptr<GaussianJointFilterRobotTracker> gaussian_joint_tracker_;
-    std::shared_ptr<RbcParticleFilterRobotTracker> rbc_particle_filter_tracker_;
+    std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
+    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
 
     mutable std::mutex joints_obsrv_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;
