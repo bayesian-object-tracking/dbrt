@@ -29,7 +29,7 @@
 #include <dbot/util/rigid_body_renderer.hpp>
 #include <dbot_ros/utils/ros_interface.hpp>
 
-#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/robot_publisher.h>
 #include <dbrt/util/kinematics_from_urdf.hpp>
 
 namespace dbrt
@@ -39,6 +39,7 @@ class RobotAnimator
 public:
     virtual void animate(const Eigen::VectorXd& current,
                          double dt,
+                         double dilation,
                          Eigen::VectorXd& next) = 0;
 };
 
@@ -56,6 +57,7 @@ public:
                   const std::shared_ptr<RobotAnimator>& robot_animator,
                   double joint_sensors_rate,
                   double visual_sensor_rate,
+                  double dilation,
                   const State& initial_state)
         : state_(initial_state),
           object_model_(object_model),
@@ -64,11 +66,12 @@ public:
           camera_data_(camera_data),
           robot_animator_(robot_animator),
           joint_sensors_rate_(joint_sensors_rate),
-          visual_sensor_rate_(visual_sensor_rate)
+          visual_sensor_rate_(visual_sensor_rate),
+          dilation_(dilation)
     {
         robot_tracker_publisher_simulated_ =
             std::make_shared<RobotTrackerPublisher<State>>(
-                urdf_kinematics_, renderer_, "/robot_emulator");
+                urdf_kinematics_, renderer_, "/robot_emulator", "");
 
         render_and_publish();
     }
@@ -97,7 +100,7 @@ public:
         {
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
-            robot_animator_->animate(state_, 1. / rate, state_);
+            robot_animator_->animate(state_, 1. / rate, dilation_, state_);
             robot_tracker_publisher_simulated_->publish_joint_state(state_);
         }
     }
@@ -155,6 +158,8 @@ private:
         // publish observation image and point cloud
         robot_tracker_publisher_simulated_->publish(
             current_state, obsrv_image_, camera_data_);
+
+        robot_tracker_publisher_simulated_->publish_camera_info(camera_data_);
     }
 
 private:
@@ -170,6 +175,7 @@ private:
         robot_tracker_publisher_simulated_;
     double joint_sensors_rate_;
     double visual_sensor_rate_;
+    double dilation_;
 
     bool running_;
     mutable std::mutex state_mutex_;

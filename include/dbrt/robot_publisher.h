@@ -12,7 +12,7 @@
  */
 
 /**
- * \file robot_tracker_publisher.h
+ * \file robot_publisher.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -44,17 +44,16 @@ namespace dbrt
  * estimated state and its marker.
  */
 template <typename State>
-class RobotTrackerPublisher : public dbot::TrackerPublisher<State>
+class RobotTrackerPublisher : public dbot::RobotPublisher<State>
 {
 public:
-    RobotTrackerPublisher(
-        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
+    RobotTrackerPublisher(const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
-        const std::string& tf_prefix = "");
+        const std::string& tf_prefix, const std::string& data_prefix);
 
     void publish_joint_state(const State& state);
 
-    void publish(const State &state,
+    void publish(const State& state,
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
@@ -84,6 +83,11 @@ public:
         const Eigen::VectorXd& depth_image,
         sensor_msgs::Image& image);
 
+    void publish_camera_info(const std::shared_ptr<dbot::CameraData>& camera_data);
+
+    sensor_msgs::CameraInfoPtr create_camera_info(
+        const std::shared_ptr<dbot::CameraData>& camera_data);
+
     bool has_image_subscribers() const;
     bool has_point_cloud_subscribers() const;
 
@@ -96,6 +100,7 @@ protected:
         robot_state_publisher_;
     std::shared_ptr<ros::Publisher> pub_point_cloud_;
     ros::Publisher pub_joint_state_;
+    ros::Publisher pub_camera_info_;
     image_transport::Publisher pub_rgb_image_;
     image_transport::Publisher pub_depth_image_;
     std::shared_ptr<dbot::RigidBodyRenderer> robot_renderer_;

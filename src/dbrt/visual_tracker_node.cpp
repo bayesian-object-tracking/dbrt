@@ -34,11 +34,10 @@
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
 #include <dbot/util/rigid_body_renderer.hpp>
-#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 
 #include <dbrt/util/builder/visual_tracker_factory.h>
-
 
 int main(int argc, char** argv)
 {
@@ -128,27 +127,28 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbot::RobotPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics,
-            renderer,
-            "/estimated"));
+            urdf_kinematics, renderer, "/estimated", "/estimated"));
 
     /* ------------------------------ */
     /* - Create tracker node        - */
     /* ------------------------------ */
-    dbot::TrackerNode<Tracker> tracker_node(tracker, tracker_publisher);
+    dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
+                                                        tracker_publisher);
 
     /* ------------------------------ */
     /* - Initialize using joint msg - */
     /* ------------------------------ */
     sensor_msgs::JointState::ConstPtr joint_state;
 
+    ros::NodeHandle nh_global;
+
     while (!joint_state)
     {
-        joint_state = ros::topic::waitForMessage<sensor_msgs::JointState>(
-            "/joint_states", nh, ros::Duration(1.));
         ROS_INFO("Waiting for initial joint state");
+        joint_state = ros::topic::waitForMessage<sensor_msgs::JointState>(
+            "/joint_states", nh_global, ros::Duration(1.));
     }
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
@@ -160,6 +160,8 @@ int main(int argc, char** argv)
     }
     tracker->initialize(initial_states);
 
+    ROS_INFO("Running visual tracker");
+
     /* ------------------------------ */
     /* - Create and run tracker     - */
     /* - node                       - */
@@ -167,7 +169,7 @@ int main(int argc, char** argv)
     ros::Subscriber subscriber =
         nh.subscribe(depth_image_topic,
                      1,
-                     &dbot::TrackerNode<Tracker>::tracking_callback,
+                     &dbot::TrackerNode<dbrt::VisualTracker>::tracking_callback,
                      &tracker_node);
 
     ros::spin();

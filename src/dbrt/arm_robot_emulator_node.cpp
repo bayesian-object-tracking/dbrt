@@ -29,28 +29,14 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <dbot_ros/tracker_node.h>
 #include <dbot/util/rigid_body_renderer.hpp>
 #include <dbot/util/virtual_camera_data_provider.hpp>
-#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
-
+#include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_publisher.h>
 #include <dbot_ros/utils/ros_interface.hpp>
-#include <dbot_ros/utils/tracking_dataset.h>
-#include <dbot_ros/utils/data_set_camera_data_provider.hpp>
-
 #include <dbrt/robot_state.hpp>
-#include <dbrt/robot_tracker.hpp>
-#include <dbrt/fusion_tracker_node.h>
-#include <dbrt/robot_tracker_publisher.h>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/robot_emulator.hpp>
-#include <dbrt/rotary_tracker.hpp>
-#include <dbrt/fusion_tracker.h>
-#include <dbrt/rotary_tracker.hpp>
-#include <dbrt/visual_tracker.hpp>
-#include <dbrt/util/builder/rotary_tracker_builder.hpp>
-#include <dbrt/util/builder/visual_tracker_factory.h>
 
 class ArmRobotAnimator : public dbrt::RobotAnimator
 {
@@ -58,6 +44,7 @@ public:
     ArmRobotAnimator() : t_(0.) {}
     virtual void animate(const Eigen::VectorXd& current,
                          double dt,
+                         double dilation,
                          Eigen::VectorXd& next)
     {
         t_ += dt;
@@ -65,13 +52,13 @@ public:
         // left arm
         for (int i = 6; i < 6 + 7; ++i)
         {
-            next[i] = current[i] + 0.1 * dt * std::sin(t_);
+            next[i] = current[i] + 0.1 * dt / dilation * std::sin(t_/dilation);
         }
 
         // right arm
         for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
         {
-            next[i] = current[i] + 0.1 * dt * std::sin(t_);
+            next[i] = current[i] + 0.1 * dt/dilation * std::sin(t_/dilation);
         }
     }
 
@@ -140,8 +127,10 @@ int main(int argc, char** argv)
 
     double joint_rate;
     double image_rate;
+    double dilation;
     nh.getParam(prefix + "joint_sensor_rate", joint_rate);
     nh.getParam(prefix + "image_sensor_rate", image_rate);
+    nh.getParam(prefix + "dilation", dilation);
 
     dbrt::RobotEmulator<State> robot(object_model,
                                      urdf_kinematics,
@@ -150,6 +139,7 @@ int main(int argc, char** argv)
                                      robot_animator,
                                      joint_rate,  // joint sensor rate
                                      image_rate,  // visual sensor rate
+                                     dilation,
                                      state);
 
     /* ------------------------------ */

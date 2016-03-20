@@ -42,7 +42,7 @@ public:
      */
     FusionTrackerNode(
         const std::shared_ptr<Tracker>& tracker,
-        const std::shared_ptr<dbot::TrackerPublisher<State>>& publisher);
+        const std::shared_ptr<dbot::RobotPublisher<State>>& publisher);
 
     /**
      * \brief Tracking callback function which is invoked whenever a new image
@@ -56,6 +56,6 @@ public:
 protected:
     State current_state_;
     std::shared_ptr<Tracker> tracker_;
-    std::shared_ptr<dbot::TrackerPublisher<State>> publisher_;
+    std::shared_ptr<dbot::RobotPublisher<State>> publisher_;
 };
 }

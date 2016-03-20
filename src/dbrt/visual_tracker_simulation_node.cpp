@@ -38,7 +38,7 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/virtual_robot.h>
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbot::RobotPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
             urdf_kinematics, renderer, "/estimated"));
 

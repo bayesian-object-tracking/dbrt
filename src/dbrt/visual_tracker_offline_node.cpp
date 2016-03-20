@@ -37,7 +37,7 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbrt/robot_tracker_publisher.h>
+#include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/util/urdf_object_loader.hpp>
 #include <dbrt/util/builder/visual_tracker_factory.h>
@@ -110,14 +110,11 @@ int main(int argc, char** argv)
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     typedef dbrt::RobotState<> State;
 
-    typedef dbrt::VisualTracker Tracker;
-
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
 
     auto tracker = dbrt::create_visual_tracker(
         pre, urdf_kinematics, object_model, camera_data);
-
 
     auto data_camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
         new dbot::DataSetCameraDataProvider(data_set, 1));
@@ -137,20 +134,19 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbot::RobotPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics,
-            data_renderer,
-            "/estimated"));
+            urdf_kinematics, data_renderer, "/estimated", "/estimated"));
 
     auto data_tracker_publisher =
         std::make_shared<dbrt::RobotTrackerPublisher<State>>(
-            urdf_kinematics, data_renderer, "/sensors");
+            urdf_kinematics, data_renderer, "/sensors", "");
 
     /* ------------------------------ */
     /* - Create tracker node        - */
     /* ------------------------------ */
-    dbot::TrackerNode<Tracker> tracker_node(tracker, tracker_publisher);
+    dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
+                                                        tracker_publisher);
 
     /* ------------------------------ */
     /* - Initialize                 - */

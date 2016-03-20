@@ -18,10 +18,12 @@
  */
 
 #include <dbrt/robot_state.hpp>
-#include <dbrt/robot_tracker_publisher.h>
-#include <dbrt/robot_tracker_publisher.hpp>
+#include <dbrt/robot_publisher.h>
+#include <dbrt/robot_publisher.hpp>
 
 namespace dbrt
 {
 template class RobotTrackerPublisher<RobotState<>>;
+
+
 }

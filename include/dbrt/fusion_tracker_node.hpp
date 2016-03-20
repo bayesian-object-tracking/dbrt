@@ -30,7 +30,7 @@ namespace dbrt
 template <typename Tracker>
 FusionTrackerNode<Tracker>::FusionTrackerNode(
     const std::shared_ptr<Tracker>& tracker,
-    const std::shared_ptr<dbot::TrackerPublisher<State>>& publisher)
+    const std::shared_ptr<dbot::RobotPublisher<State>>& publisher)
     : tracker_(tracker), publisher_(publisher)
 {
 }
