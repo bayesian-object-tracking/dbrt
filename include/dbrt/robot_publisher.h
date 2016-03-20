@@ -44,7 +44,7 @@ namespace dbrt
  * estimated state and its marker.
  */
 template <typename State>
-class RobotTrackerPublisher : public dbot::RobotPublisher<State>
+class RobotTrackerPublisher : public dbot::TrackerPublisher<State>
 {
 public:
     RobotTrackerPublisher(const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,

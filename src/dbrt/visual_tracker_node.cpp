@@ -139,7 +139,7 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
-    auto tracker_publisher = std::shared_ptr<dbot::RobotPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
             urdf_kinematics, renderer, "/estimated", "/estimated"));
 
