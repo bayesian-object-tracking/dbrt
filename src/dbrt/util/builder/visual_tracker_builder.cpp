@@ -11,6 +11,17 @@
  * file distributed with this source code.
  */
 
+/*
+ * This file implements a part of the algorithm published in:
+ *
+ * M. Wuthrich, J. Bohg, D. Kappler, C. Pfreundt, S. Schaal
+ * The Coordinate Particle Filter -
+ * A novel Particle Filter for High Dimensional Systems
+ * IEEE Intl Conf on Robotics and Automation, 2015
+ * http://arxiv.org/abs/1505.00251
+ *
+ */
+
 
 
 #include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
