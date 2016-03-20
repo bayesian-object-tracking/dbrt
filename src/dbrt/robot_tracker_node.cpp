@@ -20,8 +20,10 @@
 #include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_node.hpp>
 #include <dbrt/visual_tracker.hpp>
+#include <dbrt/rotary_tracker.hpp>
 
 namespace dbot
 {
 template class TrackerNode<dbrt::VisualTracker>;
+template class TrackerNode<dbrt::RotaryTracker>;
 }

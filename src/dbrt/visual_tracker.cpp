@@ -38,11 +38,9 @@ namespace dbrt
 VisualTracker::VisualTracker(
     const std::shared_ptr<Filter>& filter,
     const std::shared_ptr<dbot::ObjectModel>& object_model,
-    const std::shared_ptr<dbot::CameraData>& camera_data,
     int evaluation_count,
     int block_count)
     : object_model_(object_model),
-      camera_data_(camera_data),
       filter_(filter),
       evaluation_count_(evaluation_count),
       block_count_(block_count)
@@ -68,11 +66,5 @@ auto VisualTracker::on_track(const Obsrv& image) -> State
 
     State mean = filter_->belief().mean();
     return mean;
-}
-
-const std::shared_ptr<dbot::CameraData>&
-VisualTracker::camera_data() const
-{
-    return camera_data_;
 }
 }

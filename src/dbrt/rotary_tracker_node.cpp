@@ -49,7 +49,64 @@
 #include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 
-#include <dbrt/util/builder/visual_tracker_factory.h>
+#include <dbrt/util/builder/rotary_tracker_builder.hpp>
+
+/**
+ * \brief Create a gaussian filter tracking the robot joints based on joint
+ *     measurements
+ * \param prefix
+ *     parameter prefix, e.g. fusion_tracker
+ * \param kinematics
+ *     URDF robot kinematics
+ */
+std::shared_ptr<dbrt::RotaryTracker>
+create_rotary_tracker(const std::string& prefix,
+                      const int& joint_count)
+{
+    ros::NodeHandle nh("~");
+
+    typedef dbrt::RotaryTracker Tracker;
+
+    /* ------------------------------ */
+    /* - State transition function  - */
+    /* ------------------------------ */
+    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters transition_parameters;
+
+    // linear state transition parameters
+    nh.getParam(prefix + "joint_transition/joint_sigmas",
+                transition_parameters.joint_sigmas);
+    nh.getParam(prefix + "joint_transition/bias_sigmas",
+                transition_parameters.bias_sigmas);
+    nh.getParam(prefix + "joint_transition/bias_factors",
+                transition_parameters.bias_factors);
+    transition_parameters.joint_count = joint_count;
+
+    auto transition_builder =
+        std::make_shared<dbrt::FactorizedTransitionBuilder<Tracker>>(
+            (transition_parameters));
+
+    /* ------------------------------ */
+    /* - Observation model          - */
+    /* ------------------------------ */
+    dbrt::RotarySensorBuilder<Tracker>::Parameters sensor_parameters;
+
+    nh.getParam(prefix + "joint_observation/joint_sigmas",
+                sensor_parameters.joint_sigmas);
+    sensor_parameters.joint_count = joint_count;
+
+    auto rotary_sensor_builder =
+        std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(sensor_parameters);
+
+    /* ------------------------------ */
+    /* - Build the tracker          - */
+    /* ------------------------------ */
+    auto tracker_builder =
+        dbrt::RotaryTrackerBuilder<Tracker>(
+            joint_count, transition_builder, rotary_sensor_builder);
+
+    return tracker_builder.build();
+}
+
 
 int main(int argc, char** argv)
 {
@@ -120,13 +177,13 @@ int main(int argc, char** argv)
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     typedef dbrt::RobotState<> State;
 
-    typedef dbrt::VisualTracker Tracker;
+    typedef dbrt::RotaryTracker Tracker;
 
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
 
-    auto tracker = dbrt::create_visual_tracker(
-        pre, urdf_kinematics, object_model, camera_data);
+    auto tracker = create_rotary_tracker(
+        pre, urdf_kinematics->num_joints());
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
@@ -146,8 +203,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Create tracker node        - */
     /* ------------------------------ */
-    dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
-                                                        camera_data,
+    dbot::TrackerNode<Tracker> tracker_node(tracker, camera_data,
                                                         tracker_publisher);
 
     /* ------------------------------ */
@@ -182,7 +238,7 @@ int main(int argc, char** argv)
     ros::Subscriber subscriber =
         nh.subscribe(depth_image_topic,
                      1,
-                     &dbot::TrackerNode<dbrt::VisualTracker>::tracking_callback,
+                     &dbot::TrackerNode<Tracker>::tracking_callback,
                      &tracker_node);
 
     ros::spin();

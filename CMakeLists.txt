@@ -147,6 +147,15 @@ target_link_libraries(visual_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
+add_executable(rotary_tracker
+     src/${PROJECT_NAME}/rotary_tracker_node.cpp)
+target_link_libraries(rotary_tracker
+     ${PROJECT_NAME}
+     ${catkin_LIBRARIES}
+     ${OpenCV_LIBS}
+     ${PCL_LIBRARIES}
+     yaml-cpp)
+
 add_executable(visual_tracker_offline
      src/${PROJECT_NAME}/visual_tracker_offline_node.cpp)
 target_link_libraries(visual_tracker_offline

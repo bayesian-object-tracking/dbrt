@@ -96,22 +96,22 @@ void FusionTracker::run_particle_tracker()
     {
         // here is where the magic happens
 
-        usleep(33000);
-//        // obtain latest image obsrv copy
-        sensor_msgs::Image ros_image;
-        {
-            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
-            ros_image = ros_image_;
-        }
+//        usleep(33000);
+////        // obtain latest image obsrv copy
+//        sensor_msgs::Image ros_image;
+//        {
+//            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
+//            ros_image = ros_image_;
+//        }
 
-        if (ros_image.height == 0 || ros_image.width == 0) continue;
+//        if (ros_image.height == 0 || ros_image.width == 0) continue;
 
-        auto image = ri::Ros2EigenVector<double>(
-            ros_image,
-            rbc_particle_filter_tracker_->camera_data()->downsampling_factor());
+//        auto image = ri::Ros2EigenVector<double>(
+//            ros_image,
+//            rbc_particle_filter_tracker_->camera_data()->downsampling_factor());
 
-        State current_state;
-        current_state = rbc_particle_filter_tracker_->track(image);
+//        State current_state;
+//        current_state = rbc_particle_filter_tracker_->track(image);
 
 //        {
 //            std::lock_guard<std::mutex> state_lock(current_state_mutex_);
