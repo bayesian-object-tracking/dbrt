@@ -156,16 +156,6 @@ target_link_libraries(visual_tracker_offline
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-#add_executable(visual_tracker_simulation
-#     src/${PROJECT_NAME}/visual_tracker_simulation_node.cpp)
-#target_link_libraries(visual_tracker_simulation
-#     ${PROJECT_NAME}
-#     ${catkin_LIBRARIES}
-#     ${OpenCV_LIBS}
-#     ${PCL_LIBRARIES}
-#     yaml-cpp)
-
-
 add_executable(arm_robot_emulator
      src/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
 target_link_libraries(arm_robot_emulator
