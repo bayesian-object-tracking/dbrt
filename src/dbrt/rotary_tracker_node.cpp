@@ -59,9 +59,9 @@
  * \param kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::RotaryTracker>
-create_rotary_tracker(const std::string& prefix,
-                      const int& joint_count)
+std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
+    const std::string& prefix,
+    const int& joint_count)
 {
     ros::NodeHandle nh("~");
 
@@ -70,7 +70,8 @@ create_rotary_tracker(const std::string& prefix,
     /* ------------------------------ */
     /* - State transition function  - */
     /* ------------------------------ */
-    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters transition_parameters;
+    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters
+        transition_parameters;
 
     // linear state transition parameters
     nh.getParam(prefix + "joint_transition/joint_sigmas",
@@ -94,23 +95,23 @@ create_rotary_tracker(const std::string& prefix,
                 sensor_parameters.joint_sigmas);
     sensor_parameters.joint_count = joint_count;
 
+    PV(joint_count);
+
     auto rotary_sensor_builder =
         std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(sensor_parameters);
 
     /* ------------------------------ */
     /* - Build the tracker          - */
     /* ------------------------------ */
-    auto tracker_builder =
-        dbrt::RotaryTrackerBuilder<Tracker>(
-            joint_count, transition_builder, rotary_sensor_builder);
+    auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
+        joint_count, transition_builder, rotary_sensor_builder);
 
     return tracker_builder.build();
 }
 
-
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "visual_tracker");
+    ros::init(argc, argv, "rotary_tracker");
     ros::NodeHandle nh("~");
 
     /* ---------------------------------------------------------------------- */
@@ -180,10 +181,10 @@ int main(int argc, char** argv)
     typedef dbrt::RotaryTracker Tracker;
 
     // parameter shorthand prefix
-    std::string pre = "particle_filter/";
+    std::string pre = "rotary_tracker/";
 
-    auto tracker = create_rotary_tracker(
-        pre, urdf_kinematics->num_joints());
+    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
+    auto tracker = create_rotary_tracker(pre, urdf_kinematics->num_joints());
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
@@ -203,8 +204,8 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Create tracker node        - */
     /* ------------------------------ */
-    dbot::TrackerNode<Tracker> tracker_node(tracker, camera_data,
-                                                        tracker_publisher);
+    dbot::TrackerNode<Tracker> tracker_node(
+        tracker, camera_data, tracker_publisher);
 
     /* ------------------------------ */
     /* - Initialize using joint msg - */
