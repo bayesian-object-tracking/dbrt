@@ -1,5 +1,6 @@
 /*
- * This is part of the Bayesian Robot Tracking
+ * This is part of the Bayesian Object Tracking (bot),
+ * (https://github.com/bayesian-object-tracking)
  *
  * Copyright (c) 2015 Max Planck Society,
  * 				 Autonomous Motion Department,

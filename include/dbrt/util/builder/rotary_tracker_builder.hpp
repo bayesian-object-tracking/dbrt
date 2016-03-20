@@ -43,14 +43,13 @@ public:
 
 public:
     RotaryTrackerBuilder(
-        const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
+        const int& joint_count,
         const std::shared_ptr<FactorizedTransitionBuilder<Tracker>>&
-            state_transition_builder,
-        const std::shared_ptr<RotarySensorBuilder<Tracker>>&
-            obsrv_model_builder)
-        : state_transition_builder_(state_transition_builder),
-          obsrv_model_builder_(obsrv_model_builder),
-          urdf_kinematics_(urdf_kinematics)
+            transition_builder,
+        const std::shared_ptr<RotarySensorBuilder<Tracker>>& sensor_builder)
+        : joint_count_(joint_count),
+          transition_builder_(transition_builder),
+          sensor_builder_(sensor_builder)
     {
     }
 
@@ -70,11 +69,11 @@ public:
     {
         auto joint_filters = std::make_shared<std::vector<JointFilter>>();
 
-        for (int i = 0; i < urdf_kinematics_->num_joints(); ++i)
+        for (int i = 0; i < joint_count_; ++i)
         {
             auto state_transition_model =
-                this->state_transition_builder_->build(i);
-            auto obsrv_model = this->obsrv_model_builder_->build(i);
+                this->transition_builder_->build(i);
+            auto obsrv_model = this->sensor_builder_->build(i);
 
             auto filter = JointFilter(*state_transition_model, *obsrv_model);
 
@@ -84,10 +83,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<FactorizedTransitionBuilder<Tracker>>
-        state_transition_builder_;
-    std::shared_ptr<RotarySensorBuilder<Tracker>>
-        obsrv_model_builder_;
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
+    int joint_count_;
+    std::shared_ptr<FactorizedTransitionBuilder<Tracker>> transition_builder_;
+    std::shared_ptr<RotarySensorBuilder<Tracker>> sensor_builder_;
 };
 }
