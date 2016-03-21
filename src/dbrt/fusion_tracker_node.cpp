@@ -38,6 +38,7 @@
 #include <dbot_ros/utils/ros_interface.hpp>
 #include <dbot_ros/utils/tracking_dataset.h>
 #include <dbot_ros/utils/data_set_camera_data_provider.hpp>
+#include <dbot_ros/utils/ros_camera_data_provider.hpp>
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_publisher.h>
@@ -135,10 +136,21 @@ int main(int argc, char** argv)
     /* - Setup camera data          - */
     /* ------------------------------ */
     int downsampling_factor;
+    std::string camera_info_topic;
+    std::string depth_image_topic;
+    dbot::CameraData::Resolution resolution;
+    nh.getParam("camera_info_topic", camera_info_topic);
+    nh.getParam("depth_image_topic", depth_image_topic);
     nh.getParam("downsampling_factor", downsampling_factor);
+    nh.getParam("resolution/width", resolution.width);
+    nh.getParam("resolution/height", resolution.height);
     auto camera_data = std::make_shared<dbot::CameraData>(
-        std::make_shared<dbot::VirtualCameraDataProvider>(downsampling_factor,
-                                                          "/XTION"));
+        std::make_shared<dbot::RosCameraDataProvider>(nh,
+                                                      camera_info_topic,
+                                                      depth_image_topic,
+                                                      resolution,
+                                                      downsampling_factor,
+                                                      2.0));
 
     /* ------------------------------ */
     /* - Robot renderer             - */
@@ -154,32 +166,38 @@ int main(int argc, char** argv)
     /* - Our state representation   - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
-
-    //    /// \todo: somehow the two lines here make it kind of work...
-    //    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
-    //    std::cout << urdf_kinematics->GetLinkPosition(3) << std::endl;
+    dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
 
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
-    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-        new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, renderer, "/estimated", "/estimated"));
+    auto tracker_publisher =
+        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
+            new dbrt::RobotTrackerPublisher<State>(
+                urdf_kinematics, renderer, "/estimated", "/estimated"));
 
     /* ------------------------------ */
     /* - Create Tracker and         - */
     /* - tracker publisher          - */
     /* ------------------------------ */
-    auto particle_robot_tracker = dbrt::create_visual_tracker(
-        prefix, urdf_kinematics, object_model, camera_data);
+//    auto particle_robot_tracker = dbrt::create_visual_tracker(
+//        prefix, urdf_kinematics, object_model, camera_data);
 
     ROS_INFO("creating trackers ... ");
     auto gaussian_joint_robot_tracker =
         create_rotary_tracker(prefix, urdf_kinematics->num_joints());
     dbrt::FusionTracker fusion_tracker(
-        camera_data, gaussian_joint_robot_tracker, particle_robot_tracker);
+        //        camera_data, gaussian_joint_robot_tracker,
+        //        particle_robot_tracker);
+        camera_data,
+        gaussian_joint_robot_tracker,
+        [&]()
+        {
+            return dbrt::create_visual_tracker(
+                prefix, urdf_kinematics, object_model, camera_data);
+        });
 
     /* ------------------------------ */
     /* - Initialize                 - */
@@ -205,36 +223,35 @@ int main(int argc, char** argv)
     fusion_tracker.initialize(initial_states);
 
     /* ------------------------------ */
-    /* - Tracker publisher          - */
-    /* ------------------------------ */
-    //    auto tracker_publisher =
-    //    std::shared_ptr<dbot::TrackerPublisher<State>>(
-    //        new dbrt::RobotTrackerPublisher<State>(
-    //            urdf_kinematics, renderer, "/estimated"));
-
-    /* ------------------------------ */
-    /* - Create tracker node        - */
-    /* ------------------------------ */
-
-    //    dbot::TrackerNode<dbrt::RbcParticleFilterRobotTracker> tracker_node(
-    //        particle_robot_tracker, tracker_publisher);
-    //    particle_robot_tracker->initialize({robot.state()});
-
-    /* ------------------------------ */
     /* - Run tracker node           - */
     /* ------------------------------ */
     fusion_tracker.run();
+
+    ros::Subscriber joint_subscriber =
+        nh.subscribe("/joint_states",
+                     1000,
+                     &dbrt::FusionTracker::joints_obsrv_callback,
+                     &fusion_tracker);
+
+    ros::Subscriber image_subscriber =
+        nh.subscribe(depth_image_topic,
+                     1,
+                     &dbrt::FusionTracker::image_obsrv_callback,
+                     &fusion_tracker);
+
     ros::Rate visualization_rate(24);
+//    ros::AsyncSpinner spinner;
+//    spinner.start();
 
     while (ros::ok())
     {
         visualization_rate.sleep();
         auto current_state = fusion_tracker.current_state();
+        tracker_publisher->publish(current_state, camera_data);
 
-        tracker_publisher->publish(
-                current_state, camera_data);
-
+        INIT_PROFILING;
         ros::spinOnce();
+        MEASURE_FLUSH("spin spin  lovely spinner")
     }
 
     ROS_INFO("Shutting down ...");

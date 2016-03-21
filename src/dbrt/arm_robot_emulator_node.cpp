@@ -109,6 +109,7 @@ int main(int argc, char** argv)
     /* - Our state representation   - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <memory>
+#include <mutex>
 
 #include <osr/euler_vector.hpp>
 #include <osr/rigid_bodies_state.hpp>
@@ -65,6 +66,7 @@ public:
     /// set the velocity?
     virtual osr::PoseVelocityVector component(int index) const
     {
+        std::lock_guard<std::mutex> lock(*kinematics_mutex_);
         osr::PoseVelocityVector vector;
         vector.position() = position(index);
         vector.orientation() = euler_vector(index);
@@ -122,11 +124,16 @@ private:
     }
 
 public:
+    static std::shared_ptr<std::mutex> kinematics_mutex_;
     static std::shared_ptr<KinematicsFromURDF> kinematics_;
 };
 
 template <int JointCount, int BodyCount>
 std::shared_ptr<KinematicsFromURDF>
     RobotState<JointCount, BodyCount>::kinematics_;
+
+template <int JointCount, int BodyCount>
+std::shared_ptr<std::mutex>
+    RobotState<JointCount, BodyCount>::kinematics_mutex_;
 
 }

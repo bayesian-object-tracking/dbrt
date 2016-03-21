@@ -50,11 +50,14 @@ public:
     // single joint observation space
     typedef RotaryTracker::JointObsrv JointObsrv;
 
+    typedef std::function<std::shared_ptr<VisualTracker>()> VisualTrackerFactory;
+
 public:
     FusionTracker(
         const std::shared_ptr<dbot::CameraData>& camera_data,
         const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
-        const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker);
+        const VisualTrackerFactory& visual_tracker_factory);
+//        const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker);
 
     /**
      * \brief Initializes the filters with the given initial states and
@@ -96,6 +99,7 @@ protected:
     };
 
 private:
+    VisualTrackerFactory visual_tracker_factory_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
     std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
