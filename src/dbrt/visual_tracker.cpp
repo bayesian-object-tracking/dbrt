@@ -47,24 +47,19 @@ VisualTracker::VisualTracker(
 {
 }
 
-auto VisualTracker::on_initialize(
-    const std::vector<State>& initial_states) -> State
+void VisualTracker::initialize(
+    const std::vector<State>& initial_states)
 {
     filter_->set_particles(initial_states);
-
-    // TODO determine what is the number of sampling blocks
-    // eval_count / sampling blocks
     filter_->resample(evaluation_count_ / block_count_);
-
-    State mean = filter_->belief().mean();
-    return mean;
 }
 
-auto VisualTracker::on_track(const Obsrv& image) -> State
+auto VisualTracker::track(const Obsrv& image) -> State
 {
     filter_->filter(image, zero_input());
 
     State mean = filter_->belief().mean();
+
     return mean;
 }
 }

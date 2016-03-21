@@ -157,6 +157,7 @@ int main(int argc, char** argv)
     /* - Create tracker node        - */
     /* ------------------------------ */
     dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
+                                                        camera_data,
                                                         tracker_publisher);
 
     /* ------------------------------ */

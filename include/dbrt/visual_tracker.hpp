@@ -78,7 +78,7 @@ public:
      * \param image
      *     Current observation image
      */
-    State on_track(const Obsrv& image);
+    State track(const Obsrv& image);
 
     /**
      * \brief Initializes the particle filter with the given initial states and
@@ -86,7 +86,7 @@ public:
      * @param initial_states
      * @param evaluation_count
      */
-    State on_initialize(const std::vector<State>& initial_states);
+    void initialize(const std::vector<State>& initial_states);
 
 private:
     std::shared_ptr<dbot::ObjectModel> object_model_;

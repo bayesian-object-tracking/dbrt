@@ -21,6 +21,7 @@
 
 #include <mutex>
 #include <memory>
+#include <sensor_msgs/JointState.h>
 
 #include <fl/filter/gaussian/gaussian_filter_linear.hpp>
 #include <fl/model/observation/linear_gaussian_observation_model.hpp>
@@ -78,7 +79,7 @@ public:
      * \param image
      *     Current observation image
      */
-    State on_track(const Obsrv& joints_obsrv);
+    State track(const Obsrv& joints_obsrv);
 
     /**
      * \brief Initializes the particle filter with the given initial states and
@@ -88,13 +89,20 @@ public:
      * \param obsrv
      *    initial observation which may be required in
      */
-    State on_initialize(const std::vector<State>& initial_states);
+    void initialize(const std::vector<State>& initial_states);
 
+    /**
+    void track_callback(const sensor_msgs::JointState &joint_msg);
+
+    /**
+     * \brief DOC please!
+     */
     std::vector<AngleBelief> angle_beliefs();
 
+    /**
+     * \brief DOC please!
+     */
     void set_angle_beliefs(std::vector<AngleBelief> angle_beliefs);
-
-
 
     /**
      * \brief Returns immutable reference to all joint belliefs
@@ -106,7 +114,14 @@ public:
      */
     std::vector<JointBelief>& beliefs();
 
+    /**
+     * \brief Returns current state from the belief
+     */
+    State current_state() const;
+
+    void track_callback(const sensor_msgs::JointState &joint_msg);
 private:
+    State current_state_;
     std::vector<JointBelief> beliefs_;
     std::shared_ptr<std::vector<JointFilter>> joint_filters_;
 };

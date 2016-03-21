@@ -26,21 +26,6 @@
 namespace dbrt
 {
 
-void RobotTracker::initialize(const std::vector<State>& initial_states)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    on_initialize(initial_states);
-}
-
-
-auto RobotTracker::track(const Obsrv& image) -> State
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto state = on_track(image);
-    return state;
-}
-
 RobotTracker::Input RobotTracker::zero_input() const
 {
     return Input::Zero(1);

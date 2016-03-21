@@ -70,24 +70,12 @@ public:
     virtual ~RobotTracker() { }
 
     /**
-     * \brief Hook function which is called during tracking
-     * \return Current belief state
-     */
-    virtual State on_track(const Obsrv& image) = 0;
-
-    /**
-     * \brief Hook function which is called during initialization
-     * \return Initial belief state
-     */
-    virtual State on_initialize(const std::vector<State>& initial_states) = 0;
-
-    /**
      * \brief perform a single filter step
      *
      * \param image
      *     Current observation image
      */
-    virtual State track(const Obsrv& obsrv);
+    virtual State track(const Obsrv& obsrv) = 0;
 
     /**
      * \brief Initializes the particle filter with the given initial states and
@@ -95,7 +83,7 @@ public:
      * @param initial_states
      * @param evaluation_count
      */
-    void initialize(const std::vector<State>& initial_states);
+    virtual void initialize(const std::vector<State>& initial_states) = 0;
 
 
     /**
@@ -104,6 +92,6 @@ public:
     Input zero_input() const;
 
 protected:
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };
 }
