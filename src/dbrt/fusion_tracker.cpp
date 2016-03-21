@@ -18,6 +18,7 @@
  */
 
 #include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 #include <dbrt/fusion_tracker.h>
 
 #include <dbot_ros/utils/ros_interface.hpp>
@@ -25,11 +26,11 @@
 namespace dbrt
 {
 FusionTracker::FusionTracker(
-    const std::shared_ptr<RotaryTracker>&
-        gaussian_joint_tracker,
-    const std::shared_ptr<VisualTracker>&
-        rbc_particle_filter_tracker)
-    : gaussian_joint_tracker_(gaussian_joint_tracker),
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
+    const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker)
+    : camera_data_(camera_data),
+      gaussian_joint_tracker_(gaussian_joint_tracker),
       rbc_particle_filter_tracker_(rbc_particle_filter_tracker),
       running_(true)
 {
@@ -85,7 +86,7 @@ void FusionTracker::run_gaussian_tracker()
 
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-            //            current_state_ = current_state;
+            current_state_ = current_state;
         }
     }
 }
@@ -96,27 +97,28 @@ void FusionTracker::run_particle_tracker()
     {
         // here is where the magic happens
 
-//        usleep(33000);
-////        // obtain latest image obsrv copy
-//        sensor_msgs::Image ros_image;
-//        {
-//            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
-//            ros_image = ros_image_;
-//        }
+        usleep(33000);
+        //        // obtain latest image obsrv copy
+        sensor_msgs::Image ros_image;
+        {
+            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
+            ros_image = ros_image_;
+        }
 
-//        if (ros_image.height == 0 || ros_image.width == 0) continue;
+        if (ros_image.height == 0 || ros_image.width == 0) continue;
 
-//        auto image = ri::Ros2EigenVector<double>(
-//            ros_image,
-//            rbc_particle_filter_tracker_->camera_data()->downsampling_factor());
+        auto image = ri::Ros2EigenVector<double>(
+            ros_image,
+            camera_data_->downsampling_factor());
 
-//        State current_state;
-//        current_state = rbc_particle_filter_tracker_->track(image);
+        //        State current_state;
+        //        current_state = rbc_particle_filter_tracker_->track(image);
 
-//        {
-//            std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-//            current_state_ = current_state;
-//        }
+        //        {
+        //            std::lock_guard<std::mutex>
+        //            state_lock(current_state_mutex_);
+        //            current_state_ = current_state;
+        //        }
     }
 }
 
@@ -143,20 +145,25 @@ FusionTracker::State FusionTracker::current_state() const
 }
 
 void FusionTracker::joints_obsrv_callback(
-    const FusionTracker::JointsObsrv& joints_obsrv)
+    const sensor_msgs::JointState& joint_msg)
 {
     std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
 
+    Eigen::VectorXd obsrv(joint_msg.position.size());
+    for (int i = 0; i < joint_msg.position.size(); ++i)
+    {
+        obsrv[i] = joint_msg.position[i];
+    }
+
     JointsObsrvEntry entry;
     entry.timestamp = ros::Time::now().toSec();
-    entry.obsrv = joints_obsrv;
+    entry.obsrv = obsrv;
     joints_obsrvs_buffer_.push_back(entry);
 
     if (joints_obsrvs_buffer_.size() > 10000) joints_obsrvs_buffer_.pop_front();
 }
 
-void FusionTracker::image_obsrv_callback(
-    const sensor_msgs::Image& ros_image)
+void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
     //    image_obsrv_ = image_obsrv;

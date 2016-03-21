@@ -51,10 +51,10 @@ public:
     typedef RotaryTracker::JointObsrv JointObsrv;
 
 public:
-    FusionTracker(const std::shared_ptr<RotaryTracker>&
-                           gaussian_joint_tracker,
-                       const std::shared_ptr<VisualTracker>&
-                           rbc_particle_filter_tracker);
+    FusionTracker(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
+        const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker);
 
     /**
      * \brief Initializes the filters with the given initial states and
@@ -73,8 +73,8 @@ public:
      */
     State update_with_joints(const JointsObsrv& joints_obsrv);
 
-    void joints_obsrv_callback(const JointsObsrv& joints_obsrv);
-    void image_obsrv_callback(const sensor_msgs::Image &ros_image);
+    void joints_obsrv_callback(const sensor_msgs::JointState& joints_obsrv);
+    void image_obsrv_callback(const sensor_msgs::Image& ros_image);
 
     State current_state() const;
 
@@ -96,14 +96,16 @@ protected:
     };
 
 private:
+    std::shared_ptr<dbot::CameraData> camera_data_;
+    std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
+    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
+
     bool running_;
     State current_state_;
     Eigen::VectorXd image_obsrv_;
     sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
-    std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
-    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
 
     mutable std::mutex joints_obsrv_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;

@@ -34,7 +34,7 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include <ros/ros.h>
-#include <pcl_ros/point_cloud.h>
+//#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Image.h>
 
 #include <dbot/util/rigid_body_renderer.hpp>
