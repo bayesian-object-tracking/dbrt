@@ -178,6 +178,40 @@ void RobotTrackerPublisher<State>::publish(
     }
 }
 
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish(
+    const State& state,
+    const std::shared_ptr<dbot::CameraData>& camera_data)
+{
+    ros::Time t = ros::Time::now();
+
+    // make sure there is a identity transformation between base of real
+    // robot and estimated robot
+    publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
+
+    // publish movable joints
+    std::map<std::string, double> joint_positions;
+    state.GetJointState(joint_positions);
+    robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
+
+    // publish fixed transforms
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
+
+    if (has_image_subscribers())
+    {
+        Eigen::VectorXd depth_image;
+        robot_renderer_->parameters(camera_data->camera_matrix(),
+                                    camera_data->resolution().height,
+                                    camera_data->resolution().width);
+        robot_renderer_->Render(
+            state, depth_image, std::numeric_limits<double>::quiet_NaN());
+
+        publishImage(depth_image, camera_data, t);
+    }
+}
+
+
 template <typename State>
 void RobotTrackerPublisher<State>::publishImage(
     const Eigen::VectorXd& depth_image,

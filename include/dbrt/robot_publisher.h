@@ -91,6 +91,7 @@ public:
     bool has_image_subscribers() const;
     bool has_point_cloud_subscribers() const;
 
+    void publish(const State &state, const std::shared_ptr<dbot::CameraData> &camera_data);
 protected:
     sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
