@@ -29,14 +29,24 @@ RotaryTracker::RotaryTracker(
 {
 }
 
-const std::vector<RotaryTracker::JointBelief>&
-RotaryTracker::beliefs() const
+void RotaryTracker::track_callback(const sensor_msgs::JointState& joint_msg)
+{
+    Obsrv obsrv(joint_msg.position.size());
+
+    for (int i = 0; i < joint_msg.position.size(); ++i)
+    {
+        obsrv[i] = joint_msg.position[i];
+    }
+
+    track(obsrv);
+}
+
+const std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs() const
 {
     return beliefs_;
 }
 
-std::vector<RotaryTracker::AngleBelief>
-RotaryTracker::angle_beliefs()
+std::vector<RotaryTracker::AngleBelief> RotaryTracker::angle_beliefs()
 {
     std::vector<AngleBelief> beliefs(beliefs_.size());
 
@@ -84,15 +94,19 @@ void RotaryTracker::set_angle_beliefs(
     }
 }
 
-std::vector<RotaryTracker::JointBelief>&
-RotaryTracker::beliefs()
+std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs()
 {
     return beliefs_;
 }
 
+RobotTracker::State RotaryTracker::current_state() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return current_state_;
+}
+
 /// todo: there should be no obsrv passed in this function
-auto RotaryTracker::on_initialize(
-    const std::vector<State>& initial_states) -> State
+void RotaryTracker::initialize(const std::vector<State>& initial_states)
 {
     State state;
     state.resize(joint_filters_->size());
@@ -115,12 +129,11 @@ auto RotaryTracker::on_initialize(
         state(i) = beliefs_[i].mean()(0);
     }
 
-    /// todo why do we have a return value?
-    return state;
+    std::lock_guard<std::mutex> lock(mutex_);
+    current_state_ = state;
 }
 
-auto RotaryTracker::on_track(const Obsrv& joints_obsrv)
-    -> State
+auto RotaryTracker::track(const Obsrv& joints_obsrv) -> State
 {
     State state;
     state.resize(joint_filters_->size());
@@ -133,8 +146,11 @@ auto RotaryTracker::on_track(const Obsrv& joints_obsrv)
         (*joint_filters_)[i].update(
             beliefs_[i], joints_obsrv.middleRows(i, 1), beliefs_[i]);
 
-        state(i) = beliefs_[i].sample()(0);
+        state(i) = beliefs_[i].mean()(0);
     }
+
+//    std::lock_guard<std::mutex> lock(mutex_);
+    current_state_ = state;
 
     //    auto angle_bels = angle_beliefs();
     //    auto old_beliefs = beliefs_;

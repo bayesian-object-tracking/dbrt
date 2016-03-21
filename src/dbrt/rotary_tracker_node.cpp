@@ -183,7 +183,7 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string pre = "rotary_tracker/";
 
-    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
+    //    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
     auto tracker = create_rotary_tracker(pre, urdf_kinematics->num_joints());
 
     /* ------------------------------ */
@@ -197,15 +197,9 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
             urdf_kinematics, renderer, "/estimated", "/estimated"));
-
-    /* ------------------------------ */
-    /* - Create tracker node        - */
-    /* ------------------------------ */
-    dbot::TrackerNode<Tracker> tracker_node(
-        tracker, camera_data, tracker_publisher);
 
     /* ------------------------------ */
     /* - Initialize using joint msg - */
@@ -236,11 +230,20 @@ int main(int argc, char** argv)
     /* - Create and run tracker     - */
     /* - node                       - */
     /* ------------------------------ */
-    ros::Subscriber subscriber =
-        nh.subscribe(depth_image_topic,
-                     1,
-                     &dbot::TrackerNode<Tracker>::tracking_callback,
-                     &tracker_node);
+    ros::Subscriber subscriber = nh.subscribe(
+        "/joint_states", 1, &dbrt::RotaryTracker::track_callback, &(*tracker));
+
+    ros::Rate visualization_rate(24);
+
+    while (ros::ok())
+    {
+        visualization_rate.sleep();
+        auto current_state = tracker->current_state();
+
+        tracker_publisher->publish(current_state, camera_data);
+
+        ros::spinOnce();
+    }
 
     ros::spin();
 
