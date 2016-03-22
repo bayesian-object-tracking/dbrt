@@ -25,6 +25,7 @@
 #include <mutex>
 #include <memory>
 #include <thread>
+#include <functional>
 
 #include <fl/filter/gaussian/gaussian_filter_linear.hpp>
 #include <fl/model/observation/linear_gaussian_observation_model.hpp>
@@ -50,42 +51,9 @@ public:
     // single joint observation space
     typedef RotaryTracker::JointObsrv JointObsrv;
 
-    typedef std::function<std::shared_ptr<VisualTracker>()> VisualTrackerFactory;
+    typedef std::function<std::shared_ptr<VisualTracker>()>
+        VisualTrackerFactory;
 
-public:
-    FusionTracker(
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
-        const VisualTrackerFactory& visual_tracker_factory);
-//        const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker);
-
-    /**
-     * \brief Initializes the filters with the given initial states and
-     *    the number of evaluations
-     */
-    void initialize(const std::vector<State>& initial_states);
-
-    void run();
-    void shutdown();
-
-    /**
-     * \brief perform a single filter step
-     *
-     * \param image
-     *     Current observation image
-     */
-    State update_with_joints(const JointsObsrv& joints_obsrv);
-
-    void joints_obsrv_callback(const sensor_msgs::JointState& joints_obsrv);
-    void image_obsrv_callback(const sensor_msgs::Image& ros_image);
-
-    State current_state() const;
-
-protected:
-    void run_gaussian_tracker();
-    void run_particle_tracker();
-
-protected:
     struct JointsObsrvEntry
     {
         double timestamp;
@@ -98,20 +66,55 @@ protected:
         std::vector<JointBelief> beliefs;
     };
 
+public:
+    FusionTracker(const std::shared_ptr<dbot::CameraData>& camera_data,
+                  const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
+                  const VisualTrackerFactory& visual_tracker_factory);
+
+    /**
+     * \brief Initializes the filters with the given initial states and
+     *    the number of evaluations
+     */
+    void initialize(const std::vector<State>& initial_states);
+
+    void run();
+    void shutdown();
+
+    void joints_obsrv_callback(const sensor_msgs::JointState& joints_obsrv);
+    void image_obsrv_callback(const sensor_msgs::Image& ros_image);
+
+    State current_state() const;
+
+protected:
+    void run_gaussian_tracker();
+    void run_particle_tracker();
+
+private:
+    int find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
+                          double timestamp,
+                          JointsBeliefEntry& belief_entry);
+    State get_state_from_belief(const JointsBeliefEntry& entry);
+    Eigen::MatrixXd get_covariance_sqrt_from_belief(
+        const JointsBeliefEntry& entry);
+
+    std::vector<RotaryTracker::AngleBelief> get_angel_beliefs_from_moments(
+            const State& mean,
+            const Eigen::MatrixXd& cov);
+
 private:
     VisualTrackerFactory visual_tracker_factory_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
-    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker_;
 
     bool running_;
     State current_state_;
-    Eigen::VectorXd image_obsrv_;
     sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
 
+    mutable std::mutex rotary_tracker_lock_;
     mutable std::mutex joints_obsrv_buffer_mutex_;
+    mutable std::mutex joints_obsrv_belief_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;
     mutable std::mutex current_state_mutex_;
     std::thread gaussian_tracker_thread_;

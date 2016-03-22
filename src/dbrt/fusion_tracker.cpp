@@ -29,11 +29,9 @@ FusionTracker::FusionTracker(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
     const VisualTrackerFactory& visual_tracker_factory)
-    //    const std::shared_ptr<VisualTracker>& rbc_particle_filter_tracker)
     : camera_data_(camera_data),
       gaussian_joint_tracker_(gaussian_joint_tracker),
       visual_tracker_factory_(visual_tracker_factory),
-      //      rbc_particle_filter_tracker_(rbc_particle_filter_tracker),
       running_(true)
 {
 }
@@ -42,19 +40,17 @@ void FusionTracker::initialize(const std::vector<State>& initial_states)
 {
     current_state_ = initial_states[0];
     gaussian_joint_tracker_->initialize(initial_states);
-    //    rbc_particle_filter_tracker_->initialize(initial_states);
 }
 
 void FusionTracker::run_gaussian_tracker()
 {
     while (running_)
     {
-        usleep(1);
-        std::deque<JointsObsrvEntry> joints_obsrvs_buffer_copy;
+        usleep(10);
+        std::deque<JointsObsrvEntry> joints_obsrvs_buffer_local;
         {
             std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
-            joints_obsrvs_buffer_copy = joints_obsrvs_buffer_;
-            joints_obsrvs_buffer_.clear();
+            joints_obsrvs_buffer_.swap(joints_obsrvs_buffer_local);
         }
 
         State current_state;
@@ -63,7 +59,10 @@ void FusionTracker::run_gaussian_tracker()
             current_state = current_state_;
         }
 
-        for (auto joints_obsrv_entry : joints_obsrvs_buffer_copy)
+        std::lock_guard<std::mutex> belief_buffer_lock(
+            joints_obsrv_belief_buffer_mutex_);
+        std::lock_guard<std::mutex> rotary_lock(rotary_tracker_lock_);
+        for (auto joints_obsrv_entry : joints_obsrvs_buffer_local)
         {
             // construct a joints belief entry which contains the following
             //  - the joints measurement values
@@ -72,16 +71,17 @@ void FusionTracker::run_gaussian_tracker()
             JointsBeliefEntry joints_belief_entry;
             joints_belief_entry.joints_obsrv_entry = joints_obsrv_entry;
 
-            // store current belief
-            current_state = update_with_joints(
+            current_state = gaussian_joint_tracker_->track(
                 joints_belief_entry.joints_obsrv_entry.obsrv);
 
-            joints_belief_entry.beliefs = gaussian_joint_tracker_->beliefs();
+            joints_belief_entry.beliefs =
+                gaussian_joint_tracker_->beliefs();
 
             // update sliding window of belief and joints obsrv entries
             joints_obsrv_belief_buffer_.push_back(joints_belief_entry);
             if (joints_obsrv_belief_buffer_.size() > 10000)
             {
+                PInfo("Belief buffer max size reached ... popping");
                 joints_obsrv_belief_buffer_.pop_front();
             }
         }
@@ -90,7 +90,6 @@ void FusionTracker::run_gaussian_tracker()
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state_ = current_state;
         }
-        ros::spinOnce();
     }
 }
 
@@ -112,19 +111,165 @@ void FusionTracker::run_particle_tracker()
 
         if (ros_image.height == 0 || ros_image.width == 0) continue;
 
-        ROS_INFO("track ");
-
         auto image = ri::Ros2EigenVector<double>(
             ros_image, camera_data_->downsampling_factor());
 
+        /**
+         * #1 SWAP ROTARY BELIEF QUEUES SECURLY
+         * #2 GET ROTARY BELIEF AND ITS INDEX FOR IMAGE TIMESTAMP
+         * #3 CONSTRUCT STATE AND NOISE MATRIX FROM ROTARY BELIEF
+         * #4 GET PROCESS MODEL
+         * #5 SET PROCESS MODEL NOISE COVARIANCE
+         * #6 INITIALIZE PARTICLE FILTER WITH ROTARY STATE
+         * #7 TRACK AND GET STATE AND COVARIANCE
+         * #8 CONSTRUCT NEW ANGEL BELIEFS
+         * #9 SET ROTARY ANGEL BELIEFS
+         * #10 FILL BUFFER WITH OLD JOINT OBSRV
+         */
+
+        // #1
+        std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_local;
+        {
+            std::lock_guard<std::mutex> belief_buffer_lock(
+                joints_obsrv_belief_buffer_mutex_);
+
+            joints_obsrv_belief_buffer_.swap(joints_obsrv_belief_buffer_local);
+        }
+
+        // #2
+        JointsBeliefEntry belief_entry;
+        int belief_index = find_belief_entry(joints_obsrv_belief_buffer_local,
+                                             ros_image_.header.stamp.toSec(),
+                                             belief_entry);
+
+        if (belief_index < 0) continue;
+
+        // #3
+        auto state = get_state_from_belief(belief_entry);
+        auto cov_sqrt = get_covariance_sqrt_from_belief(belief_entry);
+
+        // #4
+        auto process_model = std::static_pointer_cast<
+            fl::LinearStateTransitionModel<VisualTracker::State,
+                                           VisualTracker::Noise,
+                                           VisualTracker::Input>>(
+            rbc_particle_filter_tracker->filter()->process_model());
+
+        // #5
+        process_model->noise_matrix(cov_sqrt);
+
+        // #6
+        rbc_particle_filter_tracker->initialize({state});
+
+        // #7
         State current_state;
         current_state = rbc_particle_filter_tracker->track(image);
+        auto cov = rbc_particle_filter_tracker->filter()->belief().covariance();
+
+        // #8
+        auto angle_beliefs = get_angel_beliefs_from_moments(current_state, cov);
 
         {
-            std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-            current_state_ = current_state;
+            std::lock_guard<std::mutex> rotary_lock(rotary_tracker_lock_);
+            gaussian_joint_tracker_->set_angle_beliefs(angle_beliefs);
+        }
+
+        // #9
+        std::lock_guard<std::mutex> belief_buffer_lock(
+            joints_obsrv_belief_buffer_mutex_);
+        std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
+        while (joints_obsrv_belief_buffer_.size() > 0)
+        {
+            joints_obsrvs_buffer_.push_front(
+                joints_obsrv_belief_buffer_.back().joints_obsrv_entry);
+            joints_obsrv_belief_buffer_.pop_back();
+        }
+
+        // throw away obsrv prior to belief index
+        for (int i = 0; i < belief_index; ++i)
+        {
+            joints_obsrv_belief_buffer_local.pop_front();
+        }
+
+        while (joints_obsrv_belief_buffer_local.size() > 0)
+        {
+            joints_obsrvs_buffer_.push_front(
+                joints_obsrv_belief_buffer_local.back().joints_obsrv_entry);
+            joints_obsrv_belief_buffer_local.pop_back();
         }
     }
+}
+
+int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
+                                     double timestamp,
+                                     JointsBeliefEntry& belief_entry)
+{
+    int index = 0;
+    for (auto& entry : queue)
+    {
+        if (entry.joints_obsrv_entry.timestamp > timestamp)
+        {
+            belief_entry = entry;
+            return index;
+        }
+        index++;
+    }
+
+    return -1;
+}
+
+auto FusionTracker::get_state_from_belief(const JointsBeliefEntry& entry)
+    -> State
+{
+    State state;
+    state.resize(entry.beliefs.size());
+    for (int i = 0; i < state.size(); ++i)
+    {
+        state(i, 0) = entry.beliefs[i].mean()(0, 0);
+    }
+
+    return state;
+}
+
+Eigen::MatrixXd FusionTracker::get_covariance_sqrt_from_belief(
+    const FusionTracker::JointsBeliefEntry& entry)
+{
+    Eigen::MatrixXd cov;
+    cov.setZero(entry.beliefs.size(), entry.beliefs.size());
+
+    if (entry.beliefs.size() == 0)
+    {
+        PInfo("something is wrong, the beliefs are empty");
+        exit(1);
+    }
+
+    for (int i = 0; i < cov.rows(); ++i)
+    {
+        cov(i, i) = std::sqrt(entry.beliefs[i].covariance()(0, 0));
+    }
+
+    return cov;
+}
+
+std::vector<RotaryTracker::AngleBelief>
+FusionTracker::get_angel_beliefs_from_moments(const FusionTracker::State& mean,
+                                              const Eigen::MatrixXd& cov)
+{
+    std::vector<RotaryTracker::AngleBelief> beliefs(mean.size());
+
+    for (int i = 0; i < mean.size(); ++i)
+    {
+        RotaryTracker::AngleBelief belief;
+        auto angle_mean = beliefs[i].mean();
+        auto angle_cov = beliefs[i].covariance();
+        angle_mean(0, 0) = mean(i, 0);
+        angle_cov(0, 0) = cov(i, i);
+
+        beliefs[i].mean(angle_mean);
+        beliefs[i].covariance(angle_cov);
+    }
+
+    return beliefs;
 }
 
 void FusionTracker::run()
@@ -161,36 +306,21 @@ void FusionTracker::joints_obsrv_callback(
     }
 
     JointsObsrvEntry entry;
-    entry.timestamp = ros::Time::now().toSec();
+    entry.timestamp = joint_msg.header.stamp.toSec();
     entry.obsrv = obsrv;
     joints_obsrvs_buffer_.push_back(entry);
 
-    if (joints_obsrvs_buffer_.size() > 10000) joints_obsrvs_buffer_.pop_front();
+    if (joints_obsrvs_buffer_.size() > 1000000)
+    {
+        PInfo("Obsrv buffer max size reached p.O")
+            joints_obsrvs_buffer_.pop_front();
+    }
 }
 
 void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
-    //    image_obsrv_ = image_obsrv;
     ros_image_ = ros_image;
-
-    if (ros_image.height == 0 || ros_image.width == 0) return;
-
-    //    auto image = ri::Ros2EigenVector<double>(
-    //        ros_image, camera_data_->downsampling_factor());
-
-    //    State current_state;
-    //    current_state = rbc_particle_filter_tracker_->track(image);
-
-    //    {
-    //        std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-    //        current_state_ = current_state;
-    //    }
 }
 
-auto FusionTracker::update_with_joints(
-    const FusionTracker::JointsObsrv& joints_obsrv) -> State
-{
-    return gaussian_joint_tracker_->track(joints_obsrv);
-}
 }

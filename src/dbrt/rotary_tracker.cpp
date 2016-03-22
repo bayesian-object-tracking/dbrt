@@ -94,6 +94,7 @@ void RotaryTracker::set_angle_beliefs(
     }
 }
 
+
 std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs()
 {
     return beliefs_;
@@ -149,7 +150,7 @@ auto RotaryTracker::track(const Obsrv& joints_obsrv) -> State
         state(i) = beliefs_[i].mean()(0);
     }
 
-//    std::lock_guard<std::mutex> lock(mutex_);
+    //    std::lock_guard<std::mutex> lock(mutex_);
     current_state_ = state;
 
     //    auto angle_bels = angle_beliefs();
