@@ -103,6 +103,17 @@ public:
             std::lock_guard<std::mutex> state_lock(state_mutex_);
             robot_animator_->animate(state_, 1. / rate, dilation_, state_);
             robot_tracker_publisher_simulated_->publish_joint_state(state_);
+
+
+//            auto shitty_state = state_;
+//            static double shitty_time = 0.001;
+//            shitty_time += 1.0 / rate;
+
+//            for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
+//            {
+//               shitty_state[i] += 0.06 * std::sin(shitty_time / (dilation_ * 10));
+//            }
+//            robot_tracker_publisher_simulated_->publish_joint_state(shitty_state);
         }
     }
 
