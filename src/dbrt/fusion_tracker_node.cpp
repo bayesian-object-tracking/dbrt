@@ -249,9 +249,7 @@ int main(int argc, char** argv)
         auto current_state = fusion_tracker.current_state();
         tracker_publisher->publish(current_state, camera_data);
 
-        INIT_PROFILING;
         ros::spinOnce();
-        MEASURE_FLUSH("spin spin  lovely spinner")
     }
 
     ROS_INFO("Shutting down ...");

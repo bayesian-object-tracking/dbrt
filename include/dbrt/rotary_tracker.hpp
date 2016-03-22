@@ -65,9 +65,7 @@ public:
     // Belief representation of a single joint, i.e. a Gaussian
     typedef typename JointFilter::Belief JointBelief;
 
-
     typedef fl::Gaussian<Eigen::Matrix<fl::Real, 1, 1>> AngleBelief;
-
 
 public:
     RotaryTracker(
@@ -119,7 +117,8 @@ public:
      */
     State current_state() const;
 
-    void track_callback(const sensor_msgs::JointState &joint_msg);
+    void track_callback(const sensor_msgs::JointState& joint_msg);
+
 private:
     State current_state_;
     std::vector<JointBelief> beliefs_;

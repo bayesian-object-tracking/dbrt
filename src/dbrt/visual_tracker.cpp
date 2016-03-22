@@ -54,6 +54,11 @@ void VisualTracker::initialize(
     filter_->resample(evaluation_count_ / block_count_);
 }
 
+const std::shared_ptr<VisualTracker::Filter> VisualTracker::filter()
+{
+    return filter_;
+}
+
 auto VisualTracker::track(const Obsrv& image) -> State
 {
     filter_->filter(image, zero_input());

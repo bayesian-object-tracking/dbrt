@@ -88,6 +88,8 @@ public:
      */
     void initialize(const std::vector<State>& initial_states);
 
+    const std::shared_ptr<Filter> filter();
+
 private:
     std::shared_ptr<dbot::ObjectModel> object_model_;
     std::shared_ptr<Filter> filter_;
