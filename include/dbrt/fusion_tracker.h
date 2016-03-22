@@ -112,7 +112,6 @@ private:
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
 
-    mutable std::mutex rotary_tracker_lock_;
     mutable std::mutex joints_obsrv_buffer_mutex_;
     mutable std::mutex joints_obsrv_belief_buffer_mutex_;
     mutable std::mutex image_obsrvs_mutex_;

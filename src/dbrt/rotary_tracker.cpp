@@ -94,6 +94,11 @@ void RotaryTracker::set_angle_beliefs(
     }
 }
 
+void RotaryTracker::set_beliefs(
+    const std::vector<RotaryTracker::JointBelief>& beliefs)
+{
+    beliefs_ = beliefs;
+}
 
 std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs()
 {

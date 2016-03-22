@@ -102,6 +102,8 @@ public:
      */
     void set_angle_beliefs(std::vector<AngleBelief> angle_beliefs);
 
+    void set_beliefs(const std::vector<JointBelief>& beliefs);
+
     /**
      * \brief Returns immutable reference to all joint belliefs
      */
