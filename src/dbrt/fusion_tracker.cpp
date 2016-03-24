@@ -200,26 +200,29 @@ void FusionTracker::run_particle_tracker()
         }
 
         // timestamp check
-        double t = 0;
         double maxdelta = 0;
         double avdelta = 0;
+        JointsObsrvEntry prev;
+        prev.timestamp = 0;
         for (auto& entry: joints_obsrvs_buffer_)
         {
-
-            if (entry.timestamp < t)
+            if (entry.timestamp < prev.timestamp)
             {
+                PV(entry.timestamp - prev.timestamp);
+                PV(entry.obsrv);
+                PV(prev.obsrv);
                 PInfo("constructed queue is wrong");
                 exit(1);
             }
 
-            if (t > 0)
+            if (prev.timestamp > 0)
             {
-                double delta = entry.timestamp - t;
+                double delta = entry.timestamp - prev.timestamp;
                 maxdelta = std::max(maxdelta, delta);
                 avdelta += delta;
             }
 
-            t = entry.timestamp;
+            prev = entry;
         }
 
         PV(maxdelta);
