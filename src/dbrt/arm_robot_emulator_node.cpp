@@ -68,6 +68,7 @@ protected:
     double t_;
 };
 
+
 /**
  * \brief Node entry point
  */

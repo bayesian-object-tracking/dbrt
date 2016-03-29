@@ -78,8 +78,6 @@ public:
     {
         robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
             urdf_kinematics_, renderer_, "/robot_emulator", "");
-
-        //        render_and_publish();
     }
 
     void run()
@@ -158,6 +156,7 @@ public:
                     std::lock_guard<std::mutex> publisher_lock(
                         publisher_mutex_);
                     robot_publisher_->publish_point_cloud(point_cloud);
+                    robot_publisher_->publish_camera_info(camera_data_);
                 })
                 .detach();
         }
