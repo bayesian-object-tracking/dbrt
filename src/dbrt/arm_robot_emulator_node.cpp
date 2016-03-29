@@ -52,13 +52,15 @@ public:
         // left arm
         for (int i = 6; i < 6 + 7; ++i)
         {
-            next[i] = current[i] + 0.1 * dt / dilation * std::sin(t_/dilation);
+            next[i] =
+                current[i] + 0.1 * dt / dilation * std::sin(t_ / dilation);
         }
 
         // right arm
         for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
         {
-            next[i] = current[i] + 0.1 * dt/dilation * std::sin(t_/dilation);
+            next[i] =
+                current[i] + 0.1 * dt / dilation * std::sin(t_ / dilation);
         }
     }
 
@@ -92,8 +94,12 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
+    double camera_downsampling_factor;
+    nh.getParam(prefix + "camera_downsampling_factor",
+                camera_downsampling_factor);
     auto camera_data = std::make_shared<dbot::CameraData>(
-        std::make_shared<dbot::VirtualCameraDataProvider>(1, "/XTION"));
+        std::make_shared<dbot::VirtualCameraDataProvider>(
+            camera_downsampling_factor, "/XTION"));
 
     /* ------------------------------ */
     /* - Robot renderer             - */
@@ -129,9 +135,11 @@ int main(int argc, char** argv)
     double joint_rate;
     double image_rate;
     double dilation;
+    double visual_sensor_delay;
     nh.getParam(prefix + "joint_sensor_rate", joint_rate);
-    nh.getParam(prefix + "image_sensor_rate", image_rate);
+    nh.getParam(prefix + "visual_sensor_rate", image_rate);
     nh.getParam(prefix + "dilation", dilation);
+    nh.getParam(prefix + "visual_sensor_delay", visual_sensor_delay);
 
     dbrt::RobotEmulator<State> robot(object_model,
                                      urdf_kinematics,
@@ -141,6 +149,7 @@ int main(int argc, char** argv)
                                      joint_rate,  // joint sensor rate
                                      image_rate,  // visual sensor rate
                                      dilation,
+                                     visual_sensor_delay,
                                      state);
 
     /* ------------------------------ */

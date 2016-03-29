@@ -178,7 +178,6 @@ void RobotTrackerPublisher<State>::publish(
     }
 }
 
-
 template <typename State>
 void RobotTrackerPublisher<State>::publish(
     const State& state,
@@ -210,7 +209,6 @@ void RobotTrackerPublisher<State>::publish(
         publishImage(depth_image, camera_data, t);
     }
 }
-
 
 template <typename State>
 void RobotTrackerPublisher<State>::publishImage(
@@ -258,14 +256,15 @@ void RobotTrackerPublisher<State>::publishPointCloud(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
 {
-    Eigen::VectorXd depth_image =
-        ri::Ros2EigenVector<double>(image, camera_data->downsampling_factor());
+    Eigen::VectorXd depth_image = ri::Ros2EigenVector<double>(
+        image, 1);  // camera_data->downsampling_factor());
 
     publishPointCloud(depth_image, camera_data, time);
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publishPointCloud(
+sensor_msgs::PointCloud2Ptr
+RobotTrackerPublisher<State>::convert_to_point_cloud(
     const Eigen::VectorXd& depth_image,
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
@@ -358,6 +357,23 @@ void RobotTrackerPublisher<State>::publishPointCloud(
         }
     }
 
+    return points;
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_point_cloud(
+    sensor_msgs::PointCloud2Ptr point_cloud)
+{
+    pub_point_cloud_->publish(point_cloud);
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publishPointCloud(
+    const Eigen::VectorXd& depth_image,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
+{
+    auto points = convert_to_point_cloud(depth_image, camera_data, time);
     pub_point_cloud_->publish(points);
 }
 
@@ -380,8 +396,8 @@ sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
     // if internal registration is used, rgb camera intrinsic parameters are
     // used
     info_msg->header.frame_id = camera_data->frame_id();
-    info_msg->width = camera_data->resolution().width;
-    info_msg->height = camera_data->resolution().height;
+    info_msg->width = camera_data->native_resolution().width;
+    info_msg->height = camera_data->native_resolution().height;
 
 #if ROS_VERSION_MINIMUM(1, 3, 0)
     info_msg->D = std::vector<double>(5, 0.0);
@@ -405,6 +421,8 @@ sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
     //  info_msg->K[8] = 1.0;
 
     auto camera_matrix = camera_data->camera_matrix();
+    camera_matrix.topLeftCorner(2, 3) *=
+        double(camera_data->downsampling_factor());
 
     for (size_t col = 0; col < 3; col++)
         for (size_t row = 0; row < 3; row++)

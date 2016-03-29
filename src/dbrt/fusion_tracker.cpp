@@ -212,7 +212,7 @@ void FusionTracker::run_particle_tracker()
                 PV(entry.obsrv);
                 PV(prev.obsrv);
                 PInfo("constructed queue is wrong");
-                exit(1);
+//                exit(1);
             }
 
             if (prev.timestamp > 0)

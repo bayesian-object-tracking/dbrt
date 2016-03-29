@@ -19,9 +19,13 @@
 
 #pragma once
 
+#include <thread>
+#include <chrono>
 #include <memory>
 #include <thread>
 #include <functional>
+
+#include <fl/util/profiling.hpp>
 
 #include <sensor_msgs/Image.h>
 
@@ -59,6 +63,7 @@ public:
                   double joint_sensors_rate,
                   double visual_sensor_rate,
                   double dilation,
+                  double visual_sensor_delay,
                   const State& initial_state)
         : state_(initial_state),
           object_model_(object_model),
@@ -68,13 +73,13 @@ public:
           robot_animator_(robot_animator),
           joint_sensors_rate_(joint_sensors_rate),
           visual_sensor_rate_(visual_sensor_rate),
-          dilation_(dilation)
+          dilation_(dilation),
+          visual_sensor_delay_(visual_sensor_delay)
     {
-        robot_tracker_publisher_simulated_ =
-            std::make_shared<RobotTrackerPublisher<State>>(
-                urdf_kinematics_, renderer_, "/robot_emulator", "");
+        robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
+            urdf_kinematics_, renderer_, "/robot_emulator", "");
 
-        render_and_publish();
+        //        render_and_publish();
     }
 
     void run()
@@ -102,18 +107,7 @@ public:
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
             robot_animator_->animate(state_, 1. / rate, dilation_, state_);
-            robot_tracker_publisher_simulated_->publish_joint_state(state_);
-
-
-//            auto shitty_state = state_;
-//            static double shitty_time = 0.001;
-//            shitty_time += 1.0 / rate;
-
-//            for (int i = 6 + 7 + 8; i < 6 + 2 * 7 + 8; ++i)
-//            {
-//               shitty_state[i] += 0.06 * std::sin(shitty_time / (dilation_ * 10));
-//            }
-//            robot_tracker_publisher_simulated_->publish_joint_state(shitty_state);
+            robot_publisher_->publish_joint_state(state_);
         }
     }
 
@@ -123,7 +117,49 @@ public:
         while (running_)
         {
             image_rate.sleep();
-            render_and_publish();
+
+            auto start = std::chrono::system_clock::now();
+            auto time = ros::Time::now();
+            State current_state = state();
+            robot_publisher_->publish(current_state, camera_data_);
+
+            // render and generate point cloud
+            std::lock_guard<std::mutex> image_lock(image_mutex_);
+            renderer_->Render(current_state,
+                              obsrv_vector_,
+                              std::numeric_limits<double>::quiet_NaN());
+
+            auto point_cloud = robot_publisher_->convert_to_point_cloud(
+                obsrv_vector_, camera_data_, time);
+
+            auto end = std::chrono::system_clock::now();
+            auto elapsed_time =
+                std::chrono::duration<double>(end - start).count();
+
+            // publish in parallel
+            std::thread(
+                [point_cloud,
+                 current_state,
+                 elapsed_time,
+                 visual_sensor_delay_,
+                 &publisher_mutex_,
+                 &camera_data_,
+                 &robot_publisher_]()
+                {
+                    double remaining_delay =
+                        std::max(visual_sensor_delay_ - elapsed_time, 0.0);
+
+                    PV(elapsed_time);
+                    PV(remaining_delay);
+
+                    std::this_thread::sleep_for(
+                        std::chrono::duration<double>(remaining_delay));
+
+                    std::lock_guard<std::mutex> publisher_lock(
+                        publisher_mutex_);
+                    robot_publisher_->publish_point_cloud(point_cloud);
+                })
+                .detach();
         }
     }
 
@@ -152,29 +188,6 @@ public:
     }
 
 private:
-    void render_and_publish()
-    {
-        State current_state = state();
-
-        std::lock_guard<std::mutex> image_lock(image_mutex_);
-
-        // render observation image
-        renderer_->Render(current_state,
-                          obsrv_vector_,
-                          std::numeric_limits<double>::quiet_NaN());
-
-        // convert image vector to ros image message
-        robot_tracker_publisher_simulated_->convert_to_depth_image_msg(
-            camera_data_, obsrv_vector_, obsrv_image_);
-
-        // publish observation image and point cloud
-        robot_tracker_publisher_simulated_->publish(
-            current_state, obsrv_image_, camera_data_);
-
-        robot_tracker_publisher_simulated_->publish_camera_info(camera_data_);
-    }
-
-private:
     Eigen::VectorXd state_;
     Eigen::VectorXd obsrv_vector_;
     sensor_msgs::Image obsrv_image_;
@@ -183,15 +196,16 @@ private:
     std::shared_ptr<dbot::RigidBodyRenderer> renderer_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<RobotAnimator> robot_animator_;
-    std::shared_ptr<RobotTrackerPublisher<State>>
-        robot_tracker_publisher_simulated_;
+    std::shared_ptr<RobotTrackerPublisher<State>> robot_publisher_;
     double joint_sensors_rate_;
     double visual_sensor_rate_;
     double dilation_;
+    double visual_sensor_delay_;
 
     bool running_;
     mutable std::mutex state_mutex_;
     mutable std::mutex image_mutex_;
+    mutable std::mutex publisher_mutex_;
     std::thread joint_sensor_thread_;
     std::thread visual_sensor_thread_;
 };
