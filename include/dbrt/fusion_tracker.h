@@ -69,7 +69,8 @@ public:
 public:
     FusionTracker(const std::shared_ptr<dbot::CameraData>& camera_data,
                   const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
-                  const VisualTrackerFactory& visual_tracker_factory);
+                  const VisualTrackerFactory& visual_tracker_factory,
+                  double camera_delay);
 
     /**
      * \brief Initializes the filters with the given initial states and
@@ -98,8 +99,8 @@ private:
         const JointsBeliefEntry& entry);
 
     std::vector<RotaryTracker::AngleBelief> get_angel_beliefs_from_moments(
-            const State& mean,
-            const Eigen::MatrixXd& cov);
+        const State& mean,
+        const Eigen::MatrixXd& cov);
 
 private:
     VisualTrackerFactory visual_tracker_factory_;
@@ -107,6 +108,7 @@ private:
     std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
 
     bool running_;
+    double camera_delay_;
     State current_state_;
     sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;

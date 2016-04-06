@@ -28,11 +28,13 @@ namespace dbrt
 FusionTracker::FusionTracker(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
-    const VisualTrackerFactory& visual_tracker_factory)
+    const VisualTrackerFactory& visual_tracker_factory,
+    double camera_delay)
     : camera_data_(camera_data),
       gaussian_joint_tracker_(gaussian_joint_tracker),
       visual_tracker_factory_(visual_tracker_factory),
-      running_(true)
+      running_(true),
+      camera_delay_(camera_delay)
 {
 }
 
@@ -50,6 +52,7 @@ void FusionTracker::run_gaussian_tracker()
         std::deque<JointsObsrvEntry> joints_obsrvs_buffer_local;
         {
             std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
+            if (joints_obsrvs_buffer_.size() == 0) continue;
             joints_obsrvs_buffer_.swap(joints_obsrvs_buffer_local);
         }
 
@@ -115,6 +118,9 @@ void FusionTracker::run_particle_tracker()
          * #10 FILL BUFFER WITH OLD JOINT OBSRV
          */
 
+        JointsBeliefEntry belief_entry;
+        int belief_index;
+
         // #1
         std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_local;
         {
@@ -125,15 +131,25 @@ void FusionTracker::run_particle_tracker()
         }
 
         // #2
-        JointsBeliefEntry belief_entry;
-        int belief_index = find_belief_entry(joints_obsrv_belief_buffer_local,
-                                             ros_image_.header.stamp.toSec(),
-                                             belief_entry);
-
+        belief_index = find_belief_entry(joints_obsrv_belief_buffer_local,
+                                         ros_image_.header.stamp.toSec()
+                                         + camera_delay_,
+                                         belief_entry);
         if (belief_index < 0)
         {
+            std::lock_guard<std::mutex> belief_buffer_lock(
+                joints_obsrv_belief_buffer_mutex_);
+            while (joints_obsrv_belief_buffer_local.size() > 0)
+            {
+                joints_obsrv_belief_buffer_.push_front(
+                    joints_obsrv_belief_buffer_local.back());
+                joints_obsrv_belief_buffer_local.pop_back();
+            }
+            PInfo("!!!!!!!!!!!!!!!!!!!!!!!!!");
             continue;
         }
+
+        PInfo(" particle filter kicking in");
 
         // #3
         auto mean = get_state_from_belief(belief_entry);
@@ -169,7 +185,6 @@ void FusionTracker::run_particle_tracker()
 
         // #8
         auto angle_beliefs = get_angel_beliefs_from_moments(current_state, cov);
-
 
         // #9
         std::lock_guard<std::mutex> belief_buffer_lock(
@@ -212,7 +227,6 @@ void FusionTracker::run_particle_tracker()
                 PV(entry.obsrv);
                 PV(prev.obsrv);
                 PInfo("constructed queue is wrong");
-//                exit(1);
             }
 
             if (prev.timestamp > 0)
@@ -235,15 +249,25 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
                                      JointsBeliefEntry& belief_entry)
 {
     int index = 0;
-    for (auto& entry : queue)
+    double min = 1e9;
+    double max = -1e9;
+    for (const auto entry : queue)
     {
+        min = std::min(min, entry.joints_obsrv_entry.timestamp - timestamp);
+        max = std::max(max, entry.joints_obsrv_entry.timestamp - timestamp);
+
         if (entry.joints_obsrv_entry.timestamp > timestamp)
         {
             belief_entry = entry;
+    PV(min);
+    PV(max);
             return index;
         }
         index++;
     }
+
+    PV(min);
+    PV(max);
 
     return -1;
 }
@@ -329,15 +353,18 @@ void FusionTracker::joints_obsrv_callback(
 {
     std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
 
+    const auto joint_order = gaussian_joint_tracker_->joint_order();
+
     Eigen::VectorXd obsrv(joint_msg.position.size());
     for (int i = 0; i < joint_msg.position.size(); ++i)
     {
-        obsrv[i] = joint_msg.position[i];
+        obsrv[joint_order[i]] = joint_msg.position[i];
     }
 
     JointsObsrvEntry entry;
     entry.timestamp = joint_msg.header.stamp.toSec();
     entry.obsrv = obsrv;
+//    PV(entry.timestamp - ros_image_.header.stamp.toSec())
     joints_obsrvs_buffer_.push_back(entry);
 
     if (joints_obsrvs_buffer_.size() > 1000000)
@@ -350,6 +377,7 @@ void FusionTracker::joints_obsrv_callback(
 void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
+
     ros_image_ = ros_image;
 }
 

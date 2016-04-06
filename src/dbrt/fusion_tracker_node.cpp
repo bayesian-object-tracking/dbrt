@@ -63,7 +63,8 @@
  */
 std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     const std::string& prefix,
-    const int& joint_count)
+    const int& joint_count,
+    const std::vector<int>& joint_order)
 {
     ros::NodeHandle nh("~");
 
@@ -104,7 +105,7 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* - Build the tracker          - */
     /* ------------------------------ */
     auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
-        joint_count, transition_builder, rotary_sensor_builder);
+        joint_count, joint_order, transition_builder, rotary_sensor_builder);
 
     return tracker_builder.build();
 }
@@ -179,27 +180,6 @@ int main(int argc, char** argv)
                 urdf_kinematics, renderer, "/estimated", "/estimated"));
 
     /* ------------------------------ */
-    /* - Create Tracker and         - */
-    /* - tracker publisher          - */
-    /* ------------------------------ */
-//    auto particle_robot_tracker = dbrt::create_visual_tracker(
-//        prefix, urdf_kinematics, object_model, camera_data);
-
-    ROS_INFO("creating trackers ... ");
-    auto gaussian_joint_robot_tracker =
-        create_rotary_tracker(prefix, urdf_kinematics->num_joints());
-    dbrt::FusionTracker fusion_tracker(
-        //        camera_data, gaussian_joint_robot_tracker,
-        //        particle_robot_tracker);
-        camera_data,
-        gaussian_joint_robot_tracker,
-        [&]()
-        {
-            return dbrt::create_visual_tracker(
-                prefix, urdf_kinematics, object_model, camera_data);
-        });
-
-    /* ------------------------------ */
     /* - Initialize                 - */
     /* ------------------------------ */
     sensor_msgs::JointState::ConstPtr joint_state;
@@ -219,6 +199,29 @@ int main(int argc, char** argv)
     {
         initial_states.push_back(state);
     }
+
+    auto joint_order = urdf_kinematics->GetJointOrder(*joint_state);
+
+    /* ------------------------------ */
+    /* - Create Tracker and         - */
+    /* - tracker publisher          - */
+    /* ------------------------------ */
+
+    ROS_INFO("creating trackers ... ");
+    auto gaussian_joint_robot_tracker = create_rotary_tracker(
+        prefix, urdf_kinematics->num_joints(), joint_order);
+
+    double camera_delay;
+    nh.getParam(prefix + "camera_delay", camera_delay);
+    dbrt::FusionTracker fusion_tracker(
+        camera_data,
+        gaussian_joint_robot_tracker,
+        [&]()
+        {
+            return dbrt::create_visual_tracker(
+                prefix, urdf_kinematics, object_model, camera_data);
+        },
+        camera_delay);
 
     fusion_tracker.initialize(initial_states);
 
@@ -240,8 +243,8 @@ int main(int argc, char** argv)
                      &fusion_tracker);
 
     ros::Rate visualization_rate(24);
-//    ros::AsyncSpinner spinner;
-//    spinner.start();
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
 
     while (ros::ok())
     {

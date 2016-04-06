@@ -44,10 +44,12 @@ public:
 public:
     RotaryTrackerBuilder(
         const int& joint_count,
+        const std::vector<int> joint_order,
         const std::shared_ptr<FactorizedTransitionBuilder<Tracker>>&
             transition_builder,
         const std::shared_ptr<RotarySensorBuilder<Tracker>>& sensor_builder)
         : joint_count_(joint_count),
+          joint_order_(joint_order),
           transition_builder_(transition_builder),
           sensor_builder_(sensor_builder)
     {
@@ -60,7 +62,7 @@ public:
     {
         auto joint_filters = create_joint_filters();
 
-        auto tracker = std::make_shared<Tracker>(joint_filters);
+        auto tracker = std::make_shared<Tracker>(joint_filters, joint_order_);
 
         return tracker;
     }
@@ -84,6 +86,7 @@ public:
 
 protected:
     int joint_count_;
+    std::vector<int> joint_order_;
     std::shared_ptr<FactorizedTransitionBuilder<Tracker>> transition_builder_;
     std::shared_ptr<RotarySensorBuilder<Tracker>> sensor_builder_;
 };

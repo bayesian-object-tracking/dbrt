@@ -85,6 +85,8 @@ public:
     // Convert Joint message to Eigen vector
     std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &state);
 
+    std::vector<int> GetJointOrder(const sensor_msgs::JointState& state);
+
     // Get dependencies
 //    void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
 
