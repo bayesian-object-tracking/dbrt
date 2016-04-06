@@ -256,7 +256,7 @@ void RobotTrackerPublisher<State>::publishPointCloud(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
 {
-    Eigen::VectorXd depth_image = ri::Ros2EigenVector<double>(
+    Eigen::VectorXd depth_image = ri::to_eigen_vector<double>(
         image, 1);  // camera_data->downsampling_factor());
 
     publishPointCloud(depth_image, camera_data, time);

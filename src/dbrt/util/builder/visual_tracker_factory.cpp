@@ -124,7 +124,7 @@ create_visual_tracker(
     nh.getParam(prefix + "moving_average_update_rate",
                 tracker_parameters.moving_average_update_rate);
     nh.getParam(prefix + "max_kl_divergence", tracker_parameters.max_kl_divergence);
-    ri::ReadParameter(
+    ri::read_parameter(
         prefix + "sampling_blocks", tracker_parameters.sampling_blocks, nh);
 
     auto tracker_builder =
