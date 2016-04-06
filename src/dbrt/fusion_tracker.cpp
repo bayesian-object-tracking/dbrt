@@ -161,7 +161,7 @@ void FusionTracker::run_particle_tracker()
 
         if (ros_image.height == 0 || ros_image.width == 0) continue;
 
-        auto image = ri::Ros2EigenVector<double>(
+        auto image = ri::to_eigen_vector<double>(
             ros_image, camera_data_->downsampling_factor());
         State current_state;
         current_state = rbc_particle_filter_tracker->track(image);

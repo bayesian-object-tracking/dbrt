@@ -40,7 +40,7 @@ void FusionTrackerNode<Tracker>::tracking_callback(
     const sensor_msgs::Image& ros_image,
     const JointsObsrv& joint_obsrv)
 {
-    auto image = ri::Ros2EigenVector<typename Obsrv::Scalar>(
+    auto image = ri::to_eigen_vector<typename Obsrv::Scalar>(
         ros_image, tracker_->camera_data()->downsampling_factor());
 
     current_state_ = tracker_->track(image, joint_obsrv);
