@@ -24,8 +24,10 @@
 namespace dbrt
 {
 RotaryTracker::RotaryTracker(
-    const std::shared_ptr<std::vector<JointFilter>>& joint_filters)
-    : joint_filters_(joint_filters)
+    const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
+    const std::vector<int>& joint_order)
+    : joint_filters_(joint_filters),
+      joint_order_(joint_order)
 {
 }
 
@@ -35,10 +37,15 @@ void RotaryTracker::track_callback(const sensor_msgs::JointState& joint_msg)
 
     for (int i = 0; i < joint_msg.position.size(); ++i)
     {
-        obsrv[i] = joint_msg.position[i];
+        obsrv[joint_order_[i]] = joint_msg.position[i];
     }
 
     track(obsrv);
+}
+
+const std::vector<int>& RotaryTracker::joint_order() const
+{
+   return joint_order_;
 }
 
 const std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs() const

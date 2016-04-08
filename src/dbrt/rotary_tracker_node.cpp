@@ -61,7 +61,8 @@
  */
 std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     const std::string& prefix,
-    const int& joint_count)
+    const int& joint_count,
+    const std::vector<int>& joint_order)
 {
     ros::NodeHandle nh("~");
 
@@ -104,7 +105,7 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* - Build the tracker          - */
     /* ------------------------------ */
     auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
-        joint_count, transition_builder, rotary_sensor_builder);
+        joint_count, joint_order, transition_builder, rotary_sensor_builder);
 
     return tracker_builder.build();
 }
@@ -185,23 +186,6 @@ int main(int argc, char** argv)
     std::string pre = "rotary_tracker/";
 
     //    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
-    auto tracker = create_rotary_tracker(pre, urdf_kinematics->num_joints());
-
-    /* ------------------------------ */
-    /* - Tracker publisher          - */
-    /* ------------------------------ */
-
-    std::shared_ptr<dbot::RigidBodyRenderer> renderer(
-        new dbot::RigidBodyRenderer(object_model->vertices(),
-                                    object_model->triangle_indices(),
-                                    camera_data->camera_matrix(),
-                                    camera_data->resolution().height,
-                                    camera_data->resolution().width));
-
-    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-        new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, renderer, "/estimated", "/estimated"));
-
     /* ------------------------------ */
     /* - Initialize using joint msg - */
     /* ------------------------------ */
@@ -216,6 +200,27 @@ int main(int argc, char** argv)
             "/joint_states", nh_global, ros::Duration(1.));
     }
 
+    auto joint_order = urdf_kinematics->GetJointOrder(*joint_state);
+
+    auto tracker =
+        create_rotary_tracker(pre, urdf_kinematics->num_joints(), joint_order);
+
+    /* ------------------------------ */
+    /* - Tracker publisher          - */
+    /* ------------------------------ */
+
+    std::shared_ptr<dbot::RigidBodyRenderer> renderer(
+        new dbot::RigidBodyRenderer(object_model->vertices(),
+                                    object_model->triangle_indices(),
+                                    camera_data->camera_matrix(),
+                                    camera_data->resolution().height,
+                                    camera_data->resolution().width));
+
+    auto tracker_publisher =
+        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
+            new dbrt::RobotTrackerPublisher<State>(
+                urdf_kinematics, renderer, "/estimated", "/estimated"));
+
     std::vector<Eigen::VectorXd> initial_states_vectors =
         urdf_kinematics->GetInitialJoints(*joint_state);
     std::vector<State> initial_states;
@@ -225,7 +230,7 @@ int main(int argc, char** argv)
     }
     tracker->initialize(initial_states);
 
-    ROS_INFO("Running visual tracker");
+    ROS_INFO("Running rotary tracker");
 
     /* ------------------------------ */
     /* - Create and run tracker     - */

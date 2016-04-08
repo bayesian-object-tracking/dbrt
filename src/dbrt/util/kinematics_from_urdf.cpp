@@ -36,56 +36,63 @@
 #include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-KinematicsFromURDF::KinematicsFromURDF()
-    : nh_priv_("~")
+KinematicsFromURDF::KinematicsFromURDF() : nh_priv_("~")
 {
-
     /// \todo: the robot parameters should not be loaded inside
     /// of the URDF class, but outside, and then passed
 
-
     // Load robot description from parameter server
     std::string desc_string;
-    if(!nh_.getParam("robot_description", desc_string))
-        ROS_ERROR("Could not get urdf from param server at %s", desc_string.c_str());
+    if (!nh_.getParam("robot_description", desc_string))
+        ROS_ERROR("Could not get urdf from param server at %s",
+                  desc_string.c_str());
 
     // Initialize URDF object from robot description
-    if (!urdf_.initString(desc_string))
-        ROS_ERROR("Failed to parse urdf");
+    if (!urdf_.initString(desc_string)) ROS_ERROR("Failed to parse urdf");
 
     // set up kinematic tree from URDF
-    if (!kdl_parser::treeFromUrdfModel(urdf_, kin_tree_)){
+    if (!kdl_parser::treeFromUrdfModel(urdf_, kin_tree_))
+    {
         ROS_ERROR("Failed to construct kdl tree");
         return;
     }
 
     // setup path for robot description and root of the tree
-    nh_priv_.param<std::string>("robot_description_package_path", description_path_, "..");
-    nh_priv_.param<std::string>("rendering_root_left", rendering_root_left_, "L_SHOULDER");
-    nh_priv_.param<std::string>("rendering_root_right", rendering_root_right_, "R_SHOULDER");
+    nh_priv_.param<std::string>(
+        "robot_description_package_path", description_path_, "..");
+    nh_priv_.param<std::string>(
+        "rendering_root_left", rendering_root_left_, "L_SHOULDER");
+    nh_priv_.param<std::string>(
+        "rendering_root_right", rendering_root_right_, "R_SHOULDER");
     nh_priv_.param<bool>("collision", collision_, false);
 
-
     // create segment map for correct ordering of joints
-    segment_map_ =  kin_tree_.getSegments();
+    segment_map_ = kin_tree_.getSegments();
     boost::shared_ptr<const urdf::Joint> joint;
     joint_map_.resize(kin_tree_.getNrOfJoints());
     lower_limit_.resize(kin_tree_.getNrOfJoints());
     upper_limit_.resize(kin_tree_.getNrOfJoints());
-    for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin(); seg_it != segment_map_.end(); ++seg_it)
+    for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin();
+         seg_it != segment_map_.end();
+         ++seg_it)
     {
-
         if (seg_it->second.segment.getJoint().getType() != KDL::Joint::None)
         {
-            joint = urdf_.getJoint(seg_it->second.segment.getJoint().getName().c_str());
-            // check, if joint can be found in the URDF model of the object/robot
+            joint = urdf_.getJoint(
+                seg_it->second.segment.getJoint().getName().c_str());
+            // check, if joint can be found in the URDF model of the
+            // object/robot
             if (!joint)
             {
-                ROS_FATAL("Joint '%s' has not been found in the URDF robot model! Aborting ...", joint->name.c_str());
+                ROS_FATAL(
+                    "Joint '%s' has not been found in the URDF robot model! "
+                    "Aborting ...",
+                    joint->name.c_str());
                 return;
             }
             // extract joint information
-            if (joint->type != urdf::Joint::UNKNOWN && joint->type != urdf::Joint::FIXED)
+            if (joint->type != urdf::Joint::UNKNOWN &&
+                joint->type != urdf::Joint::FIXED)
             {
                 joint_map_[seg_it->second.q_nr] = joint->name;
                 lower_limit_[seg_it->second.q_nr] = joint->limits->lower;
@@ -93,7 +100,6 @@ KinematicsFromURDF::KinematicsFromURDF()
             }
         }
     }
-
 
     /// \todo: actually the camera frame we care about is "XTION_IR", but
     /// this is not currently part of the robot model. this has to be fixed
@@ -109,32 +115,33 @@ KinematicsFromURDF::~KinematicsFromURDF()
     delete tree_solver_;
 }
 
-void KinematicsFromURDF::GetPartMeshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes)
+void KinematicsFromURDF::GetPartMeshes(
+    std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes)
 {
-    //Load robot mesh for each link
-    std::vector<boost::shared_ptr<urdf::Link> > links;
+    // Load robot mesh for each link
+    std::vector<boost::shared_ptr<urdf::Link>> links;
     urdf_.getLinks(links);
-    std::string global_root =  urdf_.getRoot()->name;
-    for (unsigned i=0; i< links.size(); i++)
+    std::string global_root = urdf_.getRoot()->name;
+    for (unsigned i = 0; i < links.size(); i++)
     {
         // keep only the links descending from our root
         boost::shared_ptr<urdf::Link> tmp_link = links[i];
-        while(tmp_link->name.compare(rendering_root_left_) == 0 &&
-              tmp_link->name.compare(rendering_root_right_) == 0 &&
-              tmp_link->name.compare(global_root) == 0)
+        while (tmp_link->name.compare(rendering_root_left_) == 0 &&
+               tmp_link->name.compare(rendering_root_right_) == 0 &&
+               tmp_link->name.compare(global_root) == 0)
         {
             tmp_link = tmp_link->getParent();
         }
 
-        if(tmp_link->name.compare(global_root)==0)
-            continue;
+        if (tmp_link->name.compare(global_root) == 0) continue;
 
-        boost::shared_ptr<PartMeshModel> part_ptr(new PartMeshModel(links[i], description_path_, i, collision_));
+        boost::shared_ptr<PartMeshModel> part_ptr(
+            new PartMeshModel(links[i], description_path_, i, collision_));
 
-
-        if(part_ptr->proper_) // if the link has an actual mesh file to read
+        if (part_ptr->proper_)  // if the link has an actual mesh file to read
         {
-            //	  std::cout << "link " << links[i]->name << " is descendant of " << tmp_link->name << std::endl;
+            //	  std::cout << "link " << links[i]->name << " is descendant of "
+            //<< tmp_link->name << std::endl;
             part_meshes.push_back(part_ptr);
             // Produces an index map for the links
             mesh_names_.push_back(part_ptr->get_name());
@@ -149,35 +156,35 @@ void KinematicsFromURDF::InitKDLData(const Eigen::VectorXd& joint_state)
     //      return;
     //      initialized = true;
 
-
     // Internally, KDL array use Eigen Vectors
-    if(jnt_array_.data.size() == 0 ||
-            !jnt_array_.data.isApprox(joint_state))
+    if (jnt_array_.data.size() == 0 || !jnt_array_.data.isApprox(joint_state))
     {
         jnt_array_.data = joint_state;
         // Given the new joint angles, compute all link transforms in one go
         ComputeLinkTransforms();
     }
-
 }
 
-void KinematicsFromURDF::ComputeLinkTransforms( )
+void KinematicsFromURDF::ComputeLinkTransforms()
 {
     // get the transform from base to camera
-    if(tree_solver_->JntToCart(jnt_array_, cam_frame_, cam_frame_name_)<0)
-        ROS_ERROR("TreeSolver returned an error for link %s", cam_frame_name_.c_str());
+    if (tree_solver_->JntToCart(jnt_array_, cam_frame_, cam_frame_name_) < 0)
+        ROS_ERROR("TreeSolver returned an error for link %s",
+                  cam_frame_name_.c_str());
     cam_frame_ = cam_frame_.Inverse();
 
     // loop over all segments to compute the link transformation
     for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin();
-         seg_it != segment_map_.end(); ++seg_it)
+         seg_it != segment_map_.end();
+         ++seg_it)
     {
         if (std::find(mesh_names_.begin(),
                       mesh_names_.end(),
                       seg_it->second.segment.getName()) != mesh_names_.end())
         {
             KDL::Frame frame;
-            if(tree_solver_->JntToCart(jnt_array_, frame, seg_it->second.segment.getName())<0)
+            if (tree_solver_->JntToCart(
+                    jnt_array_, frame, seg_it->second.segment.getName()) < 0)
                 ROS_ERROR("TreeSolver returned an error for link %s",
                           seg_it->second.segment.getName().c_str());
             frame_map_[seg_it->second.segment.getName()] = cam_frame_ * frame;
@@ -185,19 +192,19 @@ void KinematicsFromURDF::ComputeLinkTransforms( )
     }
 }
 
-Eigen::VectorXd KinematicsFromURDF::GetLinkPosition( int idx)
+Eigen::VectorXd KinematicsFromURDF::GetLinkPosition(int idx)
 {
     Eigen::VectorXd pos(3);
 
     KDL::Frame& frame = frame_map_[mesh_names_[idx]];
-    pos << frame.p.x(), frame.p.y(),frame.p.z();
+    pos << frame.p.x(), frame.p.y(), frame.p.z();
     return pos;
 }
 
 void KinematicsFromURDF::print_joints()
 {
     std::cout << "robot joints: " << std::endl;
-    for(size_t i = 0; i < joint_map_.size(); i++)
+    for (size_t i = 0; i < joint_map_.size(); i++)
     {
         std::cout << "(" << i << " : " << joint_map_[i] << ")  " << std::endl;
     }
@@ -206,79 +213,97 @@ void KinematicsFromURDF::print_joints()
 
 void KinematicsFromURDF::print_links()
 {
-    std::vector<boost::shared_ptr<urdf::Link> > links;
+    std::vector<boost::shared_ptr<urdf::Link>> links;
     urdf_.getLinks(links);
 
     std::cout << "robot links: " << std::endl;
-    for(size_t i = 0; i < links.size(); i++)
+    for (size_t i = 0; i < links.size(); i++)
     {
         std::cout << "(" << i << " : " << links[i]->name << ")  " << std::endl;
     }
     std::cout << std::endl;
 }
 
-
-Eigen::Quaternion<double> KinematicsFromURDF::GetLinkOrientation( int idx)
+Eigen::Quaternion<double> KinematicsFromURDF::GetLinkOrientation(int idx)
 {
     Eigen::Quaternion<double> quat;
-    frame_map_[mesh_names_[idx]].M.GetQuaternion(quat.x(), quat.y(), quat.z(), quat.w());
+    frame_map_[mesh_names_[idx]].M.GetQuaternion(
+        quat.x(), quat.y(), quat.z(), quat.w());
     return quat;
 }
 
-std::vector<Eigen::VectorXd>
-KinematicsFromURDF::GetInitialSamples(const sensor_msgs::JointState &state,
-                                      int initial_sample_count,
-                                      float ratio_std)
+std::vector<Eigen::VectorXd> KinematicsFromURDF::GetInitialSamples(
+    const sensor_msgs::JointState& state,
+    int initial_sample_count,
+    float ratio_std)
 {
     std::vector<Eigen::VectorXd> samples;
     samples.reserve(initial_sample_count);
-    for(int i=0; i<initial_sample_count; ++i)
+    for (int i = 0; i < initial_sample_count; ++i)
     {
         Eigen::VectorXd sample(state.position.size());
         // loop over all joint and fill in KDL array
-        for(std::vector<double>::const_iterator jnt = state.position.begin();
-            jnt !=state.position.end(); ++jnt)
+        for (std::vector<double>::const_iterator jnt = state.position.begin();
+             jnt != state.position.end();
+             ++jnt)
         {
-            int tmp_index = GetJointIndex(state.name[jnt-state.position.begin()]);
-            if (tmp_index >=0)
+            int tmp_index =
+                GetJointIndex(state.name[jnt - state.position.begin()]);
+            if (tmp_index >= 0)
             {
                 double new_jnt;
-                std::string name = state.name[jnt-state.position.begin()];
-                new_jnt = GetRandomPertubation( tmp_index, *jnt, ratio_std);
+                std::string name = state.name[jnt - state.position.begin()];
+                new_jnt = GetRandomPertubation(tmp_index, *jnt, ratio_std);
                 sample(tmp_index) = new_jnt;
-            } else
+            }
+            else
                 ROS_ERROR("i: %d, No joint index for %s",
-                          (int)(jnt-state.position.begin()),
-                          state.name[jnt-state.position.begin()].c_str());
+                          (int)(jnt - state.position.begin()),
+                          state.name[jnt - state.position.begin()].c_str());
         }
         samples.push_back(sample);
     }
     return samples;
 }
 
-std::vector<Eigen::VectorXd> KinematicsFromURDF::GetInitialJoints(const sensor_msgs::JointState &state)
+std::vector<Eigen::VectorXd> KinematicsFromURDF::GetInitialJoints(
+    const sensor_msgs::JointState& state)
 {
     std::vector<Eigen::VectorXd> samples;
     Eigen::VectorXd sample(num_joints());
     // loop over all joint and fill in KDL array
-    for(std::vector<double>::const_iterator jnt = state.position.begin();
-        jnt !=state.position.end(); ++jnt)
+    for (std::vector<double>::const_iterator jnt = state.position.begin();
+         jnt != state.position.end();
+         ++jnt)
     {
-        int tmp_index = GetJointIndex(state.name[jnt-state.position.begin()]);
+        int tmp_index = GetJointIndex(state.name[jnt - state.position.begin()]);
 
-        if (tmp_index >=0)
+        if (tmp_index >= 0)
             sample(tmp_index) = *jnt;
         else
             ROS_ERROR("i: %d, No joint index for %s",
-                      (int)(jnt-state.position.begin()),
-                      state.name[jnt-state.position.begin()].c_str());
+                      (int)(jnt - state.position.begin()),
+                      state.name[jnt - state.position.begin()].c_str());
     }
     samples.push_back(sample);
 
     return samples;
 }
 
-//void KinematicsFromURDF::GetDependencies(std::vector<std::vector<size_t> >& dependencies)
+std::vector<int> KinematicsFromURDF::GetJointOrder(
+    const sensor_msgs::JointState& state)
+{
+    std::vector<int> order(state.name.size());
+    for (int i = 0; i < state.name.size(); ++i)
+    {
+        order[i] = GetJointIndex(state.name[i]);
+    }
+
+    return order;
+}
+
+// void KinematicsFromURDF::GetDependencies(std::vector<std::vector<size_t> >&
+// dependencies)
 //{
 //    // only one fully dependent object -> the robot
 //    std::vector<size_t> robot_deps;
@@ -292,30 +317,28 @@ KDL::Tree KinematicsFromURDF::GetTree()
     return kin_tree_;
 }
 
-double KinematicsFromURDF::GetRandomPertubation(int jnt_index, double jnt_angle, double ratio)
+double KinematicsFromURDF::GetRandomPertubation(int jnt_index,
+                                                double jnt_angle,
+                                                double ratio)
 {
     double mean = jnt_angle;
-    double range = upper_limit_[jnt_index]-lower_limit_[jnt_index];
-    double std  = ratio * range;
+    double range = upper_limit_[jnt_index] - lower_limit_[jnt_index];
+    double std = ratio * range;
     boost::normal_distribution<double> normal(mean, std);
     double val = normal(generator_);
 
     // clip the values to the limits
-    if(val>upper_limit_[jnt_index])
-        val = upper_limit_[jnt_index];
+    if (val > upper_limit_[jnt_index]) val = upper_limit_[jnt_index];
 
-    if(val<lower_limit_[jnt_index])
-        val = lower_limit_[jnt_index];
-    
+    if (val < lower_limit_[jnt_index]) val = lower_limit_[jnt_index];
+
     return val;
-
 }
 
-int KinematicsFromURDF::GetJointIndex(const std::string &name)
+int KinematicsFromURDF::GetJointIndex(const std::string& name)
 {
-    for (unsigned int i=0; i < joint_map_.size(); ++i)
-        if (joint_map_[i] == name)
-            return i;
+    for (unsigned int i = 0; i < joint_map_.size(); ++i)
+        if (joint_map_[i] == name) return i;
     return -1;
 }
 
@@ -333,7 +356,6 @@ int KinematicsFromURDF::num_links()
 {
     return mesh_names_.size();
 }
-
 
 std::vector<std::string> KinematicsFromURDF::GetJointMap()
 {

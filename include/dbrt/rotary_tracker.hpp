@@ -68,8 +68,9 @@ public:
     typedef fl::Gaussian<Eigen::Matrix<fl::Real, 1, 1>> AngleBelief;
 
 public:
-    RotaryTracker(
-        const std::shared_ptr<std::vector<JointFilter>>& joint_filters);
+    RotaryTracker(const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
+        const std::vector<int>& joint_order);
+
 
     /**
      * \brief perform a single filter step
@@ -121,7 +122,10 @@ public:
 
     void track_callback(const sensor_msgs::JointState& joint_msg);
 
+    const std::vector<int>& joint_order() const;
+
 private:
+    std::vector<int> joint_order_;
     State current_state_;
     std::vector<JointBelief> beliefs_;
     std::shared_ptr<std::vector<JointFilter>> joint_filters_;
