@@ -101,7 +101,12 @@ public:
     bool has_image_subscribers() const;
     bool has_point_cloud_subscribers() const;
 
+
+    /// \shitty publisher
     void publish(const State& state,
+                 const std::shared_ptr<dbot::CameraData>& camera_data);
+
+    void publish(const State& state, const ros::Time &time,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
 protected:

@@ -178,13 +178,21 @@ void RobotTrackerPublisher<State>::publish(
     }
 }
 
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish(const State& state,
+             const std::shared_ptr<dbot::CameraData>& camera_data)
+{
+    publish(state, ros::Time::now(), camera_data);
+}
+
+
 template <typename State>
 void RobotTrackerPublisher<State>::publish(
     const State& state,
+    const ros::Time& t,
     const std::shared_ptr<dbot::CameraData>& camera_data)
 {
-    ros::Time t = ros::Time::now();
-
     // make sure there is a identity transformation between base of real
     // robot and estimated robot
     publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
