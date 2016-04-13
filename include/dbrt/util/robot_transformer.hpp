@@ -30,23 +30,43 @@ namespace dbrt
 {
 
 /**
- * \brief Lookup transforms between frame_ids given joint values
+ * \brief Lookup transforms between frame_ids given joint values.
  */
-class RobotTransformer : robot_state_pub::RobotStatePublisher
+class RobotTransformer
 {
 public:
-    RobotTransformer(const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics);
+    /**
+     * \brief Creates a RobotTransformer. Needs access to a publisher from robot_state_pub.
+     */
+    RobotTransformer(
+        const std::shared_ptr<robot_state_pub::RobotStatePublisher>& state_publisher);
 
-    void set_transforner(std::map<std::string, double> joints, const std::string& tf_prefix);
+    /**
+     * \brief Set joint configuration for which we want to calculate transforms.
+     */
+    void set_joints(std::map<std::string, double> joints, const std::string& tf_prefix);
 
+    /**
+     * \brief Lookup transform by frame_id pair.
+     */
     void lookup_transform(const std::string& from, const std::string& to,
-      tf::StampedTransform& transform) const;
+        tf::StampedTransform& tf_transform) const;
 
 protected:
-    std::string tf_prefix_;
-    std::Time fake_time_;
-    tf::Transformer transformer_;
+    void set_transformer_() const;
 
+    // Joint values and corresponding tf_prefix.
+    std::map<std::string, double> joints_;
+    std::string tf_prefix_;
+
+    // This guy knows about the kinematics and can provide tf_transforms from joints.
+    // It happens to need a time to stamp the returned transforms.
+    std::shared_ptr<robot_state_pub::RobotStatePublisher> transforms_provider_;
+    std::Time fake_time_;
+
+    // This guy knows how to build a tree of tf_transforms and do magical lookups.
+    mutable tf::Transformer tf_transformer_;
+    mutable bool is_empty_;
 };
 
 } // end of namespace
