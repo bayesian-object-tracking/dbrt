@@ -126,15 +126,13 @@ bool RobotTrackerPublisher<State>::has_point_cloud_subscribers() const
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_joint_state(const State& state)
+void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
+                                                       const ros::Time time)
 {
-    std::cout << "dude you should not be publishing joint angles"
-                 " without time stamps!!!" << std::endl;
-
     ROS_FATAL_COND(joint_state_.position.size() != state.size(),
                    "Joint state message and robot state sizes do not match");
 
-    joint_state_.header.stamp = ros::Time::now();
+    joint_state_.header.stamp = time;
     for (int i = 0; i < state.size(); ++i)
     {
         joint_state_.position[i] = state(i, 0);
@@ -395,23 +393,22 @@ void RobotTrackerPublisher<State>::publishPointCloud(
 
 template <typename State>
 void RobotTrackerPublisher<State>::publish_camera_info(
-    const std::shared_ptr<dbot::CameraData>& camera_data)
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const ros::Time& time)
 {
-    auto camera_info = create_camera_info(camera_data);
+    auto camera_info = create_camera_info(camera_data, time);
     pub_camera_info_.publish(camera_info);
 }
 
 template <typename State>
 sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
-    const std::shared_ptr<dbot::CameraData>& camera_data)
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
 {
-    std::cout << "dude you should not be publishing camera infos"
-                 " without time stamps!!!" << std::endl;
-
     sensor_msgs::CameraInfoPtr info_msg =
         boost::make_shared<sensor_msgs::CameraInfo>();
 
-    info_msg->header.stamp = ros::Time::now();
+    info_msg->header.stamp = time;
     // if internal registration is used, rgb camera intrinsic parameters are
     // used
     info_msg->header.frame_id = camera_data->frame_id();

@@ -65,7 +65,8 @@ public:
                   double dilation,
                   double visual_sensor_delay,
                   const State& initial_state)
-        : state_(initial_state),
+        : time_(0.),
+          state_(initial_state),
           object_model_(object_model),
           urdf_kinematics_(urdf_kinematics),
           renderer_(renderer),
@@ -104,8 +105,10 @@ public:
         {
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
-            robot_animator_->animate(state_, 1. / rate, dilation_, state_);
-            robot_publisher_->publish_joint_state(state_);
+            double delta_time = 1. / rate;
+            robot_animator_->animate(state_, delta_time, dilation_, state_);
+            time_ += delta_time;
+            robot_publisher_->publish_joint_state(state_, ros::Time(time_));
         }
     }
 
@@ -117,9 +120,11 @@ public:
             image_rate.sleep();
 
             auto start = std::chrono::system_clock::now();
-            auto time = ros::Time::now();
-            State current_state = state();
-            robot_publisher_->publish(current_state, camera_data_);
+            State current_state;
+            double current_time;
+            state_and_time(current_state, current_time);
+            robot_publisher_->publish(current_state,
+                                      ros::Time(current_time), camera_data_);
 
             // render and generate point cloud
             std::lock_guard<std::mutex> image_lock(image_mutex_);
@@ -128,7 +133,7 @@ public:
                               std::numeric_limits<double>::quiet_NaN());
 
             auto point_cloud = robot_publisher_->convert_to_point_cloud(
-                obsrv_vector_, camera_data_, time);
+                obsrv_vector_, camera_data_, ros::Time(current_time));
 
             auto end = std::chrono::system_clock::now();
             auto elapsed_time =
@@ -138,6 +143,7 @@ public:
             std::thread(
                 [point_cloud,
                  current_state,
+                 current_time,
                  elapsed_time,
                  visual_sensor_delay_,
                  &publisher_mutex_,
@@ -156,16 +162,18 @@ public:
                     std::lock_guard<std::mutex> publisher_lock(
                         publisher_mutex_);
                     robot_publisher_->publish_point_cloud(point_cloud);
-                    robot_publisher_->publish_camera_info(camera_data_);
+                    robot_publisher_->publish_camera_info(camera_data_,
+                                                          ros::Time(current_time));
                 })
                 .detach();
         }
     }
 
-    State state() const
+    void state_and_time(State& state, double& time) const
     {
         std::lock_guard<std::mutex> state_lock(state_mutex_);
-        return state_;
+        state = state_;
+        time = time_;
     }
 
     Eigen::VectorXd joint_observation()
@@ -187,6 +195,8 @@ public:
     }
 
 private:
+
+    double time_;
     Eigen::VectorXd state_;
     Eigen::VectorXd obsrv_vector_;
     sensor_msgs::Image obsrv_image_;

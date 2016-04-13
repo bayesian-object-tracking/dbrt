@@ -57,7 +57,7 @@ public:
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
-    void publish_joint_state(const State& state);
+    void publish_joint_state(const State& state, const ros::Time time);
 
     void publish_point_cloud(sensor_msgs::PointCloud2Ptr point_cloud);
 
@@ -92,11 +92,12 @@ public:
         const std::shared_ptr<dbot::CameraData>& camera_data,
         const ros::Time& time);
 
-    void publish_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data);
+    void publish_camera_info(const std::shared_ptr<dbot::CameraData>& camera_data,
+                             const ros::Time &time);
 
     sensor_msgs::CameraInfoPtr create_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data);
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const ros::Time &time);
 
     bool has_image_subscribers() const;
     bool has_point_cloud_subscribers() const;
