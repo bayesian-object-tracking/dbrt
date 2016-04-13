@@ -158,7 +158,7 @@ void RobotTrackerPublisher<State>::publish(
     robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
 
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_);
 
     if (has_image_subscribers())
     {
@@ -195,7 +195,7 @@ void RobotTrackerPublisher<State>::publish(
     robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
 
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_);
 
     if (has_image_subscribers())
     {
