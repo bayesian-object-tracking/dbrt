@@ -145,6 +145,7 @@ template <typename State>
 void RobotTrackerPublisher<State>::publish_tf(const State& state,
                                               const ros::Time& time)
 {
+    /// \todo: these frames should not be connected
     publishTransform(time, root_, tf::resolve(tf_prefix_, root_));
 
     // publish movable joints
@@ -152,11 +153,13 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
     state.GetJointState(joint_positions);
     robot_state_publisher_->publishTransforms(joint_positions, time, tf_prefix_);
 
+    /// \todo: why is this necessary??
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
 }
 
 
+/// \todo: this function has to disappear
 template <typename State>
 void RobotTrackerPublisher<State>::publish(
     const State& state,
@@ -179,23 +182,6 @@ void RobotTrackerPublisher<State>::publish(
 
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
-
-    if (has_image_subscribers())
-    {
-        Eigen::VectorXd depth_image;
-        robot_renderer_->parameters(camera_data->camera_matrix(),
-                                    camera_data->resolution().height,
-                                    camera_data->resolution().width);
-        robot_renderer_->Render(
-            state, depth_image, std::numeric_limits<double>::quiet_NaN());
-
-        publishImage(depth_image, camera_data, t);
-    }
-
-    if (has_point_cloud_subscribers())
-    {
-        publishPointCloud(obsrv_image, camera_data, t);
-    }
 }
 
 
@@ -229,18 +215,6 @@ void RobotTrackerPublisher<State>::publish(
     // publish fixed transforms
     /// \todo why do we need this??
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
-
-    if (has_image_subscribers())
-    {
-        Eigen::VectorXd depth_image;
-        robot_renderer_->parameters(camera_data->camera_matrix(),
-                                    camera_data->resolution().height,
-                                    camera_data->resolution().width);
-        robot_renderer_->Render(
-            state, depth_image, std::numeric_limits<double>::quiet_NaN());
-
-        publishImage(depth_image, camera_data, t);
-    }
 }
 
 template <typename State>
@@ -249,16 +223,6 @@ void RobotTrackerPublisher<State>::publishImage(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
 {
-    if (pub_rgb_image_.getNumSubscribers() > 0)
-    {
-        sensor_msgs::Image ros_image;
-        convert_to_rgb_depth_image_msg(camera_data, depth_image, ros_image);
-
-        ros_image.header.frame_id = tf_prefix_ + camera_data->frame_id();
-        ros_image.header.stamp = time;
-        pub_rgb_image_.publish(ros_image);
-    }
-
     if (pub_depth_image_.getNumSubscribers() > 0)
     {
         sensor_msgs::Image ros_image;
