@@ -254,8 +254,7 @@ int main(int argc, char** argv)
         fusion_tracker.current_state_and_time(current_state, current_state_time);
 
 
-        tracker_publisher->publish(current_state,
-                                   ros::Time(current_state_time), camera_data);
+        tracker_publisher->publish_tf(current_state, ros::Time(current_state_time));
         ros::spinOnce();
     }
 

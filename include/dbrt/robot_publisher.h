@@ -57,12 +57,6 @@ public:
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
-//    void publish(const State& state,
-//                 const std::shared_ptr<dbot::CameraData>& camera_data);
-
-    void publish(const State& state, const ros::Time &time,
-                 const std::shared_ptr<dbot::CameraData>& camera_data);
-
     void publish_joint_state(const State& state, const ros::Time time);
     void publish_tf(const State& state, const ros::Time &time);
 
@@ -76,9 +70,6 @@ public:
 
     void publish_camera_info(const std::shared_ptr<dbot::CameraData>& camera_data,
                              const ros::Time &time);
-
-
-
 
 
 protected:
