@@ -53,18 +53,21 @@ public:
         const std::string& tf_prefix,
         const std::string& data_prefix);
 
+    /// \todo THIS FUNCTION HAS TO GO AWAY!!
     void publish(const State& state,
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
+
     void publish_joint_state(const State& state, const ros::Time time);
+
     void publish_tf(const State& state, const ros::Time &time);
 
-    void publishTransform(const ros::Time& time,
+    void publish_transform(const ros::Time& time,
                           const std::string& from,
                           const std::string& to);
 
-    void publishImage(const Eigen::VectorXd& depth_image,
+    void publish_image(const Eigen::VectorXd& depth_image,
                       const std::shared_ptr<dbot::CameraData>& camera_data,
                       const ros::Time& time);
 

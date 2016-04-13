@@ -159,7 +159,7 @@ public:
                         publisher_mutex_);
                     robot_publisher_->publish_camera_info(camera_data_,
                                                           ros::Time(time));
-                    robot_publisher_->publishImage(depth_image, camera_data_,
+                    robot_publisher_->publish_image(depth_image, camera_data_,
                                                    ros::Time(time));
                 })
                 .detach();

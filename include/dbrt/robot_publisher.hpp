@@ -119,7 +119,7 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
                                               const ros::Time& time)
 {
     /// \todo: these frames should not be connected
-    publishTransform(time, root_, tf::resolve(tf_prefix_, root_));
+    publish_transform(time, root_, tf::resolve(tf_prefix_, root_));
 
     // publish movable joints
     std::map<std::string, double> joint_positions;
@@ -132,21 +132,21 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
 }
 
 
-///// \todo: this function has to disappear
+/// \todo THIS FUNCTION HAS TO GO AWAY!!
 template <typename State>
 void RobotTrackerPublisher<State>::publish(
     const State& state,
     const sensor_msgs::Image& obsrv_image,
     const std::shared_ptr<dbot::CameraData>& camera_data)
 {
-    std::cout << "dude you should not be publishing joint angles"
-                 " without time stamps!!!" << std::endl;
+    std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
+    exit(-1);
 
     ros::Time t = ros::Time::now();
 
     // make sure there is a identity transformation between base of real
     // robot and estimated robot
-    publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
+    publish_transform(t, root_, tf::resolve(tf_prefix_, root_));
 
     // publish movable joints
     std::map<std::string, double> joint_positions;
@@ -158,7 +158,7 @@ void RobotTrackerPublisher<State>::publish(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publishImage(
+void RobotTrackerPublisher<State>::publish_image(
     const Eigen::VectorXd& depth_image,
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
@@ -175,9 +175,9 @@ void RobotTrackerPublisher<State>::publishImage(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publishTransform(const ros::Time& time,
-                                                    const std::string& from,
-                                                    const std::string& to)
+void RobotTrackerPublisher<State>::publish_transform(const ros::Time& time,
+                                                     const std::string& from,
+                                                     const std::string& to)
 {
     if (from.compare(to) == 0) return;
 
