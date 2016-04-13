@@ -158,14 +158,14 @@ void RobotTrackerPublisher<State>::publish(
 }
 
 
-template <typename State>
-void RobotTrackerPublisher<State>::publish(const State& state,
-             const std::shared_ptr<dbot::CameraData>& camera_data)
-{
-    std::cout << "dude you should not be publishing joint angles"
-                 " without time stamps!!!" << std::endl;
-    publish(state, ros::Time::now(), camera_data);
-}
+//template <typename State>
+//void RobotTrackerPublisher<State>::publish(const State& state,
+//             const std::shared_ptr<dbot::CameraData>& camera_data)
+//{
+//    std::cout << "dude you should not be publishing joint angles"
+//                 " without time stamps!!!" << std::endl;
+//    publish(state, ros::Time::now(), camera_data);
+//}
 
 
 template <typename State>
