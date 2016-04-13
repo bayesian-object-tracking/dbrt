@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string pre = "rotary_tracker/";
 
-    //    urdf_kinematics->InitKDLData(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
+    //    urdf_kinematics->set_joint_angles(Eigen::VectorXd::Zero(urdf_kinematics->num_joints()));
     /* ------------------------------ */
     /* - Initialize using joint msg - */
     /* ------------------------------ */

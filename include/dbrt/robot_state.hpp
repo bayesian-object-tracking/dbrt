@@ -97,9 +97,9 @@ private:
     {
         assert(this->size() > 0);
         CheckKinematics();
-        kinematics_->InitKDLData(*this);
+        kinematics_->set_joint_angles(*this);
 
-        Vector v = kinematics_->GetLinkPosition(object_index);
+        Vector v = kinematics_->get_link_position(object_index);
         return v;
     }
 
@@ -107,10 +107,10 @@ private:
     {
         assert(this->size() > 0);
         CheckKinematics();
-        kinematics_->InitKDLData(*this);
+        kinematics_->set_joint_angles(*this);
 
         osr::EulerVector v;
-        v.quaternion(kinematics_->GetLinkOrientation(object_index));
+        v.quaternion(kinematics_->get_link_orientation(object_index));
         return v;
     }
 

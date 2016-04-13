@@ -34,7 +34,7 @@ void UrdfObjectModelLoader::load(
     std::vector<std::vector<std::vector<int>>>& triangle_indices) const
 {
     std::vector<boost::shared_ptr<PartMeshModel>> part_meshes_;
-    urdf_kinematics_->GetPartMeshes(part_meshes_);
+    urdf_kinematics_->get_part_meshes(part_meshes_);
 
     vertices.resize(part_meshes_.size());
     triangle_indices.resize(part_meshes_.size());
