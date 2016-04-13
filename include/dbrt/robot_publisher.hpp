@@ -142,6 +142,22 @@ void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
 }
 
 template <typename State>
+void RobotTrackerPublisher<State>::publish_tf(const State& state,
+                                              const ros::Time& time)
+{
+    publishTransform(time, root_, tf::resolve(tf_prefix_, root_));
+
+    // publish movable joints
+    std::map<std::string, double> joint_positions;
+    state.GetJointState(joint_positions);
+    robot_state_publisher_->publishTransforms(joint_positions, time, tf_prefix_);
+
+    // publish fixed transforms
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
+}
+
+
+template <typename State>
 void RobotTrackerPublisher<State>::publish(
     const State& state,
     const sensor_msgs::Image& obsrv_image,
@@ -201,6 +217,8 @@ void RobotTrackerPublisher<State>::publish(
 {
     // make sure there is a identity transformation between base of real
     // robot and estimated robot
+
+    /// \todo this has to go, this is not correct
     publishTransform(t, root_, tf::resolve(tf_prefix_, root_));
 
     // publish movable joints
@@ -209,6 +227,7 @@ void RobotTrackerPublisher<State>::publish(
     robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
 
     // publish fixed transforms
+    /// \todo why do we need this??
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
 
     if (has_image_subscribers())

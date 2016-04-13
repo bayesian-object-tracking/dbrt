@@ -58,6 +58,8 @@ public:
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
     void publish_joint_state(const State& state, const ros::Time time);
+    void publish_tf(const State& state, const ros::Time &time);
+
 
     void publish_point_cloud(sensor_msgs::PointCloud2Ptr point_cloud);
 
