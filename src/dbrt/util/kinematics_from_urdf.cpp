@@ -104,7 +104,7 @@ KinematicsFromURDF::KinematicsFromURDF() : nh_priv_("~")
     /// \todo: actually the camera frame we care about is "XTION_IR", but
     /// this is not currently part of the robot model. this has to be fixed
     /// at some point, because XTION and XTION_IR are shifted by about 2.5 cm.
-    nh_priv_.param<std::string>("camera_frame", cam_frame_name_, "XTION");
+    nh_priv_.param<std::string>("camera_frame", cam_frame_name_, "XTION_RGB");
 
     // initialise kinematic tree solver
     tree_solver_ = new KDL::TreeFkSolverPos_recursive(kin_tree_);
