@@ -46,11 +46,6 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     const std::string& data_prefix)
     : node_handle_("~"), tf_prefix_(tf_prefix), robot_renderer_(renderer)
 {
-    pub_point_cloud_ = std::shared_ptr<ros::Publisher>(new ros::Publisher());
-
-    *pub_point_cloud_ = node_handle_.advertise<sensor_msgs::PointCloud2>(
-        data_prefix + "/XTION/depth/points", 0);
-
     pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
         data_prefix + "/joint_states", 0);
 
@@ -61,7 +56,6 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
         new image_transport::ImageTransport(node_handle_));
 
     pub_depth_image_ = it->advertise(data_prefix + "/XTION/depth/image", 0);
-    pub_rgb_image_ = it->advertise(data_prefix + "/XTION/depth/image_color", 0);
 
     // get the name of the root frame
     root_ = urdf_kinematics->GetRootFrameID();
@@ -83,19 +77,6 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::convert_to_rgb_depth_image_msg(
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const Eigen::VectorXd& depth_points,
-    sensor_msgs::Image& image)
-{
-    vis::ImageVisualizer image_viz(camera_data->resolution().height,
-                                   camera_data->resolution().width);
-
-    image_viz.add_points(depth_points);
-    image_viz.get_image(image);
-}
-
-template <typename State>
 void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const Eigen::VectorXd& depth_image,
@@ -114,15 +95,7 @@ void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
 template <typename State>
 bool RobotTrackerPublisher<State>::has_image_subscribers() const
 {
-    return pub_rgb_image_.getNumSubscribers() > 0 ||
-           pub_depth_image_.getNumSubscribers() > 0 ||
-           pub_point_cloud_->getNumSubscribers() > 0;
-}
-
-template <typename State>
-bool RobotTrackerPublisher<State>::has_point_cloud_subscribers() const
-{
-    return pub_point_cloud_->getNumSubscribers() > 0;
+    return pub_depth_image_.getNumSubscribers() > 0;
 }
 
 template <typename State>
@@ -247,132 +220,7 @@ void RobotTrackerPublisher<State>::publishTransform(const ros::Time& time,
     br.sendTransform(tf::StampedTransform(transform, time, from, to));
 }
 
-template <typename State>
-void RobotTrackerPublisher<State>::publishPointCloud(
-    const sensor_msgs::Image& image,
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    Eigen::VectorXd depth_image = ri::to_eigen_vector<double>(
-        image, 1);  // camera_data->downsampling_factor());
 
-    publishPointCloud(depth_image, camera_data, time);
-}
-
-template <typename State>
-sensor_msgs::PointCloud2Ptr
-RobotTrackerPublisher<State>::convert_to_point_cloud(
-    const Eigen::VectorXd& depth_image,
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    Eigen::MatrixXd camera_matrix = camera_data->camera_matrix();
-    camera_matrix.topLeftCorner(2, 3) *=
-        double(camera_data->downsampling_factor());
-
-    float bad_point = std::numeric_limits<float>::quiet_NaN();
-
-    sensor_msgs::PointCloud2Ptr points =
-        boost::make_shared<sensor_msgs::PointCloud2>();
-
-    const int nRows = camera_data->resolution().height;
-    const int nCols = camera_data->resolution().width;
-
-    points->header.frame_id = tf_prefix_ + camera_data->frame_id();
-    points->header.stamp = time;
-    points->width = nCols;
-    points->height = nRows;
-    points->is_dense = false;
-    points->is_bigendian = false;
-    points->fields.resize(3);
-    points->fields[0].name = "x";
-    points->fields[1].name = "y";
-    points->fields[2].name = "z";
-    int offset = 0;
-    for (size_t d = 0; d < points->fields.size(); ++d, offset += sizeof(float))
-    {
-        points->fields[d].offset = offset;
-        points->fields[d].datatype = sensor_msgs::PointField::FLOAT32;
-        points->fields[d].count = 1;
-    }
-
-    points->point_step = offset;
-    points->row_step = points->point_step * points->width;
-
-    points->data.resize(points->width * points->height * points->point_step);
-
-    for (size_t v = 0; v < nRows; ++v)
-    {
-        for (size_t u = 0; u < nCols; ++u)
-        {
-            float depth = depth_image(v * nCols + u, 0);
-            if (depth != depth)  // || depth==0.0)
-            {
-                // depth is invalid
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[0].offset],
-                       &bad_point,
-                       sizeof(float));
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[1].offset],
-                       &bad_point,
-                       sizeof(float));
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[2].offset],
-                       &bad_point,
-                       sizeof(float));
-            }
-            else
-            {
-                int ux = u * camera_data->downsampling_factor();
-                int vx = v * camera_data->downsampling_factor();
-
-                // depth is valid
-                float x = ((float)ux - camera_matrix(0, 2)) * depth /
-                          camera_matrix(0, 0);
-                float y = ((float)vx - camera_matrix(1, 2)) * depth /
-                          camera_matrix(1, 1);
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[0].offset],
-                       &x,
-                       sizeof(float));
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[1].offset],
-                       &y,
-                       sizeof(float));
-                memcpy(&points->data[v * points->row_step +
-                                     u * points->point_step +
-                                     points->fields[2].offset],
-                       &depth,
-                       sizeof(float));
-            }
-        }
-    }
-
-    return points;
-}
-
-template <typename State>
-void RobotTrackerPublisher<State>::publish_point_cloud(
-    sensor_msgs::PointCloud2Ptr point_cloud)
-{
-    pub_point_cloud_->publish(point_cloud);
-}
-
-template <typename State>
-void RobotTrackerPublisher<State>::publishPointCloud(
-    const Eigen::VectorXd& depth_image,
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    auto points = convert_to_point_cloud(depth_image, camera_data, time);
-    pub_point_cloud_->publish(points);
-}
 
 template <typename State>
 void RobotTrackerPublisher<State>::publish_camera_info(

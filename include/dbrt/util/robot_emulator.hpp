@@ -124,20 +124,11 @@ public:
             State state;
             double time;
             state_and_time(state, time);
-//            robot_publisher_->publish(state,
-//                                      ros::Time(time),
-//                                      camera_data_);
-
-            // render and generate point cloud
-//            std::lock_guard<std::mutex> image_lock(image_mutex_);
 
             Eigen::VectorXd depth_image;
             renderer_->Render(state,
                               depth_image,
                               std::numeric_limits<double>::quiet_NaN());
-
-//            auto point_cloud = robot_publisher_->convert_to_point_cloud(
-//                obsrv_vector_, camera_data_, ros::Time(time));
 
             auto end = std::chrono::system_clock::now();
             auto elapsed_time =
@@ -146,7 +137,6 @@ public:
             // publish in parallel
             std::thread(
                 [
-//                 point_cloud,
                  state,
                  time,
                  elapsed_time,
@@ -167,7 +157,6 @@ public:
 
                     std::lock_guard<std::mutex> publisher_lock(
                         publisher_mutex_);
-//                    robot_publisher_->publish_point_cloud(point_cloud);
                     robot_publisher_->publish_camera_info(camera_data_,
                                                           ros::Time(time));
                     robot_publisher_->publishImage(depth_image, camera_data_,
