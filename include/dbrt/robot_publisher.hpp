@@ -128,7 +128,7 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
 
     /// \todo: why is this necessary??
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_);
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
 }
 
 
@@ -154,7 +154,7 @@ void RobotTrackerPublisher<State>::publish(
     robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
 
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_);
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
 }
 
 template <typename State>
