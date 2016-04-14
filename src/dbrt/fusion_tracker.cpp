@@ -57,10 +57,13 @@ void FusionTracker::run_gaussian_tracker()
         }
 
         State current_state;
+        double current_state_time;
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state = current_state_;
+            current_state_time = current_state_time_;
         }
+
 
         std::lock_guard<std::mutex> belief_buffer_lock(
             joints_obsrv_belief_buffer_mutex_);
@@ -75,6 +78,8 @@ void FusionTracker::run_gaussian_tracker()
 
             current_state = gaussian_joint_tracker_->track(
                 joints_belief_entry.joints_obsrv_entry.obsrv);
+            current_state_time = joints_belief_entry.joints_obsrv_entry.timestamp;
+
 
             joints_belief_entry.beliefs =
                 gaussian_joint_tracker_->beliefs();
@@ -91,6 +96,7 @@ void FusionTracker::run_gaussian_tracker()
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state_ = current_state;
+            current_state_time_ = current_state_time;
         }
     }
 }
@@ -100,7 +106,11 @@ void FusionTracker::run_particle_tracker()
     std::shared_ptr<VisualTracker> rbc_particle_filter_tracker =
         visual_tracker_factory_();
 
-    rbc_particle_filter_tracker->initialize({current_state()});
+    State current_state;
+    double garbage;
+
+    current_state_and_time(current_state, garbage);
+    rbc_particle_filter_tracker->initialize({current_state});
 
     while (running_)
     {
@@ -342,10 +352,13 @@ void FusionTracker::shutdown()
     particle_tracker_thread_.join();
 }
 
-FusionTracker::State FusionTracker::current_state() const
+void FusionTracker::current_state_and_time(State& current_state,
+                                          double& current_state_time) const
 {
     std::lock_guard<std::mutex> state_lock(current_state_mutex_);
-    return current_state_;
+
+    current_state = current_state_;
+    current_state_time = current_state_time_;
 }
 
 void FusionTracker::joints_obsrv_callback(

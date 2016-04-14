@@ -55,6 +55,8 @@
 // tools
 #include <dbrt/util/part_mesh_model.hpp>
 
+#include <osr/pose_vector.hpp>
+
 class KinematicsFromURDF
 {
 public:
@@ -63,27 +65,30 @@ public:
     ~KinematicsFromURDF();
 
     // outputs a list of mesh model objects
-    void GetPartMeshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes);
+    void get_part_meshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes);
 
     // Initialises the KDL data and specifically the camera pose
-    void InitKDLData(const Eigen::VectorXd& joint_state);
+    void set_joint_angles(const Eigen::VectorXd& joint_state);
 
     // Get the position of the robot link with index idx
-    Eigen::VectorXd GetLinkPosition( int idx);
+    Eigen::VectorXd get_link_position( int idx);
 
     // Get the orientation of the robot link with index idx
-    Eigen::Quaternion<double> GetLinkOrientation( int idx);
+    Eigen::Quaternion<double> get_link_orientation( int idx);
 
 
-    /// \todo: this function should not be in this class
-    // Get initial samples around input joint state
-    std::vector<Eigen::VectorXd> GetInitialSamples(const sensor_msgs::JointState &state,
-                                                   int initial_sample_count,
-                                                   float ratio_std = 0.1);
+    osr::PoseVector get_link_pose(int index);
+
+
+//    /// \todo: this function should not be in this class
+//    // Get initial samples around input joint state
+//    std::vector<Eigen::VectorXd> GetInitialSamples(const sensor_msgs::JointState &state,
+//                                                   int initial_sample_count,
+//                                                   float ratio_std = 0.1);
 
     /// \todo this function shoudl not be in this class
     // Convert Joint message to Eigen vector
-    std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &state);
+    std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &angles);
 
     std::vector<int> GetJointOrder(const sensor_msgs::JointState& state);
 

@@ -53,68 +53,49 @@ public:
         const std::string& tf_prefix,
         const std::string& data_prefix);
 
+    /// \todo THIS FUNCTION HAS TO GO AWAY!!
     void publish(const State& state,
                  const sensor_msgs::Image& obsrv_image,
                  const std::shared_ptr<dbot::CameraData>& camera_data);
 
-    void publish_joint_state(const State& state);
 
-    void publish_point_cloud(sensor_msgs::PointCloud2Ptr point_cloud);
+    void publish_joint_state(const State& state, const ros::Time time);
 
-    void publishTransform(const ros::Time& time,
+    void publish_tf(const State& state, const ros::Time &time);
+
+    void publish_transform(const ros::Time& time,
                           const std::string& from,
                           const std::string& to);
 
-    void publishImage(const Eigen::VectorXd& depth_image,
+    void publish_image(const Eigen::VectorXd& depth_image,
                       const std::shared_ptr<dbot::CameraData>& camera_data,
                       const ros::Time& time);
 
-    void publishPointCloud(const Eigen::VectorXd& depth_image,
-                           const std::shared_ptr<dbot::CameraData>& camera_data,
-                           const ros::Time& time);
+    void publish_camera_info(const std::shared_ptr<dbot::CameraData>& camera_data,
+                             const ros::Time &time);
 
-    void publishPointCloud(const sensor_msgs::Image& image,
-                           const std::shared_ptr<dbot::CameraData>& camera_data,
-                           const ros::Time& time);
 
-    void convert_to_rgb_depth_image_msg(
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const Eigen::VectorXd& depth_image,
-        sensor_msgs::Image& image);
+protected:
+    bool has_image_subscribers() const;
 
     void convert_to_depth_image_msg(
         const std::shared_ptr<dbot::CameraData>& camera_data,
         const Eigen::VectorXd& depth_image,
         sensor_msgs::Image& image);
 
-    sensor_msgs::PointCloud2Ptr convert_to_point_cloud(
-        const Eigen::VectorXd& depth_image,
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const ros::Time& time);
-
-    void publish_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data);
-
     sensor_msgs::CameraInfoPtr create_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data);
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const ros::Time &time);
 
-    bool has_image_subscribers() const;
-    bool has_point_cloud_subscribers() const;
 
-    void publish(const State& state,
-                 const std::shared_ptr<dbot::CameraData>& camera_data);
-
-protected:
     sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
     std::string tf_prefix_;
     std::string root_;
     std::shared_ptr<robot_state_pub::RobotStatePublisher>
         robot_state_publisher_;
-    std::shared_ptr<ros::Publisher> pub_point_cloud_;
     ros::Publisher pub_joint_state_;
     ros::Publisher pub_camera_info_;
-    image_transport::Publisher pub_rgb_image_;
     image_transport::Publisher pub_depth_image_;
     std::shared_ptr<dbot::RigidBodyRenderer> robot_renderer_;
 };

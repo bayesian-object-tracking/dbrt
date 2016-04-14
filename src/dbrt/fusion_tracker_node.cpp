@@ -249,9 +249,12 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
         visualization_rate.sleep();
-        auto current_state = fusion_tracker.current_state();
-        tracker_publisher->publish(current_state, camera_data);
+        State current_state;
+        double current_state_time;
+        fusion_tracker.current_state_and_time(current_state, current_state_time);
 
+
+        tracker_publisher->publish_tf(current_state, ros::Time(current_state_time));
         ros::spinOnce();
     }
 
