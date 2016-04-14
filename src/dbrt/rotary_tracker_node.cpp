@@ -139,8 +139,25 @@ int main(int argc, char** argv)
     /* - Create the robot model     - */
     /* ------------------------------ */
     // initialize the kinematics
+    std::string robot_description;
+        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
+
+    std::string robot_description_package_path;
+    ri::read_parameter("robot_description_package_path",
+                       robot_description_package_path, nh);
+    std::string rendering_root_left;
+    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
+    std::string rendering_root_right;
+    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+    std::string camera_frame_id;
+    ri::read_parameter("camera_frame_id", camera_frame_id, nh);
+
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-        new KinematicsFromURDF());
+                new KinematicsFromURDF(robot_description,
+                                       robot_description_package_path,
+                                       rendering_root_left,
+                                       rendering_root_right,
+                                       camera_frame_id));
 
     auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
         new dbrt::UrdfObjectModelLoader(urdf_kinematics));

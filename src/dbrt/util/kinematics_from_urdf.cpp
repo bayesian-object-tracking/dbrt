@@ -36,7 +36,14 @@
 #include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-KinematicsFromURDF::KinematicsFromURDF() : nh_priv_("~")
+KinematicsFromURDF::KinematicsFromURDF(
+        const std::string& robot_description,
+        const std::string& robot_description_package_path,
+        const std::string& rendering_root_left,
+        const std::string& rendering_root_right,
+        const std::string& camera_frame_id):
+     nh_priv_("~")
+
 {
     /// \todo: the robot parameters should not be loaded inside
     /// of the URDF class, but outside, and then passed
@@ -136,7 +143,7 @@ void KinematicsFromURDF::get_part_meshes(
         if (tmp_link->name.compare(global_root) == 0) continue;
 
         boost::shared_ptr<PartMeshModel> part_ptr(
-                    new PartMeshModel(links[i], description_path_, i, collision_));
+                    new PartMeshModel(links[i], description_path_, i, false));
 
         if (part_ptr->proper_)  // if the link has an actual mesh file to read
         {

@@ -85,9 +85,25 @@ int main(int argc, char** argv)
     /* - and robot mesh model       - */
     /* ------------------------------ */
 
-    /// \todo: the robot parameters should not be loaded inside
-    /// of the URDF class, but outside, and then passed
-    auto urdf_kinematics = std::make_shared<KinematicsFromURDF>();
+    std::string robot_description;
+        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
+
+    std::string robot_description_package_path;
+    ri::read_parameter("robot_description_package_path",
+                       robot_description_package_path, nh);
+    std::string rendering_root_left;
+    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
+    std::string rendering_root_right;
+    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+    std::string camera_frame_id;
+    ri::read_parameter("camera_frame_id", camera_frame_id, nh);
+
+    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
+                new KinematicsFromURDF(robot_description,
+                                       robot_description_package_path,
+                                       rendering_root_left,
+                                       rendering_root_right,
+                                       camera_frame_id));
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
@@ -99,9 +115,9 @@ int main(int argc, char** argv)
     nh.getParam(prefix + "camera_downsampling_factor",
                 camera_downsampling_factor);
 
-    std::string camera_frame_id;
-    nh.getParam("camera_frame_id",
-                camera_frame_id);
+//    std::string camera_frame_id;
+//    nh.getParam("camera_frame_id",
+//                camera_frame_id);
 
     auto camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::VirtualCameraDataProvider>(

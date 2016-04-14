@@ -61,7 +61,12 @@ class KinematicsFromURDF
 {
 public:
 
-    KinematicsFromURDF();
+    KinematicsFromURDF(const std::string& robot_description,
+            const std::string& robot_description_package_path,
+            const std::string& rendering_root_left,
+            const std::string& rendering_root_right,
+            const std::string& camera_frame_id);
+
     ~KinematicsFromURDF();
 
     // outputs a list of mesh model objects
