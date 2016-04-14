@@ -84,7 +84,7 @@ public:
     void joints_obsrv_callback(const sensor_msgs::JointState& joints_obsrv);
     void image_obsrv_callback(const sensor_msgs::Image& ros_image);
 
-    void current_state_and_time(State& current_state, double& current_state_time) const;
+    void current_state_and_time(State& current_state, double& current_time) const;
 
 protected:
     void run_gaussian_tracker();
@@ -110,7 +110,10 @@ private:
     bool running_;
     double camera_delay_;
     State current_state_;
-    double current_state_time_;
+    double current_time_;
+    JointObsrv current_angle_measurement_;
+
+
     sensor_msgs::Image ros_image_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;

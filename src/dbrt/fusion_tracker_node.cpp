@@ -250,11 +250,11 @@ int main(int argc, char** argv)
     {
         visualization_rate.sleep();
         State current_state;
-        double current_state_time;
-        fusion_tracker.current_state_and_time(current_state, current_state_time);
+        double current_time;
+        fusion_tracker.current_state_and_time(current_state, current_time);
 
 
-        tracker_publisher->publish_tf(current_state, ros::Time(current_state_time));
+        tracker_publisher->publish_tf(current_state, ros::Time(current_time));
         ros::spinOnce();
     }
 

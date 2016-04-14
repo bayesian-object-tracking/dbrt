@@ -57,11 +57,13 @@ void FusionTracker::run_gaussian_tracker()
         }
 
         State current_state;
-        double current_state_time;
+        double current_time;
+        JointObsrv current_angle_measurement;
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state = current_state_;
-            current_state_time = current_state_time_;
+            current_time = current_time_;
+            current_angle_measurement = current_angle_measurement_;
         }
 
 
@@ -78,7 +80,9 @@ void FusionTracker::run_gaussian_tracker()
 
             current_state = gaussian_joint_tracker_->track(
                 joints_belief_entry.joints_obsrv_entry.obsrv);
-            current_state_time = joints_belief_entry.joints_obsrv_entry.timestamp;
+            current_time = joints_belief_entry.joints_obsrv_entry.timestamp;
+            current_angle_measurement =
+                                   joints_belief_entry.joints_obsrv_entry.obsrv;
 
 
             joints_belief_entry.beliefs =
@@ -96,7 +100,8 @@ void FusionTracker::run_gaussian_tracker()
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state_ = current_state;
-            current_state_time_ = current_state_time;
+            current_time_ = current_time;
+            current_angle_measurement_ = current_angle_measurement;
         }
     }
 }
@@ -353,12 +358,12 @@ void FusionTracker::shutdown()
 }
 
 void FusionTracker::current_state_and_time(State& current_state,
-                                          double& current_state_time) const
+                                          double& current_time) const
 {
     std::lock_guard<std::mutex> state_lock(current_state_mutex_);
 
     current_state = current_state_;
-    current_state_time = current_state_time_;
+    current_time = current_time_;
 }
 
 void FusionTracker::joints_obsrv_callback(
