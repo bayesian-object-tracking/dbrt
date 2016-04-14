@@ -111,7 +111,7 @@ private:
     double camera_delay_;
     State current_state_;
     double current_time_;
-    JointObsrv current_angle_measurement_;
+    JointsObsrv current_angle_measurement_;
 
 
     sensor_msgs::Image ros_image_;
