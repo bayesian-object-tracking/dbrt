@@ -80,23 +80,32 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string prefix = "arm_robot_emulator/";
 
+
+    /* ------------------------------ */
+    /* - Setup camera data          - */
+    /* ------------------------------ */
+    auto camera_downsampling_factor =
+            ri::read<double>(prefix + "camera_downsampling_factor", nh);
+    auto camera_frame_id = ri::read<std::string>("camera_frame_id", nh);
+
+    auto camera_data = std::make_shared<dbot::CameraData>(
+        std::make_shared<dbot::VirtualCameraDataProvider>(
+            camera_downsampling_factor, "/" + camera_frame_id));
+
+
     /* ------------------------------ */
     /* - Create the robot kinematics- */
     /* - and robot mesh model       - */
     /* ------------------------------ */
 
-    std::string robot_description;
-        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
-
-    std::string robot_description_package_path;
-    ri::read_parameter("robot_description_package_path",
-                       robot_description_package_path, nh);
-    std::string rendering_root_left;
-    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
-    std::string rendering_root_right;
-    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
-    std::string camera_frame_id;
-    ri::read_parameter("camera_frame_id", camera_frame_id, nh);
+    auto robot_description =
+            ri::read<std::string>("robot_description", ros::NodeHandle());
+    auto robot_description_package_path =
+            ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left =
+            ri::read<std::string>("rendering_root_left", nh);
+    auto rendering_root_right =
+            ri::read<std::string>("rendering_root_right", nh);
 
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
                 new KinematicsFromURDF(robot_description,
@@ -108,20 +117,7 @@ int main(int argc, char** argv)
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
 
-    /* ------------------------------ */
-    /* - Setup camera data          - */
-    /* ------------------------------ */
-    double camera_downsampling_factor;
-    nh.getParam(prefix + "camera_downsampling_factor",
-                camera_downsampling_factor);
 
-//    std::string camera_frame_id;
-//    nh.getParam("camera_frame_id",
-//                camera_frame_id);
-
-    auto camera_data = std::make_shared<dbot::CameraData>(
-        std::make_shared<dbot::VirtualCameraDataProvider>(
-            camera_downsampling_factor, "/" + camera_frame_id));
 
     /* ------------------------------ */
     /* - Robot renderer             - */
@@ -148,20 +144,17 @@ int main(int argc, char** argv)
     auto robot_animator =
         std::shared_ptr<dbrt::RobotAnimator>(new ArmRobotAnimator());
 
-    std::vector<double> joints;
-    nh.getParam(prefix + "initial_state", joints);
+    auto joints = ri::read<std::vector<double>>(prefix + "initial_state", nh);
 
     State state;
     state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
 
-    double joint_rate;
-    double image_rate;
-    double dilation;
-    double visual_sensor_delay;
-    nh.getParam(prefix + "joint_sensor_rate", joint_rate);
-    nh.getParam(prefix + "visual_sensor_rate", image_rate);
-    nh.getParam(prefix + "dilation", dilation);
-    nh.getParam(prefix + "visual_sensor_delay", visual_sensor_delay);
+
+    auto joint_rate = ri::read<double>(prefix + "joint_sensor_rate", nh);
+    auto image_rate = ri::read<double>(prefix + "visual_sensor_rate", nh);
+    auto dilation = ri::read<double>(prefix + "dilation", nh);
+    auto visual_sensor_delay =
+            ri::read<double>(prefix + "visual_sensor_delay", nh);
 
     dbrt::RobotEmulator<State> robot(object_model,
                                      urdf_kinematics,

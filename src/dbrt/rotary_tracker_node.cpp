@@ -166,16 +166,15 @@ int main(int argc, char** argv)
     /* - Create the robot model     - */
     /* ------------------------------ */
     // initialize the kinematics
-    std::string robot_description;
-        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
-
-    std::string robot_description_package_path;
-    ri::read_parameter("robot_description_package_path",
-                       robot_description_package_path, nh);
-    std::string rendering_root_left;
-    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
-    std::string rendering_root_right;
-    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+    auto robot_description =
+            ri::read<std::string>("robot_description",
+                                            ros::NodeHandle());
+    auto robot_description_package_path =
+            ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left =
+            ri::read<std::string>("rendering_root_left", nh);
+    auto rendering_root_right =
+            ri::read<std::string>("rendering_root_right", nh);
 
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
                 new KinematicsFromURDF(robot_description,

@@ -77,12 +77,13 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
         transition_parameters;
 
     // linear state transition parameters
-    nh.getParam(prefix + "joint_transition/joint_sigmas",
-                transition_parameters.joint_sigmas);
-    nh.getParam(prefix + "joint_transition/bias_sigmas",
-                transition_parameters.bias_sigmas);
-    nh.getParam(prefix + "joint_transition/bias_factors",
-                transition_parameters.bias_factors);
+    transition_parameters.joint_sigmas = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/joint_sigmas", nh);
+    transition_parameters.bias_sigmas = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/bias_sigmas", nh);
+    transition_parameters.bias_factors = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/bias_factors", nh);
+
     transition_parameters.joint_count = joint_count;
 
     auto transition_builder =
@@ -94,8 +95,8 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* ------------------------------ */
     dbrt::RotarySensorBuilder<Tracker>::Parameters sensor_parameters;
 
-    nh.getParam(prefix + "joint_observation/joint_sigmas",
-                sensor_parameters.joint_sigmas);
+    sensor_parameters.joint_sigmas = ri::read<std::vector<double>>(
+                                 prefix + "joint_observation/joint_sigmas", nh);
     sensor_parameters.joint_count = joint_count;
 
     auto rotary_sensor_builder =
@@ -122,15 +123,16 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
-    int downsampling_factor;
-    std::string camera_info_topic;
-    std::string depth_image_topic;
+    auto camera_info_topic = ri::read<std::string>("camera_info_topic", nh);
+    auto depth_image_topic = ri::read<std::string>("depth_image_topic", nh);
+    auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
+
     dbot::CameraData::Resolution resolution;
-    nh.getParam("camera_info_topic", camera_info_topic);
-    nh.getParam("depth_image_topic", depth_image_topic);
-    nh.getParam("downsampling_factor", downsampling_factor);
-    nh.getParam("resolution/width", resolution.width);
-    nh.getParam("resolution/height", resolution.height);
+    resolution.width = ri::read<int>("resolution/width", nh);
+    resolution.height = ri::read<int>("resolution/height", nh);
+
+
+
     auto camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::RosCameraDataProvider>(nh,
                                                       camera_info_topic,
@@ -146,18 +148,14 @@ int main(int argc, char** argv)
     /* - Create the robot kinematics- */
     /* - and robot mesh model       - */
     /* ------------------------------ */
-
-    /// \todo: the robot parameters should not be loaded inside
-    /// of the URDF class, but outside, and then passed
-    std::string robot_description;
-    ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
-    std::string robot_description_package_path;
-    ri::read_parameter("robot_description_package_path",
-                       robot_description_package_path, nh);
-    std::string rendering_root_left;
-    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
-    std::string rendering_root_right;
-    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+    auto robot_description =
+            ri::read<std::string>("robot_description", ros::NodeHandle());
+    auto robot_description_package_path =
+            ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left =
+            ri::read<std::string>("rendering_root_left", nh);
+    auto rendering_root_right =
+            ri::read<std::string>("rendering_root_right", nh);
 
     std::string prefixed_frame_id = camera_data->frame_id();
     std::size_t slash_index = prefixed_frame_id.find_last_of("/");
@@ -233,8 +231,7 @@ int main(int argc, char** argv)
     auto gaussian_joint_robot_tracker = create_rotary_tracker(
         prefix, urdf_kinematics->num_joints(), joint_order);
 
-    double camera_delay;
-    nh.getParam(prefix + "camera_delay", camera_delay);
+    auto camera_delay = ri::read<double>(prefix + "camera_delay", nh);
     dbrt::FusionTracker fusion_tracker(
         camera_data,
         gaussian_joint_robot_tracker,
