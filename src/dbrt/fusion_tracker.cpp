@@ -125,7 +125,7 @@ void FusionTracker::run_particle_tracker()
             std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
             if (!ros_image_updated_)
             {
-                continue; 
+                continue;
             }
         }
 
@@ -308,7 +308,7 @@ Eigen::MatrixXd FusionTracker::get_covariance_sqrt_from_belief(
 
     if (entry.beliefs.size() == 0)
     {
-        throw std::runtime_error("Something is wrong. The beliefs are empty."); 
+        throw std::runtime_error("Something is wrong. The beliefs are empty.");
     }
 
     for (int i = 0; i < cov_sqrt.rows(); ++i)
@@ -363,6 +363,16 @@ void FusionTracker::current_state_and_time(State& current_state,
 
     current_state = current_state_;
     current_time = current_time_;
+}
+
+void FusionTracker::current_things(State& current_state,
+    double& current_time, JointsObsrv& current_angle_measurement) const
+{
+    std::lock_guard<std::mutex> state_lock(current_state_mutex_);
+
+    current_state = current_state_;
+    current_time = current_time_;
+    current_angle_measurement = current_angle_measurement_;
 }
 
 void FusionTracker::joints_obsrv_callback(
