@@ -42,20 +42,13 @@ KinematicsFromURDF::KinematicsFromURDF(
         const std::string& rendering_root_left,
         const std::string& rendering_root_right,
         const std::string& camera_frame_id):
-     nh_priv_("~")
-
+    description_path_(robot_description_package_path),
+    rendering_root_left_(rendering_root_left),
+    rendering_root_right_(rendering_root_right),
+    cam_frame_name_(camera_frame_id)
 {
-    /// \todo: the robot parameters should not be loaded inside
-    /// of the URDF class, but outside, and then passed
-
-    // Load robot description from parameter server
-    std::string desc_string;
-    if (!nh_.getParam("robot_description", desc_string))
-        ROS_ERROR("Could not get urdf from param server at %s",
-                  desc_string.c_str());
-
     // Initialize URDF object from robot description
-    if (!urdf_.initString(desc_string)) ROS_ERROR("Failed to parse urdf");
+    if (!urdf_.initString(robot_description)) ROS_ERROR("Failed to parse urdf");
 
     // set up kinematic tree from URDF
     if (!kdl_parser::treeFromUrdfModel(urdf_, kin_tree_))
@@ -63,15 +56,6 @@ KinematicsFromURDF::KinematicsFromURDF(
         ROS_ERROR("Failed to construct kdl tree");
         return;
     }
-
-    // setup path for robot description and root of the tree
-    nh_priv_.param<std::string>(
-                "robot_description_package_path", description_path_, "..");
-    nh_priv_.param<std::string>(
-                "rendering_root_left", rendering_root_left_, "L_SHOULDER");
-    nh_priv_.param<std::string>(
-                "rendering_root_right", rendering_root_right_, "R_SHOULDER");
-    nh_priv_.param<bool>("collision", collision_, false);
 
     // create segment map for correct ordering of joints
     segment_map_ = kin_tree_.getSegments();
@@ -87,14 +71,11 @@ KinematicsFromURDF::KinematicsFromURDF(
         {
             joint = urdf_.getJoint(
                         seg_it->second.segment.getJoint().getName().c_str());
-            // check, if joint can be found in the URDF model of the
-            // object/robot
+            // check, if joint can be found in the URDF model of the object/robot
             if (!joint)
             {
-                ROS_FATAL(
-                            "Joint '%s' has not been found in the URDF robot model! "
-                            "Aborting ...",
-                            joint->name.c_str());
+                ROS_FATAL("Joint '%s' has not been found in the URDF robot model! "
+                            "Aborting ...", joint->name.c_str());
                 return;
             }
             // extract joint information
@@ -107,11 +88,6 @@ KinematicsFromURDF::KinematicsFromURDF(
             }
         }
     }
-
-    /// \todo: actually the camera frame we care about is "XTION_IR", but
-    /// this is not currently part of the robot model. this has to be fixed
-    /// at some point, because XTION and XTION_IR are shifted by about 2.5 cm.
-    nh_priv_.param<std::string>("camera_frame", cam_frame_name_, "XTION_RGB");
 
     // initialise kinematic tree solver
     tree_solver_ = new KDL::TreeFkSolverPos_recursive(kin_tree_);

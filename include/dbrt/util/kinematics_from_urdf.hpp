@@ -172,7 +172,7 @@ private:
     std::string rendering_root_left_, rendering_root_right_;
 
     // whether to render only collision model or full mesh model
-    bool collision_;
+//    bool collision_;
 
 };
 
