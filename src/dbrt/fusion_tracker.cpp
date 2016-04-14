@@ -34,7 +34,8 @@ FusionTracker::FusionTracker(
       gaussian_joint_tracker_(gaussian_joint_tracker),
       visual_tracker_factory_(visual_tracker_factory),
       running_(true),
-      camera_delay_(camera_delay)
+      camera_delay_(camera_delay),
+      ros_image_updated_(false)
 {
 }
 
@@ -80,7 +81,6 @@ void FusionTracker::run_gaussian_tracker()
                 joints_belief_entry.joints_obsrv_entry.obsrv);
             current_state_time = joints_belief_entry.joints_obsrv_entry.timestamp;
 
-
             joints_belief_entry.beliefs =
                 gaussian_joint_tracker_->beliefs();
 
@@ -114,6 +114,15 @@ void FusionTracker::run_particle_tracker()
 
     while (running_)
     {
+        // continue only if there is a new image available
+        usleep(10);
+        {
+            std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
+            if (!ros_image_updated_)
+            {
+                continue; 
+            }
+        }
 
         /**
          * #1 SWAP ROTARY BELIEF QUEUES SECURLY
@@ -155,11 +164,8 @@ void FusionTracker::run_particle_tracker()
                     joints_obsrv_belief_buffer_local.back());
                 joints_obsrv_belief_buffer_local.pop_back();
             }
-            PInfo("!!!!!!!!!!!!!!!!!!!!!!!!!");
             continue;
         }
-
-        PInfo(" particle filter kicking in");
 
         // #3
         auto mean = get_state_from_belief(belief_entry);
@@ -183,9 +189,9 @@ void FusionTracker::run_particle_tracker()
         {
             std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
             ros_image = ros_image_;
+            ros_image_updated_ = false;
         }
 
-        if (ros_image.height == 0 || ros_image.width == 0) continue;
 
         auto image = ri::to_eigen_vector<double>(
             ros_image, camera_data_->downsampling_factor());
@@ -249,8 +255,7 @@ void FusionTracker::run_particle_tracker()
             prev = entry;
         }
 
-        PV(maxdelta);
-        PV(avdelta/joints_obsrvs_buffer_.size());
+        ROS_INFO("Visual information fused");
     }
 }
 
@@ -269,15 +274,10 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
         if (entry.joints_obsrv_entry.timestamp > timestamp)
         {
             belief_entry = entry;
-    PV(min);
-    PV(max);
             return index;
         }
         index++;
     }
-
-    PV(min);
-    PV(max);
 
     return -1;
 }
@@ -303,8 +303,7 @@ Eigen::MatrixXd FusionTracker::get_covariance_sqrt_from_belief(
 
     if (entry.beliefs.size() == 0)
     {
-        PInfo("something is wrong, the beliefs are empty");
-        exit(1);
+        throw std::runtime_error("Something is wrong. The beliefs are empty."); 
     }
 
     for (int i = 0; i < cov_sqrt.rows(); ++i)
@@ -353,7 +352,7 @@ void FusionTracker::shutdown()
 }
 
 void FusionTracker::current_state_and_time(State& current_state,
-                                          double& current_state_time) const
+                                           double& current_state_time) const
 {
     std::lock_guard<std::mutex> state_lock(current_state_mutex_);
 
@@ -377,13 +376,12 @@ void FusionTracker::joints_obsrv_callback(
     JointsObsrvEntry entry;
     entry.timestamp = joint_msg.header.stamp.toSec();
     entry.obsrv = obsrv;
-//    PV(entry.timestamp - ros_image_.header.stamp.toSec())
     joints_obsrvs_buffer_.push_back(entry);
 
     if (joints_obsrvs_buffer_.size() > 1000000)
     {
-        PInfo("Obsrv buffer max size reached p.O")
-            joints_obsrvs_buffer_.pop_front();
+        ROS_WARN("Obsrv buffer max size reached.");
+        joints_obsrvs_buffer_.pop_front();
     }
 }
 
@@ -391,6 +389,7 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
 
+    ros_image_updated_ = true;
     ros_image_ = ros_image;
 }
 
