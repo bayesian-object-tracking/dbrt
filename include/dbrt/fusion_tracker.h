@@ -115,6 +115,7 @@ private:
 
 
     sensor_msgs::Image ros_image_;
+    bool ros_image_updated_;
     std::deque<JointsObsrvEntry> joints_obsrvs_buffer_;
     std::deque<JointsBeliefEntry> joints_obsrv_belief_buffer_;
 

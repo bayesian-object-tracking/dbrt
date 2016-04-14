@@ -164,8 +164,31 @@ int main(int argc, char** argv)
     ROS_INFO("Starting robot emulator ... ");
     robot.run();
 
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
+
     ROS_INFO("Robot emulator running ... ");
-    ros::spin();
+    ROS_INFO("Use RETURN to toggle between pause/resume."
+             "To explicitly pause the emulator type 'pause' and to resule the "
+             "emulator enter 'resume'.");
+    while(ros::ok())
+    {
+        std::string cmd;
+        std::getline(std::cin, cmd);
+        if (cmd == "pause")
+        {
+            robot.pause();
+        }
+        else if(cmd == "resume")
+        {
+            robot.resume();
+        }
+        else
+        {
+            robot.toggle_pause();
+        }
+    }
+    // ros::spin();
 
     ROS_INFO("Shutting down ...");
     robot.shutdown();

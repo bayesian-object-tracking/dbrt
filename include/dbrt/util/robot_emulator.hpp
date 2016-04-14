@@ -75,7 +75,8 @@ public:
           joint_sensors_rate_(joint_sensors_rate),
           visual_sensor_rate_(visual_sensor_rate),
           dilation_(dilation),
-          visual_sensor_delay_(visual_sensor_delay)
+          visual_sensor_delay_(visual_sensor_delay),
+          paused_(false)
     {
         robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
             urdf_kinematics_, renderer_, "/robot_emulator", "");
@@ -90,6 +91,21 @@ public:
             std::thread(&RobotEmulator::run_visual_sensors, this);
     }
 
+    void pause()
+    {
+        paused_ = true;
+    }
+
+    void resume()
+    {
+        paused_ = false;
+    }
+
+    void toggle_pause()
+    {
+        paused_ = !paused_;
+    }
+
     void shutdown()
     {
         running_ = false;
@@ -101,8 +117,13 @@ public:
     {
         const double rate = joint_sensors_rate_;
         ros::Rate joint_rate(rate);
-        while (running_)
-        {
+        while (ros::ok() && running_)
+        {            
+            while(ros::ok() && paused_)
+            {
+                usleep(1000);
+            }
+
             joint_rate.sleep();
             std::lock_guard<std::mutex> state_lock(state_mutex_);
             double delta_time = 1. / rate;
@@ -118,6 +139,11 @@ public:
         ros::Rate image_rate(visual_sensor_rate_);
         while (running_)
         {
+            while(ros::ok() && paused_)
+            {
+                usleep(1000);
+            }
+
             image_rate.sleep();
 
             auto start = std::chrono::system_clock::now();
@@ -149,8 +175,8 @@ public:
                     double remaining_delay =
                         std::max(visual_sensor_delay_ - elapsed_time, 0.0);
 
-                    PV(elapsed_time);
-                    PV(remaining_delay);
+                    ROS_INFO_STREAM("Visual simulation computation delay " <<
+                                    elapsed_time);
 
                     std::this_thread::sleep_for(
                         std::chrono::duration<double>(remaining_delay));
@@ -214,5 +240,6 @@ private:
     mutable std::mutex publisher_mutex_;
     std::thread joint_sensor_thread_;
     std::thread visual_sensor_thread_;
+    bool paused_;
 };
 }
