@@ -98,9 +98,14 @@ int main(int argc, char** argv)
     double camera_downsampling_factor;
     nh.getParam(prefix + "camera_downsampling_factor",
                 camera_downsampling_factor);
+
+    std::string camera_frame_id;
+    nh.getParam("camera_frame_id",
+                camera_frame_id);
+
     auto camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::VirtualCameraDataProvider>(
-            camera_downsampling_factor, "/XTION"));
+            camera_downsampling_factor, "/" + camera_frame_id));
 
     /* ------------------------------ */
     /* - Robot renderer             - */
