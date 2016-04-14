@@ -140,7 +140,7 @@ void RobotTrackerPublisher<State>::publish(
     const std::shared_ptr<dbot::CameraData>& camera_data)
 {
     std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
-    exit(-1);
+//    exit(-1);
 
     ros::Time t = ros::Time::now();
 

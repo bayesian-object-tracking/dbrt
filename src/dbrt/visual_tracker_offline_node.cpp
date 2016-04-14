@@ -78,36 +78,6 @@ int main(int argc, char** argv)
     /*    - Filter builder                                                    */
     /* ---------------------------------------------------------------------- */
 
-    /* ------------------------------ */
-    /* - Create the robot model     - */
-    /* ------------------------------ */
-    // initialize the kinematics
-    std::string robot_description;
-        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
-
-    std::string robot_description_package_path;
-    ri::read_parameter("robot_description_package_path",
-                       robot_description_package_path, nh);
-    std::string rendering_root_left;
-    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
-    std::string rendering_root_right;
-    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
-    std::string camera_frame_id;
-    ri::read_parameter("camera_frame_id", camera_frame_id, nh);
-
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       camera_frame_id));
-
-    auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
-        new dbrt::UrdfObjectModelLoader(urdf_kinematics));
-
-    // Load the model usign the URDF loader
-    auto object_model =
-        std::make_shared<dbot::ObjectModel>(object_model_loader, false);
 
     /* ------------------------------ */
     /* - Data set provider          - */
@@ -131,6 +101,44 @@ int main(int argc, char** argv)
     // Create camera data from the DataSetCameraDataProvider which takes the
     // data from the loaded tracking data set object
     auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
+
+
+
+
+    /* ------------------------------ */
+    /* - Create the robot model     - */
+    /* ------------------------------ */
+    // initialize the kinematics
+    std::string robot_description;
+        ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
+
+    std::string robot_description_package_path;
+    ri::read_parameter("robot_description_package_path",
+                       robot_description_package_path, nh);
+    std::string rendering_root_left;
+    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
+    std::string rendering_root_right;
+    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+
+    std::string prefixed_frame_id = camera_data->frame_id();
+    std::size_t slash_index = prefixed_frame_id.find_last_of("/");
+    std::string frame_id = prefixed_frame_id.substr(slash_index + 1);
+
+    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
+                new KinematicsFromURDF(robot_description,
+                                       robot_description_package_path,
+                                       rendering_root_left,
+                                       rendering_root_right,
+                                       frame_id));
+
+    auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
+        new dbrt::UrdfObjectModelLoader(urdf_kinematics));
+
+    // Load the model usign the URDF loader
+    auto object_model =
+        std::make_shared<dbot::ObjectModel>(object_model_loader, false);
+
+
 
     /* ------------------------------ */
     /* - Few types we will be using - */

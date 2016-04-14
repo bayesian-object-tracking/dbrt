@@ -118,37 +118,6 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "fusion_tracker");
     ros::NodeHandle nh("~");
 
-    // parameter shorthand prefix
-    std::string prefix = "fusion_tracker/";
-
-    /* ------------------------------ */
-    /* - Create the robot kinematics- */
-    /* - and robot mesh model       - */
-    /* ------------------------------ */
-
-    /// \todo: the robot parameters should not be loaded inside
-    /// of the URDF class, but outside, and then passed
-    std::string robot_description;
-    ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
-    std::string robot_description_package_path;
-    ri::read_parameter("robot_description_package_path",
-                       robot_description_package_path, nh);
-    std::string rendering_root_left;
-    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
-    std::string rendering_root_right;
-    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
-    std::string camera_frame_id;
-    ri::read_parameter("camera_frame_id", camera_frame_id, nh);
-
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       camera_frame_id));
-
-    auto object_model = std::make_shared<dbot::ObjectModel>(
-        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
 
     /* ------------------------------ */
     /* - Setup camera data          - */
@@ -169,6 +138,42 @@ int main(int argc, char** argv)
                                                       resolution,
                                                       downsampling_factor,
                                                       2.0));
+
+    // parameter shorthand prefix
+    std::string prefix = "fusion_tracker/";
+
+    /* ------------------------------ */
+    /* - Create the robot kinematics- */
+    /* - and robot mesh model       - */
+    /* ------------------------------ */
+
+    /// \todo: the robot parameters should not be loaded inside
+    /// of the URDF class, but outside, and then passed
+    std::string robot_description;
+    ri::read_parameter("robot_description", robot_description, ros::NodeHandle());
+    std::string robot_description_package_path;
+    ri::read_parameter("robot_description_package_path",
+                       robot_description_package_path, nh);
+    std::string rendering_root_left;
+    ri::read_parameter("rendering_root_left", rendering_root_left, nh);
+    std::string rendering_root_right;
+    ri::read_parameter("rendering_root_right", rendering_root_right, nh);
+
+    std::string prefixed_frame_id = camera_data->frame_id();
+    std::size_t slash_index = prefixed_frame_id.find_last_of("/");
+    std::string frame_id = prefixed_frame_id.substr(slash_index + 1);
+
+    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
+                new KinematicsFromURDF(robot_description,
+                                       robot_description_package_path,
+                                       rendering_root_left,
+                                       rendering_root_right,
+                                       frame_id));
+
+    auto object_model = std::make_shared<dbot::ObjectModel>(
+        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
+
+
 
     /* ------------------------------ */
     /* - Robot renderer             - */
