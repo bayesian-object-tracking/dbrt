@@ -28,12 +28,14 @@ namespace dbrt
 {
 
 RobotTransformer::RobotTransformer(
-    const std::shared_ptr<robot_state_pub::RobotStatePublisher>& state_publisher)
-    : transforms_provider_(state_publisher), tf_transformer_(false), is_empty_(true) {}
+    const std::shared_ptr<robot_state_pub::RobotStatePublisher>& state_publisher):
+    transforms_provider_(state_publisher),
+    tf_transformer_(false),
+    is_empty_(true) {}
 
 
 void RobotTransformer::set_joints(
-    std::map<std::string, double> joints,
+    const std::map<std::string, double>& joints, const ros::Time& time,
     const std::string& tf_prefix)
 {
     // Store the joints values
@@ -41,22 +43,40 @@ void RobotTransformer::set_joints(
 
     // These guys will be needed later to get transforms and query our transformer
     tf_prefix_ = tf_prefix;
-    fake_time_ = ros::Time.now();
+    time_ = time; //ros::Time.now();
 
     // Lazy init if the transformer (only when actually queried)
     tf_transformer_.clear();
+    tf_transforms_.clear();
     is_empty_ = true;
+}
+
+
+const std::vector<tf::StampedTransform>& RobotTransformer::get_transforms()
+{
+    if (joints_.empty())
+    {
+        ROS_WARNING("Trying to get transforms, but joint values have not been set");
+        return tf_transforms_;
+    }
+    if (tf_transforms_.empty())
+    {
+        // Use method from robot_state_pub::RobotStatePublisher to get tfs
+        transforms_provider_.getAllTransforms(joints_, time_, tf_prefix_, tf_transforms_);
+    }
+    return tf_transforms_;
 }
 
 
 void RobotTransformer::set_transformer_() const
 {
-    // Use method from robot_state_pub::RobotStatePublisher to get tfs
-    std::vector<tf::StampedTransform> tf_transforms;
-    transforms_provider_.getTransforms(joints_, fake_time_, tf_prefix_, tf_transforms);
+    if (!is_empty_)
+    {
+        return;
+    }
+    const std::vector<tf::StampedTransform>& tf_transforms = get_transforms();
 
     // Fill in our transformer with these transforms
-    tf_transformer_.clear()
     for (tf_trans : tf_transforms)
     {
         ok = tf_transformer_.setTransform(tf_trans, authority="robot_transformer");
@@ -73,10 +93,7 @@ void RobotTransformer::set_transformer_() const
 void RobotTransformer::lookup_transform(const std::string& from,
     const std::string& to, tf::StampedTransform& tf_transform) const
 {
-    if (is_empty_)
-    {
-        set_transformer_();
-    }
+    set_transformer_();
     tf_transformer_.lookupTransform(tf::resolve(tf_prefix_, from),
         tf::resolve(tf_prefix_, to), fake_time_, tf_transform);
 }
