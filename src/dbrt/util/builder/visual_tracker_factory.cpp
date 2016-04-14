@@ -105,19 +105,18 @@ create_visual_tracker(
                 prefix + "observation/kinect/model_sigma", nh);
     sensor_parameters.kinect.sigma_factor = ri::read<double> (
                 prefix + "observation/kinect/sigma_factor", nh);
-
     sensor_parameters.delta_time = ri::read<double> (
                 prefix + "observation/delta_time", nh);
 
     // gpu only parameters
-    nh.getParam(prefix + "gpu/use_custom_shaders",
-                sensor_parameters.use_custom_shaders);
-    nh.getParam(prefix + "gpu/vertex_shader_file",
-                sensor_parameters.vertex_shader_file);
-    nh.getParam(prefix + "gpu/fragment_shader_file",
-                sensor_parameters.fragment_shader_file);
-    nh.getParam(prefix + "gpu/geometry_shader_file",
-                sensor_parameters.geometry_shader_file);
+    sensor_parameters.use_custom_shaders = ri::read<bool> (
+                prefix + "gpu/use_custom_shaders", nh);
+    sensor_parameters.vertex_shader_file = ri::read<std::string> (
+                prefix + "gpu/vertex_shader_file", nh);
+    sensor_parameters.fragment_shader_file = ri::read<std::string> (
+                prefix + "gpu/fragment_shader_file", nh);
+    sensor_parameters.geometry_shader_file = ri::read<std::string> (
+                prefix + "gpu/geometry_shader_file", nh);
 
     auto sensor_builder =
         std::make_shared<dbot::RbObservationModelBuilder<State>>(
@@ -128,13 +127,14 @@ create_visual_tracker(
     /* ------------------------------ */
     dbrt::VisualTrackerBuilder<Tracker>::Parameters tracker_parameters;
     tracker_parameters.evaluation_count = sensor_parameters.sample_count;
-    nh.getParam(prefix + "moving_average_update_rate",
-                tracker_parameters.moving_average_update_rate);
-    nh.getParam(prefix + "max_kl_divergence", tracker_parameters.max_kl_divergence);
 
+
+    tracker_parameters.moving_average_update_rate = ri::read<double>(
+                prefix + "moving_average_update_rate", nh);
+    tracker_parameters.max_kl_divergence = ri::read<double>(
+                prefix + "max_kl_divergence", nh);
     tracker_parameters.sampling_blocks =
-    ri::read<std::vector<std::vector<int>>>(prefix +
-                                                      "sampling_blocks",nh);
+        ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks", nh);
 
     auto tracker_builder =
         dbrt::VisualTrackerBuilder<Tracker>(urdf_kinematics,
