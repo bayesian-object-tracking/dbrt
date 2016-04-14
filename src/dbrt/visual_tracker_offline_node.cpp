@@ -82,8 +82,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Data set provider          - */
     /* ------------------------------ */
-    std::string source;
-    nh.getParam("source", source);
+    auto source = ri::read<std::string>("source", nh);
 
     ROS_INFO_STREAM("Loading data from " << source);
     auto data_set = std::make_shared<TrackingDataset>(source);
@@ -91,9 +90,9 @@ int main(int argc, char** argv)
 
     /* ------------------------------ */
     /* - Setup camera data          - */
-    /* ------------------------------ */
-    int downsampling_factor;
-    nh.getParam("downsampling_factor", downsampling_factor);
+    /* ------------------------------ */  
+    auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
+
 
     auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
         new dbot::DataSetCameraDataProvider(data_set, downsampling_factor));

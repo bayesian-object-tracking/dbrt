@@ -80,15 +80,12 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
-    int downsampling_factor;
-    std::string camera_info_topic;
-    std::string depth_image_topic;
+    auto camera_info_topic = ri::read<std::string>("camera_info_topic", nh);
+    auto depth_image_topic = ri::read<std::string>("depth_image_topic", nh);
+    auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
     dbot::CameraData::Resolution resolution;
-    nh.getParam("camera_info_topic", camera_info_topic);
-    nh.getParam("depth_image_topic", depth_image_topic);
-    nh.getParam("downsampling_factor", downsampling_factor);
-    nh.getParam("resolution/width", resolution.width);
-    nh.getParam("resolution/height", resolution.height);
+    resolution.width = ri::read<int>("resolution/width", nh);
+    resolution.height = ri::read<int>("resolution/height", nh);
 
     auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
         new dbot::RosCameraDataProvider(nh,
