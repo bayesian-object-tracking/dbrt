@@ -75,12 +75,12 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
         transition_parameters;
 
     // linear state transition parameters
-    nh.getParam(prefix + "joint_transition/joint_sigmas",
-                transition_parameters.joint_sigmas);
-    nh.getParam(prefix + "joint_transition/bias_sigmas",
-                transition_parameters.bias_sigmas);
-    nh.getParam(prefix + "joint_transition/bias_factors",
-                transition_parameters.bias_factors);
+    transition_parameters.joint_sigmas = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/joint_sigmas", nh);
+    transition_parameters.bias_sigmas = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/bias_sigmas", nh);
+    transition_parameters.bias_factors = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/bias_factors", nh);
     transition_parameters.joint_count = joint_count;
 
     auto transition_builder =
@@ -92,8 +92,8 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* ------------------------------ */
     dbrt::RotarySensorBuilder<Tracker>::Parameters sensor_parameters;
 
-    nh.getParam(prefix + "joint_observation/joint_sigmas",
-                sensor_parameters.joint_sigmas);
+    sensor_parameters.joint_sigmas = ri::read<std::vector<double>>(
+                                 prefix + "joint_observation/joint_sigmas", nh);
     sensor_parameters.joint_count = joint_count;
 
     PV(joint_count);
@@ -139,15 +139,12 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
-    int downsampling_factor;
-    std::string camera_info_topic;
-    std::string depth_image_topic;
+    auto camera_info_topic = ri::read<std::string>("camera_info_topic", nh);
+    auto depth_image_topic = ri::read<std::string>("depth_image_topic", nh);
+    auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
     dbot::CameraData::Resolution resolution;
-    nh.getParam("camera_info_topic", camera_info_topic);
-    nh.getParam("depth_image_topic", depth_image_topic);
-    nh.getParam("downsampling_factor", downsampling_factor);
-    nh.getParam("resolution/width", resolution.width);
-    nh.getParam("resolution/height", resolution.height);
+    resolution.width = ri::read<int>("resolution/width", nh);
+    resolution.height = ri::read<int>("resolution/height", nh);
 
     auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
         new dbot::RosCameraDataProvider(nh,

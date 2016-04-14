@@ -83,7 +83,6 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
                                  prefix + "joint_transition/bias_sigmas", nh);
     transition_parameters.bias_factors = ri::read<std::vector<double>> (
                                  prefix + "joint_transition/bias_factors", nh);
-
     transition_parameters.joint_count = joint_count;
 
     auto transition_builder =
@@ -126,7 +125,6 @@ int main(int argc, char** argv)
     auto camera_info_topic = ri::read<std::string>("camera_info_topic", nh);
     auto depth_image_topic = ri::read<std::string>("depth_image_topic", nh);
     auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
-
     dbot::CameraData::Resolution resolution;
     resolution.width = ri::read<int>("resolution/width", nh);
     resolution.height = ri::read<int>("resolution/height", nh);
