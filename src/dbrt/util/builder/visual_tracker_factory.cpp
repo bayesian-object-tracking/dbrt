@@ -65,8 +65,8 @@ create_visual_tracker(
     dbrt::TransitionBuilder<Tracker>::Parameters transition_parameters;
 
     // linear state transition parameters
-    nh.getParam(prefix + "joint_transition/joint_sigmas",
-                transition_parameters.joint_sigmas);
+    transition_parameters.joint_sigmas = ri::read<std::vector<double>> (
+                                 prefix + "joint_transition/joint_sigmas", nh);
     transition_parameters.joint_count = urdf_kinematics->num_joints();
 
     auto transition_builder =
@@ -76,31 +76,38 @@ create_visual_tracker(
     /* - Observation model          - */
     /* ------------------------------ */
     dbot::RbObservationModelBuilder<State>::Parameters sensor_parameters;
-    nh.getParam(prefix + "use_gpu", sensor_parameters.use_gpu);
+
+
+    sensor_parameters.use_gpu = ri::read<bool> (prefix + "use_gpu", nh);
 
     if (sensor_parameters.use_gpu)
     {
-        nh.getParam(prefix + "gpu/sample_count", sensor_parameters.sample_count);
+        sensor_parameters.sample_count =
+                ri::read<int> (prefix + "gpu/sample_count", nh);
     }
     else
     {
-        nh.getParam(prefix + "cpu/sample_count", sensor_parameters.sample_count);
+        sensor_parameters.sample_count =
+                ri::read<int> (prefix + "cpu/sample_count", nh);
     }
 
-    nh.getParam(prefix + "observation/occlusion/p_occluded_visible",
-                sensor_parameters.occlusion.p_occluded_visible);
-    nh.getParam(prefix + "observation/occlusion/p_occluded_occluded",
-                sensor_parameters.occlusion.p_occluded_occluded);
-    nh.getParam(prefix + "observation/occlusion/initial_occlusion_prob",
-                sensor_parameters.occlusion.initial_occlusion_prob);
+    sensor_parameters.occlusion.p_occluded_visible = ri::read<double> (
+                prefix + "observation/occlusion/p_occluded_visible", nh);
+    sensor_parameters.occlusion.p_occluded_occluded = ri::read<double> (
+                prefix + "observation/occlusion/p_occluded_occluded", nh);
+    sensor_parameters.occlusion.initial_occlusion_prob = ri::read<double> (
+                prefix + "observation/occlusion/initial_occlusion_prob", nh);
 
-    nh.getParam(prefix + "observation/kinect/tail_weight",
-                sensor_parameters.kinect.tail_weight);
-    nh.getParam(prefix + "observation/kinect/model_sigma",
-                sensor_parameters.kinect.model_sigma);
-    nh.getParam(prefix + "observation/kinect/sigma_factor",
-                sensor_parameters.kinect.sigma_factor);
-    sensor_parameters.delta_time = 1. / 6.;
+
+    sensor_parameters.kinect.tail_weight = ri::read<double> (
+                prefix + "observation/kinect/tail_weight", nh);
+    sensor_parameters.kinect.model_sigma = ri::read<double> (
+                prefix + "observation/kinect/model_sigma", nh);
+    sensor_parameters.kinect.sigma_factor = ri::read<double> (
+                prefix + "observation/kinect/sigma_factor", nh);
+
+    sensor_parameters.delta_time = ri::read<double> (
+                prefix + "observation/delta_time", nh);
 
     // gpu only parameters
     nh.getParam(prefix + "gpu/use_custom_shaders",
