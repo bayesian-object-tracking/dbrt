@@ -170,7 +170,7 @@ void RobotTrackerPublisher<State>::publish_root_link(const State& state,
 
     // Set all transformations corresponding to estimated joints
     state.GetJointState(named_joint_values);
-    transformer_.set_joints(named_joint_values, time, tf_prefix_);
+    transformer_.set_joints(named_joint_values);
 
     // Lookup transform from estimated target to estimated root
     tf::StampedTransform transform_et_er;
@@ -178,19 +178,20 @@ void RobotTrackerPublisher<State>::publish_root_link(const State& state,
 
     // Set all transformations corresponding to measured joints
     get_joint_map_(angle_measurements, named_joint_values);
-    transformer_.set_joints(named_joint_values, time, measured_tf_prefix_);
+    transformer_.set_joints(named_joint_values);
 
     // Lookup transform from measured root to measured target
     tf::StampedTransform transform_mr_mt;
     transformer_.lookup_transform(root_frame_id_, target_frame_id_, transform_mr_mt);
 
     // Compose the two tf_transforms
-    tf::StampedTransform transform_mb_eb(transform_mr_mt*transform_et_er,
-        time, transform_mr_mt.frame_id_, transform_et_er.child_frame_id_);
+    tf::StampedTransform transform_mr_er(transform_mr_mt*transform_et_er, time,
+        tf::resolve(measured_tf_prefix_, root_frame_id_),
+        tf::resolve(tf_prefix_, root_frame_id_));
 
     // Broadcast
     static tf::TransformBroadcaster br;
-    br.sendTransform(transform_mb_eb);
+    br.sendTransform(transform_mr_er);
 }
 
 

@@ -29,21 +29,17 @@ RobotTransformer::RobotTransformer(
     const std::shared_ptr<robot_state_pub::RobotStatePublisher>& state_publisher):
     transforms_provider_(state_publisher),
     tf_transformer_(false),
-    is_empty_(true) {}
+    is_empty_(true),
+    fake_time_(ros::Time(0)),
+    fake_prefix_("") {}
 
 
-void RobotTransformer::set_joints(
-    const std::map<std::string, double>& joints, const ros::Time& time,
-    const std::string& tf_prefix)
+void RobotTransformer::set_joints(const std::map<std::string, double>& joints)
 {
     // Store the joints values
     joints_ = joints;
 
-    // These guys will be needed later to get transforms and query our transformer
-    tf_prefix_ = tf_prefix;
-    time_ = time; //ros::Time.now();
-
-    // Lazy init if the transformer (only when actually queried)
+    // Lazy setting of the transformer (only when actually queried)
     tf_transformer_.clear();
     tf_transforms_.clear();
     is_empty_ = true;
@@ -60,7 +56,8 @@ const std::vector<tf::StampedTransform>& RobotTransformer::get_transforms() cons
     if (tf_transforms_.empty())
     {
         // Use method from robot_state_pub::RobotStatePublisher to get tfs
-        transforms_provider_->getAllTransforms(joints_, time_, tf_prefix_, tf_transforms_);
+        transforms_provider_->getAllTransforms(joints_, fake_time_,
+            fake_prefix_, tf_transforms_);
     }
     return tf_transforms_;
 }
@@ -72,15 +69,16 @@ void RobotTransformer::set_transformer_() const
     {
         return;
     }
-    const std::vector<tf::StampedTransform>& tf_transforms = get_transforms();
 
+    const std::vector<tf::StampedTransform>& tf_transforms = get_transforms();
     // Fill in our transformer with these transforms
     for (std::size_t i = 0; i < tf_transforms.size(); ++i)
     {
         bool ok = tf_transformer_.setTransform(tf_transforms[i], "robot_transformer");
         if (!ok)
         {
-            ROS_DEBUG("Problem setting tf from %s to %s", tf_transforms[i].frame_id_.c_str(),
+            ROS_DEBUG("Problem setting tf from %s to %s",
+                tf_transforms[i].frame_id_.c_str(),
                 tf_transforms[i].child_frame_id_.c_str());
         }
     }
@@ -92,8 +90,19 @@ void RobotTransformer::lookup_transform(const std::string& from,
     const std::string& to, tf::StampedTransform& tf_transform) const
 {
     set_transformer_();
-    tf_transformer_.lookupTransform(tf::resolve(tf_prefix_, from),
-        tf::resolve(tf_prefix_, to), time_, tf_transform);
+    std::string pfrom = tf::resolve(fake_prefix_, from);
+    std::string pto = tf::resolve(fake_prefix_, to);
+    try
+    {
+        tf_transformer_.lookupTransform(tf::resolve(fake_prefix_, from),
+            tf::resolve(fake_prefix_, to), fake_time_, tf_transform);
+    }
+    catch (tf::TransformException ex)
+    {
+        ROS_ERROR("WEIRD! This should not happen... %s", ex.what());
+        ros::Duration(1.0).sleep();
+    }
+
 }
 
 } // end of namespace

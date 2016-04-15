@@ -44,8 +44,7 @@ public:
     /**
      * \brief Set joint configuration for which we want to calculate transforms.
      */
-    void set_joints(const std::map<std::string, double>& joints, const ros::Time& time,
-        const std::string& tf_prefix);
+    void set_joints(const std::map<std::string, double>& joints);
 
     /**
      * \brief Acess to the transforms that were computed as by-product.
@@ -59,17 +58,16 @@ public:
         tf::StampedTransform& tf_transform) const;
 
 protected:
-
     void set_transformer_() const;
 
-    // Joint values and corresponding time and tf_prefix.
+    // Joint values
     std::map<std::string, double> joints_;
-    ros::Time time_;
-    std::string tf_prefix_;
 
     // This guy knows about the kinematics and can provide tf_transforms from joints.
     // It happens to need a time to stamp the returned transforms.
     std::shared_ptr<robot_state_pub::RobotStatePublisher> transforms_provider_;
+    ros::Time fake_time_;
+    std::string fake_prefix_;
 
     // This guy knows how to build a tree of tf_transforms and do magical lookups.
     mutable tf::Transformer tf_transformer_;
