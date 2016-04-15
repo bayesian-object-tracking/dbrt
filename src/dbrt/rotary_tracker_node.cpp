@@ -264,6 +264,8 @@ int main(int argc, char** argv)
 
         /// \todo: THIS IS A HACK!! WE SHOULD PASS THE PROPER TIME WHICH
         /// CORRESPONDS TO THE MEASUREMENT
+        std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
+                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!!!!" << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_joint_state(current_state, time);
         tracker_publisher->publish_tf(current_state, time);
