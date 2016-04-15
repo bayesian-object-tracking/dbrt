@@ -30,6 +30,7 @@
 #include <dbrt/util/image_visualizer.hpp>
 #include <dbrt/robot_publisher.h>
 
+
 namespace dbrt
 {
 class ObjectRenderTools
@@ -43,8 +44,17 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
     const std::string& tf_prefix,
-    const std::string& data_prefix)
-    : node_handle_("~"), tf_prefix_(tf_prefix), robot_renderer_(renderer)
+    const std::string& data_prefix,
+    const std::string& target_frame_id,
+    const std::string& measured_tf_prefix):
+    node_handle_("~"),
+    tf_prefix_(tf_prefix),
+    robot_renderer_(renderer),
+    target_frame_id_(target_frame_id),
+    measured_tf_prefix_(measured_tf_prefix),
+    robot_state_publisher_(std::make_shared<robot_state_pub::RobotStatePublisher>(
+        urdf_kinematics->GetTree())),
+    transformer_(robot_state_publisher_)
 {
     pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
         data_prefix + "/joint_states", 0);
@@ -58,21 +68,18 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     pub_depth_image_ = it->advertise(data_prefix + "/XTION/depth/image", 0);
 
     // get the name of the root frame
-    root_ = urdf_kinematics->GetRootFrameID();
+    root_frame_id_ = urdf_kinematics->GetRootFrameID();
 
-    // initialize the robot state publisher
-    robot_state_publisher_ =
-        std::make_shared<robot_state_pub::RobotStatePublisher>(
-            urdf_kinematics->GetTree());
+    // get joint map
+    joint_names_ = urdf_kinematics->GetJointMap();
 
     // setup basic joint state message
-    auto joint_names = urdf_kinematics->GetJointMap();
-    joint_state_.position.resize(joint_names.size());
-    joint_state_.effort.resize(joint_names.size());
-    joint_state_.velocity.resize(joint_names.size());
-    for (int i = 0; i < joint_names.size(); ++i)
+    joint_state_.position.resize(joint_names_.size());
+    joint_state_.effort.resize(joint_names_.size());
+    joint_state_.velocity.resize(joint_names_.size());
+    for (int i = 0; i < joint_names_.size(); ++i)
     {
-        joint_state_.name.push_back(joint_names[i]);
+        joint_state_.name.push_back(joint_names_[i]);
     }
 }
 
@@ -114,21 +121,74 @@ void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
     pub_joint_state_.publish(joint_state_);
 }
 
+
+
+template <typename State>
+void RobotTrackerPublisher<State>::get_joint_map_(
+    const JointsObsrv& joint_values,
+    std::map<std::string, double>& named_joint_values) const
+{
+    named_joint_values.clear();
+    for (std::size_t i = 0; i < joint_names_.size(); ++i)
+    {
+        named_joint_values[joint_names_[i]] = joint_values[i];
+    }
+}
+
+
 template <typename State>
 void RobotTrackerPublisher<State>::publish_tf(const State& state,
-                                              const ros::Time& time)
+    const ros::Time& time)
 {
-    /// \todo: these frames should not be connected
-    publish_transform(time, root_, tf::resolve(tf_prefix_, root_));
+    publish_id_transform(time, root_frame_id_, tf::resolve(tf_prefix_, root_frame_id_));
+    publish_tf_tree(state, time);
 
+}
+
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_tf_tree(const State& state,
+    const ros::Time& time)
+{
     // publish movable joints
     std::map<std::string, double> joint_positions;
     state.GetJointState(joint_positions);
     robot_state_publisher_->publishTransforms(joint_positions, time, tf_prefix_);
 
-    /// \todo: why is this necessary??
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
+}
+
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_root_link(const State& state,
+    const ros::Time &time, const JointsObsrv& angle_measurements)
+{
+    std::map<std::string, double> named_joint_values;
+
+    // Set all transformations corresponding to estimated joints
+    state.GetJointState(named_joint_values);
+    transformer_.set_joints(named_joint_values, time, tf_prefix_);
+
+    // Lookup transform from estimated target to estimated root
+    tf::StampedTransform transform_et_er;
+    transformer_.lookup_transform(target_frame_id_, root_frame_id_, transform_et_er);
+
+    // Set all transformations corresponding to measured joints
+    get_joint_map_(angle_measurements, named_joint_values);
+    transformer_.set_joints(named_joint_values, time, measured_tf_prefix_);
+
+    // Lookup transform from measured root to measured target
+    tf::StampedTransform transform_mr_mt;
+    transformer_.lookup_transform(root_frame_id_, target_frame_id_, transform_mr_mt);
+
+    // Compose the two tf_transforms
+    tf::StampedTransform transform_mb_eb(transform_mr_mt*transform_et_er,
+        time, transform_mr_mt.frame_id_, transform_et_er.child_frame_id_);
+
+    // Broadcast
+    static tf::TransformBroadcaster br;
+    br.sendTransform(transform_mb_eb);
 }
 
 
@@ -141,20 +201,8 @@ void RobotTrackerPublisher<State>::publish(
 {
     std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
 //    exit(-1);
-
     ros::Time t = ros::Time::now();
-
-    // make sure there is a identity transformation between base of real
-    // robot and estimated robot
-    publish_transform(t, root_, tf::resolve(tf_prefix_, root_));
-
-    // publish movable joints
-    std::map<std::string, double> joint_positions;
-    state.GetJointState(joint_positions);
-    robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
-
-    // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
+    publish_tf(state, t);
 }
 
 template <typename State>
@@ -175,9 +223,8 @@ void RobotTrackerPublisher<State>::publish_image(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_transform(const ros::Time& time,
-                                                     const std::string& from,
-                                                     const std::string& to)
+void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
+    const std::string& from, const std::string& to)
 {
     if (from.compare(to) == 0) return;
 
@@ -188,7 +235,6 @@ void RobotTrackerPublisher<State>::publish_transform(const ros::Time& time,
 }
 
 
-
 template <typename State>
 void RobotTrackerPublisher<State>::publish_camera_info(
         const std::shared_ptr<dbot::CameraData>& camera_data,
@@ -197,6 +243,7 @@ void RobotTrackerPublisher<State>::publish_camera_info(
     auto camera_info = create_camera_info(camera_data, time);
     pub_camera_info_.publish(camera_info);
 }
+
 
 template <typename State>
 sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
@@ -252,4 +299,5 @@ sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
 
     return info_msg;
 }
+
 }
