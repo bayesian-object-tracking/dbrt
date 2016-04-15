@@ -63,7 +63,8 @@ public:
                   double joint_sensors_rate,
                   double visual_sensor_rate,
                   double dilation,
-                  double visual_sensor_delay,
+                  double image_publishing_delay,
+                  double image_timestamp_delay,
                   const State& initial_state)
         : time_(0.),
           state_(initial_state),
@@ -75,7 +76,8 @@ public:
           joint_sensors_rate_(joint_sensors_rate),
           visual_sensor_rate_(visual_sensor_rate),
           dilation_(dilation),
-          visual_sensor_delay_(visual_sensor_delay),
+          image_publishing_delay_(image_publishing_delay),
+          image_timestamp_delay_(image_timestamp_delay),
           paused_(false)
     {
         robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
@@ -148,8 +150,10 @@ public:
 
             auto start = std::chrono::system_clock::now();
             State state;
-            double time;
-            state_and_time(state, time);
+            double acquisition_time;
+            state_and_time(state, acquisition_time);
+
+            double timestamp = acquisition_time + image_timestamp_delay_;
 
             Eigen::VectorXd depth_image;
             renderer_->Render(state,
@@ -164,16 +168,16 @@ public:
             std::thread(
                 [
                  state,
-                 time,
+                 timestamp,
                  elapsed_time,
                  depth_image,
-                 visual_sensor_delay_,
+                 image_publishing_delay_,
                  &publisher_mutex_,
                  &camera_data_,
                  &robot_publisher_]()
                 {
                     double remaining_delay =
-                        std::max(visual_sensor_delay_ - elapsed_time, 0.0);
+                        std::max(image_publishing_delay_ - elapsed_time, 0.0);
 
                     ROS_INFO_STREAM("Visual simulation computation delay " <<
                                     elapsed_time);
@@ -184,9 +188,9 @@ public:
                     std::lock_guard<std::mutex> publisher_lock(
                         publisher_mutex_);
                     robot_publisher_->publish_camera_info(camera_data_,
-                                                          ros::Time(time));
+                                                          ros::Time(timestamp));
                     robot_publisher_->publish_image(depth_image, camera_data_,
-                                                   ros::Time(time));
+                                                   ros::Time(timestamp));
                 })
                 .detach();
         }
@@ -232,7 +236,8 @@ private:
     double joint_sensors_rate_;
     double visual_sensor_rate_;
     double dilation_;
-    double visual_sensor_delay_;
+    double image_publishing_delay_;
+    double image_timestamp_delay_;
 
     bool running_;
     mutable std::mutex state_mutex_;

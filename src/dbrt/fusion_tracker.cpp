@@ -59,7 +59,7 @@ void FusionTracker::run_gaussian_tracker()
 
         State current_state;
         double current_time;
-        JointObsrv current_angle_measurement;
+        JointsObsrv current_angle_measurement;
         {
             std::lock_guard<std::mutex> state_lock(current_state_mutex_);
             current_state = current_state_;
