@@ -85,6 +85,8 @@ public:
     void image_obsrv_callback(const sensor_msgs::Image& ros_image);
 
     void current_state_and_time(State& current_state, double& current_time) const;
+    void current_things(State& current_state, double& current_time,
+        JointsObsrv& current_angle_measurement) const;
 
 protected:
     void run_gaussian_tracker();
@@ -109,10 +111,12 @@ private:
 
     bool running_;
     double camera_delay_;
-    State current_state_;
-    double current_time_;
-    JointsObsrv current_angle_measurement_;
 
+    State current_state_;
+    // We need this to publish estimated tfs with the stamp corresponding to the current state.
+    double current_time_;
+    // We need this to calculate "measured" tfs at the same point in time.
+    JointsObsrv current_angle_measurement_;
 
     sensor_msgs::Image ros_image_;
     bool ros_image_updated_;
