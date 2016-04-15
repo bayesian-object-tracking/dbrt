@@ -266,15 +266,12 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
         visualization_rate.sleep();
-
         State current_state;
         double current_time;
-        dbrt::JointsObsrv current_angle_measurement;
-        fusion_tracker.current_things(current_state, current_time,
-            current_angle_measurement);
+        fusion_tracker.current_state_and_time(current_state, current_time);
 
-        tracker_publisher->publish_tf(current_state, ros::Time(current_time)); //, current_angle_measurement);
 
+        tracker_publisher->publish_tf(current_state, ros::Time(current_time));
         ros::spinOnce();
     }
 

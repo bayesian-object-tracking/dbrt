@@ -30,7 +30,6 @@
 #include <dbrt/util/image_visualizer.hpp>
 #include <dbrt/robot_publisher.h>
 
-
 namespace dbrt
 {
 class ObjectRenderTools
@@ -44,17 +43,8 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
     const std::string& tf_prefix,
-    const std::string& data_prefix,
-    const std::string& target_frame_id,
-    const std::string& measured_tf_prefix):
-    node_handle_("~"),
-    tf_prefix_(tf_prefix),
-    robot_renderer_(renderer),
-    target_frame_id_(target_frame_id),
-    measured_tf_prefix_(measured_tf_prefix),
-    robot_state_publisher_(std::make_shared<robot_state_pub::RobotStatePublisher>(
-        urdf_kinematics->GetTree())),
-    transformer_(robot_state_publisher_)
+    const std::string& data_prefix)
+    : node_handle_("~"), tf_prefix_(tf_prefix), robot_renderer_(renderer)
 {
     pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
         data_prefix + "/joint_states", 0);
@@ -68,18 +58,21 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     pub_depth_image_ = it->advertise(data_prefix + "/XTION/depth/image", 0);
 
     // get the name of the root frame
-    root_frame_id_ = urdf_kinematics->GetRootFrameID();
+    root_ = urdf_kinematics->GetRootFrameID();
 
-    // get joint map
-    joint_names_ = urdf_kinematics->GetJointMap();
+    // initialize the robot state publisher
+    robot_state_publisher_ =
+        std::make_shared<robot_state_pub::RobotStatePublisher>(
+            urdf_kinematics->GetTree());
 
     // setup basic joint state message
-    joint_state_.position.resize(joint_names_.size());
-    joint_state_.effort.resize(joint_names_.size());
-    joint_state_.velocity.resize(joint_names_.size());
-    for (int i = 0; i < joint_names_.size(); ++i)
+    auto joint_names = urdf_kinematics->GetJointMap();
+    joint_state_.position.resize(joint_names.size());
+    joint_state_.effort.resize(joint_names.size());
+    joint_state_.velocity.resize(joint_names.size());
+    for (int i = 0; i < joint_names.size(); ++i)
     {
-        joint_state_.name.push_back(joint_names_[i]);
+        joint_state_.name.push_back(joint_names[i]);
     }
 }
 
@@ -126,7 +119,7 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
                                               const ros::Time& time)
 {
     /// \todo: these frames should not be connected
-    publish_transform(time, root_frame_id_, tf::resolve(tf_prefix_, root_frame_id_));
+    publish_transform(time, root_, tf::resolve(tf_prefix_, root_));
 
     // publish movable joints
     std::map<std::string, double> joint_positions;
@@ -150,7 +143,18 @@ void RobotTrackerPublisher<State>::publish(
 //    exit(-1);
 
     ros::Time t = ros::Time::now();
-    publish_tf(state, t);
+
+    // make sure there is a identity transformation between base of real
+    // robot and estimated robot
+    publish_transform(t, root_, tf::resolve(tf_prefix_, root_));
+
+    // publish movable joints
+    std::map<std::string, double> joint_positions;
+    state.GetJointState(joint_positions);
+    robot_state_publisher_->publishTransforms(joint_positions, t, tf_prefix_);
+
+    // publish fixed transforms
+    robot_state_publisher_->publishFixedTransforms(tf_prefix_, t);
 }
 
 template <typename State>
