@@ -153,8 +153,10 @@ int main(int argc, char** argv)
     auto joint_rate = ri::read<double>(prefix + "joint_sensor_rate", nh);
     auto image_rate = ri::read<double>(prefix + "visual_sensor_rate", nh);
     auto dilation = ri::read<double>(prefix + "dilation", nh);
-    auto visual_sensor_delay =
-            ri::read<double>(prefix + "visual_sensor_delay", nh);
+    auto image_publishing_delay =
+            ri::read<double>(prefix + "image_publishing_delay", nh);
+    auto image_timestamp_delay =
+            ri::read<double>(prefix + "image_timestamp_delay", nh);
 
     dbrt::RobotEmulator<State> robot(object_model,
                                      urdf_kinematics,
@@ -164,7 +166,8 @@ int main(int argc, char** argv)
                                      joint_rate,  // joint sensor rate
                                      image_rate,  // visual sensor rate
                                      dilation,
-                                     visual_sensor_delay,
+                                     image_publishing_delay,
+                                     image_timestamp_delay,
                                      state);
 
     /* ------------------------------ */
