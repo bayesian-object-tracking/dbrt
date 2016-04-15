@@ -17,9 +17,7 @@
  * \author Cristina Garcia Cifuentes (c.garciacifuentes@gmail.com)
  */
 
-#pragma once
 
-#include <ros/ros.h>
 
 #include <dbrt/util/robot_transformer.hpp>
 
@@ -52,17 +50,17 @@ void RobotTransformer::set_joints(
 }
 
 
-const std::vector<tf::StampedTransform>& RobotTransformer::get_transforms()
+const std::vector<tf::StampedTransform>& RobotTransformer::get_transforms() const
 {
     if (joints_.empty())
     {
-        ROS_WARNING("Trying to get transforms, but joint values have not been set");
+        ROS_WARN("Trying to get transforms, but joint values have not been set");
         return tf_transforms_;
     }
     if (tf_transforms_.empty())
     {
         // Use method from robot_state_pub::RobotStatePublisher to get tfs
-        transforms_provider_.getAllTransforms(joints_, time_, tf_prefix_, tf_transforms_);
+        transforms_provider_->getAllTransforms(joints_, time_, tf_prefix_, tf_transforms_);
     }
     return tf_transforms_;
 }
@@ -77,16 +75,16 @@ void RobotTransformer::set_transformer_() const
     const std::vector<tf::StampedTransform>& tf_transforms = get_transforms();
 
     // Fill in our transformer with these transforms
-    for (tf_trans : tf_transforms)
+    for (std::size_t i = 0; i < tf_transforms.size(); ++i)
     {
-        ok = tf_transformer_.setTransform(tf_trans, authority="robot_transformer");
+        bool ok = tf_transformer_.setTransform(tf_transforms[i], "robot_transformer");
         if (!ok)
         {
-            ROS_DEBUG("Problem setting tf from %s to %s", tf_trans.frame_id.c_str(),
-                tf_trans.child_frame_id.c_str());
+            ROS_DEBUG("Problem setting tf from %s to %s", tf_transforms[i].frame_id_.c_str(),
+                tf_transforms[i].child_frame_id_.c_str());
         }
     }
-    is_empty = false;
+    is_empty_ = false;
 }
 
 
@@ -95,7 +93,7 @@ void RobotTransformer::lookup_transform(const std::string& from,
 {
     set_transformer_();
     tf_transformer_.lookupTransform(tf::resolve(tf_prefix_, from),
-        tf::resolve(tf_prefix_, to), fake_time_, tf_transform);
+        tf::resolve(tf_prefix_, to), time_, tf_transform);
 }
 
 } // end of namespace
