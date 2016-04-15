@@ -132,7 +132,7 @@ public:
             robot_animator_->animate(state_, delta_time, dilation_, state_);
             time_ += delta_time;
             robot_publisher_->publish_joint_state(state_, ros::Time(time_));
-//            robot_publisher_->publish_tf(state_, ros::Time(time_));
+            robot_publisher_->publish_tf(state_, ros::Time(time_));
         }
     }
 
