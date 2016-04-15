@@ -125,8 +125,7 @@ set(sources
     src/${PROJECT_NAME}/util/image_visualizer.cpp
     src/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
     src/${PROJECT_NAME}/util/robot_tracking_dataset.cpp
-    src/${PROJECT_NAME}/util/image_publisher.cpp
-    src/${PROJECT_NAME}/util/robot_transformer.cpp)
+    src/${PROJECT_NAME}/util/image_publisher.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}
