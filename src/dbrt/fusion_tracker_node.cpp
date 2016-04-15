@@ -273,9 +273,12 @@ int main(int argc, char** argv)
         fusion_tracker.current_things(current_state, current_time,
             current_angle_measurement);
 
-        tracker_publisher->publish_root_link(current_state, ros::Time(current_time),
-            current_angle_measurement);
-        tracker_publisher->publish_tf_tree(current_state, ros::Time(current_time));
+        if (current_angle_measurement.size() > 0 )
+        {
+            tracker_publisher->publish_root_link(current_state, ros::Time(current_time),
+                current_angle_measurement);
+            tracker_publisher->publish_tf_tree(current_state, ros::Time(current_time));
+        }
 
         ros::spinOnce();
     }

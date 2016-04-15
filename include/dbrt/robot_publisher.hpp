@@ -128,6 +128,8 @@ void RobotTrackerPublisher<State>::get_joint_map_(
     const JointsObsrv& joint_values,
     std::map<std::string, double>& named_joint_values) const
 {
+    //std::cout << "joint names size " << joint_names_.size() <<
+    //" joint values size " << joint_values.size() << std::endl;
     named_joint_values.clear();
     for (std::size_t i = 0; i < joint_names_.size(); ++i)
     {
