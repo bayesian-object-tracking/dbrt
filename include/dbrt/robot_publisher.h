@@ -70,11 +70,9 @@ public:
 
     void publish_tf(const State& state, const ros::Time &time);
 
-    void publish_tf_tree(const State& state, const ros::Time &time);
-
-    void publish_root_link(const State& state, const ros::Time &time,
-        const JointsObsrv& angle_measurements) ;
-
+    void publish_transform(const ros::Time& time,
+                          const std::string& from,
+                          const std::string& to);
 
     void publish_image(const Eigen::VectorXd& depth_image,
                       const std::shared_ptr<dbot::CameraData>& camera_data,
@@ -83,17 +81,8 @@ public:
     void publish_camera_info(const std::shared_ptr<dbot::CameraData>& camera_data,
                              const ros::Time &time);
 
-    void publish_id_transform(const ros::Time& time, const std::string& from,
-                              const std::string& to);
 
 protected:
-
-
-
-    // \todo Kind of duplicated wrt state.GetJointState().
-    void get_joint_map_(const JointsObsrv& joint_values,
-                        std::map<std::string, double>& named_joint_values) const;
-
     bool has_image_subscribers() const;
 
     void convert_to_depth_image_msg(

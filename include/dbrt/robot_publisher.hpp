@@ -121,74 +121,21 @@ void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
     pub_joint_state_.publish(joint_state_);
 }
 
-
-
-template <typename State>
-void RobotTrackerPublisher<State>::get_joint_map_(
-    const JointsObsrv& joint_values,
-    std::map<std::string, double>& named_joint_values) const
-{
-    named_joint_values.clear();
-    for (std::size_t i = 0; i < joint_names_.size(); ++i)
-    {
-        named_joint_values[joint_names_[i]] = joint_values[i];
-    }
-}
-
-
 template <typename State>
 void RobotTrackerPublisher<State>::publish_tf(const State& state,
-    const ros::Time& time)
+                                              const ros::Time& time)
 {
-    publish_id_transform(time, root_frame_id_, tf::resolve(tf_prefix_, root_frame_id_));
-    publish_tf_tree(state, time);
+    /// \todo: these frames should not be connected
+    publish_transform(time, root_frame_id_, tf::resolve(tf_prefix_, root_frame_id_));
 
-}
-
-
-template <typename State>
-void RobotTrackerPublisher<State>::publish_tf_tree(const State& state,
-    const ros::Time& time)
-{
     // publish movable joints
     std::map<std::string, double> joint_positions;
     state.GetJointState(joint_positions);
     robot_state_publisher_->publishTransforms(joint_positions, time, tf_prefix_);
 
+    /// \todo: why is this necessary??
     // publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
-}
-
-
-template <typename State>
-void RobotTrackerPublisher<State>::publish_root_link(const State& state,
-    const ros::Time &time, const JointsObsrv& angle_measurements)
-{
-    std::map<std::string, double> named_joint_values;
-
-    // Set all transformations corresponding to estimated joints
-    state.GetJointState(named_joint_values);
-    transformer_.set_joints(named_joint_values, time, tf_prefix_);
-
-    // Lookup transform from estimated target to estimated root
-    tf::StampedTransform transform_et_er;
-    transformer_.lookup_transform(target_frame_id_, root_frame_id_, transform_et_er);
-
-    // Set all transformations corresponding to measured joints
-    get_joint_map_(angle_measurements, named_joint_values);
-    transformer_.set_joints(named_joint_values, time, measured_tf_prefix_);
-
-    // Lookup transform from measured root to measured target
-    tf::StampedTransform transform_mr_mt;
-    transformer_.lookup_transform(root_frame_id_, target_frame_id_, transform_mr_mt);
-
-    // Compose the two tf_transforms
-    tf::StampedTransform transform_mb_eb(transform_mr_mt*transform_et_er,
-        time, transform_mr_mt.frame_id_, transform_et_er.child_frame_id_);
-
-    // Broadcast
-    static tf::TransformBroadcaster br;
-    br.sendTransform(transform_mb_eb);
 }
 
 
@@ -201,6 +148,7 @@ void RobotTrackerPublisher<State>::publish(
 {
     std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
 //    exit(-1);
+
     ros::Time t = ros::Time::now();
     publish_tf(state, t);
 }
@@ -223,8 +171,9 @@ void RobotTrackerPublisher<State>::publish_image(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
-    const std::string& from, const std::string& to)
+void RobotTrackerPublisher<State>::publish_transform(const ros::Time& time,
+                                                     const std::string& from,
+                                                     const std::string& to)
 {
     if (from.compare(to) == 0) return;
 
@@ -235,6 +184,7 @@ void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
 }
 
 
+
 template <typename State>
 void RobotTrackerPublisher<State>::publish_camera_info(
         const std::shared_ptr<dbot::CameraData>& camera_data,
@@ -243,7 +193,6 @@ void RobotTrackerPublisher<State>::publish_camera_info(
     auto camera_info = create_camera_info(camera_data, time);
     pub_camera_info_.publish(camera_info);
 }
-
 
 template <typename State>
 sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
@@ -299,5 +248,4 @@ sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
 
     return info_msg;
 }
-
 }
