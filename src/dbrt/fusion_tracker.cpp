@@ -108,6 +108,7 @@ void FusionTracker::run_gaussian_tracker()
 
 void FusionTracker::run_particle_tracker()
 {
+
     std::shared_ptr<VisualTracker> rbc_particle_filter_tracker =
         visual_tracker_factory_();
 
@@ -119,6 +120,9 @@ void FusionTracker::run_particle_tracker()
 
     while (running_)
     {
+
+
+
         // continue only if there is a new image available
         usleep(10);
         {
@@ -128,6 +132,11 @@ void FusionTracker::run_particle_tracker()
                 continue;
             }
         }
+
+        std::cout << "processing image with stamp " << ros_image_.header.stamp << std::endl;
+
+
+
 
         /**
          * #1 SWAP ROTARY BELIEF QUEUES SECURLY
@@ -141,6 +150,8 @@ void FusionTracker::run_particle_tracker()
          * #9 SET ROTARY ANGEL BELIEFS
          * #10 FILL BUFFER WITH OLD JOINT OBSRV
          */
+
+        INIT_PROFILING;
 
         JointsBeliefEntry belief_entry;
         int belief_index;
@@ -161,6 +172,8 @@ void FusionTracker::run_particle_tracker()
                                          belief_entry);
         if (belief_index < 0)
         {
+            std::cout << "belief_index < 0: " << belief_index << std::endl;
+
             std::lock_guard<std::mutex> belief_buffer_lock(
                 joints_obsrv_belief_buffer_mutex_);
             while (joints_obsrv_belief_buffer_local.size() > 0)
@@ -171,6 +184,15 @@ void FusionTracker::run_particle_tracker()
             }
             continue;
         }
+
+
+        // just some print -----------------------------------------------------
+        static ros::Time last_image_stamp;
+        ros::Duration delta = ros_image_.header.stamp - last_image_stamp;
+        last_image_stamp = ros_image_.header.stamp;
+        std::cout << "time difference between processed images: " << delta <<
+                     std::endl;
+        // ---------------------------------------------------------------------
 
         // #3
         auto mean = get_state_from_belief(belief_entry);
@@ -184,6 +206,9 @@ void FusionTracker::run_particle_tracker()
             rbc_particle_filter_tracker->filter()->process_model());
 
         // #5
+//        std::cout << "setting covariance sqrt " << std::endl
+//                     << cov_sqrt << std::endl;
+
         process_model->noise_matrix(cov_sqrt);
 
         // #6
@@ -260,8 +285,9 @@ void FusionTracker::run_particle_tracker()
             prev = entry;
         }
 
-        ROS_INFO("Visual information fused");
+        MEASURE("total time for visual processing");
     }
+
 }
 
 int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
@@ -269,12 +295,12 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
                                      JointsBeliefEntry& belief_entry)
 {
     int index = 0;
-    double min = 1e9;
-    double max = -1e9;
+//    double min = 1e9;
+//    double max = -1e9;
     for (const auto entry : queue)
     {
-        min = std::min(min, entry.joints_obsrv_entry.timestamp - timestamp);
-        max = std::max(max, entry.joints_obsrv_entry.timestamp - timestamp);
+//        min = std::min(min, entry.joints_obsrv_entry.timestamp - timestamp);
+//        max = std::max(max, entry.joints_obsrv_entry.timestamp - timestamp);
 
         if (entry.joints_obsrv_entry.timestamp > timestamp)
         {
@@ -404,6 +430,7 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
 
+    std::cout << "received image with stamp " << ros_image.header.stamp << std::endl;
     ros_image_updated_ = true;
     ros_image_ = ros_image;
 }
