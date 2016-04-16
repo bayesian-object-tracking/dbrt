@@ -306,7 +306,7 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
         min = std::min(min, entry.joints_obsrv_entry.timestamp);
         max = std::max(max, entry.joints_obsrv_entry.timestamp);
 
-        if (entry.joints_obsrv_entry.timestamp > timestamp || index != 0)
+        if (entry.joints_obsrv_entry.timestamp > timestamp)
         {
             belief_entry = entry;
             return index;
