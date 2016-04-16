@@ -48,7 +48,7 @@
 #include <dbrt/rotary_tracker.hpp>
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/fusion_tracker.h>
-#include <dbrt/fusion_tracker_node.h>
+//#include <dbrt/fusion_tracker_node.h>
 
 #include <dbrt/util/builder/rotary_tracker_builder.hpp>
 #include <dbrt/util/builder/visual_tracker_factory.h>
