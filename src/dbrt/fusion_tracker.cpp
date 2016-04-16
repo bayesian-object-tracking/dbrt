@@ -209,6 +209,11 @@ void FusionTracker::run_particle_tracker()
 //        std::cout << "setting covariance sqrt " << std::endl
 //                     << cov_sqrt << std::endl;
 
+        std::cout << "particle filter process model: max sigma: "
+                  << cov_sqrt.maxCoeff() << std::endl;
+        std::cout << "particle filter process model: max sigma: "
+                  << cov_sqrt.minCoeff() << std::endl;
+
         process_model->noise_matrix(cov_sqrt);
 
         // #6
@@ -295,20 +300,27 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
                                      JointsBeliefEntry& belief_entry)
 {
     int index = 0;
-//    double min = 1e9;
-//    double max = -1e9;
+    double min = std::numeric_limits<double>::max();
+    double max = std::numeric_limits<double>::min();
     for (const auto entry : queue)
     {
-//        min = std::min(min, entry.joints_obsrv_entry.timestamp - timestamp);
-//        max = std::max(max, entry.joints_obsrv_entry.timestamp - timestamp);
+        min = std::min(min, entry.joints_obsrv_entry.timestamp);
+        max = std::max(max, entry.joints_obsrv_entry.timestamp);
 
-        if (entry.joints_obsrv_entry.timestamp > timestamp)
+        if (entry.joints_obsrv_entry.timestamp > timestamp || index != 0)
         {
             belief_entry = entry;
             return index;
         }
         index++;
     }
+
+    std::cout.precision(20);
+
+    std::cout << "could not find a matching belief for time stamp "
+                 << timestamp << std::endl;
+    std::cout << "latest belief: " << max << std::endl;
+    std::cout << "oldest belief: " << min << std::endl;
 
     return -1;
 }
