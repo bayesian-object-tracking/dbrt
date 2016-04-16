@@ -167,8 +167,7 @@ void FusionTracker::run_particle_tracker()
 
         // #2
         belief_index = find_belief_entry(joints_obsrv_belief_buffer_local,
-                                         ros_image_.header.stamp.toSec()
-                                         + camera_delay_,
+                                         ros_image_.header.stamp.toSec(),
                                          belief_entry);
         if (belief_index < 0)
         {
@@ -445,6 +444,8 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
     std::cout << "received image with stamp " << ros_image.header.stamp << std::endl;
     ros_image_updated_ = true;
     ros_image_ = ros_image;
+    ros_image_.header.stamp.fromSec(
+                ros_image_.header.stamp.toSec() - camera_delay_);
 }
 
 }
