@@ -204,8 +204,8 @@ void RobotTrackerPublisher<State>::publish(
 {
     std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
 //    exit(-1);
-    ros::Time t = ros::Time::now();
-    publish_tf(state, t);
+//    ros::Time t = ros::Time::now();
+    publish_tf(state, obsrv_image.header.stamp);
 }
 
 template <typename State>

@@ -57,7 +57,7 @@ public:
         const std::shared_ptr<dbot::RigidBodyRenderer>& renderer,
         const std::string& tf_prefix,
         const std::string& data_prefix,
-        const std::string& target_frame_id="R_PALM",
+        const std::string& target_frame_id,
         const std::string& measured_tf_prefix="");
 
     /// \todo THIS FUNCTION HAS TO GO AWAY!!

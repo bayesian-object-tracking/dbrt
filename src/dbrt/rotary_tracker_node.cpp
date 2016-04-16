@@ -232,10 +232,13 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
+    auto tf_connecting_frame =
+            ri::read<std::string>("tf_connecting_frame", nh);
+
     auto tracker_publisher =
         std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
             new dbrt::RobotTrackerPublisher<State>(
-                urdf_kinematics, renderer, "/estimated", "/estimated"));
+                urdf_kinematics, renderer, "/estimated", "/estimated", tf_connecting_frame));
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
         urdf_kinematics->GetInitialJoints(*joint_state);

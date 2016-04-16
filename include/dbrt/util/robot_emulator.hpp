@@ -81,7 +81,7 @@ public:
           paused_(false)
     {
         robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
-            urdf_kinematics_, renderer_, "/robot_emulator", "");
+            urdf_kinematics_, renderer_, "/robot_emulator", "", "FUCK_YOU");
     }
 
     void run()

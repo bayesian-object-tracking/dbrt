@@ -169,13 +169,17 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
+    auto tf_connecting_frame =
+            ri::read<std::string>("tf_connecting_frame", nh);
+
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, data_renderer, "/estimated", "/estimated"));
+            urdf_kinematics, data_renderer, "/estimated", "/estimated"
+                                                          ,tf_connecting_frame));
 
     auto data_tracker_publisher =
         std::make_shared<dbrt::RobotTrackerPublisher<State>>(
-            urdf_kinematics, data_renderer, "/sensors", "");
+            urdf_kinematics, data_renderer, "/sensors", "", tf_connecting_frame);
 
     /* ------------------------------ */
     /* - Create tracker node        - */

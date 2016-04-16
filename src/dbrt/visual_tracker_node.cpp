@@ -159,9 +159,14 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
+
+    auto tf_connecting_frame =
+            ri::read<std::string>("tf_connecting_frame", nh);
+
     auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
-        new dbrt::RobotTrackerPublisher<State>(
-            urdf_kinematics, renderer, "/estimated", "/estimated"));
+                    new dbrt::RobotTrackerPublisher<State>(
+                        urdf_kinematics, renderer, "/estimated", "/estimated",
+                        tf_connecting_frame));
 
     /* ------------------------------ */
     /* - Create tracker node        - */

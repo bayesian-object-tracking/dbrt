@@ -192,10 +192,14 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
+
+    auto tf_connecting_frame =
+            ri::read<std::string>("tf_connecting_frame", nh);
+
     auto tracker_publisher =
         std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
             new dbrt::RobotTrackerPublisher<State>(
-                urdf_kinematics, renderer, "/estimated", "/estimated"));
+                urdf_kinematics, renderer, "/estimated", "/estimated", tf_connecting_frame));
 
     /* ------------------------------ */
     /* - Initialize                 - */
