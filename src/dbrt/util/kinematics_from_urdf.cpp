@@ -36,17 +36,20 @@
 #include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-KinematicsFromURDF::KinematicsFromURDF(
-        const std::string& robot_description,
+KinematicsFromURDF::KinematicsFromURDF(const std::string& robot_description,
         const std::string& robot_description_package_path,
         const std::string& rendering_root_left,
         const std::string& rendering_root_right,
-        const std::string& camera_frame_id):
+        const std::string& camera_frame_id,
+        const bool& use_camera_offset):
     description_path_(robot_description_package_path),
     rendering_root_left_(rendering_root_left),
     rendering_root_right_(rendering_root_right),
-    cam_frame_name_(camera_frame_id)
+    cam_frame_name_(camera_frame_id),
+    use_camera_offset_(use_camera_offset)
 {
+
+    camera_offset_.setZero();
     // Initialize URDF object from robot description
     if (!urdf_.initString(robot_description)) ROS_ERROR("Failed to parse urdf");
 

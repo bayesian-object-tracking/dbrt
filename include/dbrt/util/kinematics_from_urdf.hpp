@@ -65,7 +65,8 @@ public:
             const std::string& robot_description_package_path,
             const std::string& rendering_root_left,
             const std::string& rendering_root_right,
-            const std::string& camera_frame_id);
+            const std::string& camera_frame_id,
+            const bool& use_camera_offset=false);
 
     ~KinematicsFromURDF();
 
@@ -170,6 +171,9 @@ private:
 
     // rendering roots for left and right arm to exclude occluding head meshes
     std::string rendering_root_left_, rendering_root_right_;
+
+    bool use_camera_offset_;
+    osr::PoseVector camera_offset_;
 
     // whether to render only collision model or full mesh model
 //    bool collision_;
