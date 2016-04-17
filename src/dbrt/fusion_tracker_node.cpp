@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     /* - and robot mesh model       - */
     /* ------------------------------ */
     auto robot_description =
-            ri::read<std::string>("robot_description", ros::NodeHandle());
+            ri::read<std::string>("robot_description_downsampled", ros::NodeHandle());
     auto robot_description_package_path =
             ri::read<std::string>("robot_description_package_path", nh);
     auto rendering_root_left =
