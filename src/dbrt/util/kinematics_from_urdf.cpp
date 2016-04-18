@@ -309,7 +309,12 @@ KDL::Tree KinematicsFromURDF::GetTree()
 int KinematicsFromURDF::GetJointIndex(const std::string& name)
 {
     for (unsigned int i = 0; i < joint_map_.size(); ++i)
+    {
         if (joint_map_[i] == name) return i;
+    }
+
+    std::cout << "could not find joint with name " << name << std::endl;
+    exit(-1);
     return -1;
 }
 

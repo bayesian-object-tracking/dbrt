@@ -417,16 +417,34 @@ void FusionTracker::joints_obsrv_callback(
 {
     std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
 
+    /// hack: we add a measurement = 0 for the six extra joints corresponding
+    /// to the camera offset ***************************************************
+    sensor_msgs::JointState joint_state_with_offset = joint_msg;
+//    //    joint_state_with_offset.name.push_back("OFFSET_X");
+//    //    joint_state_with_offset.name.push_back("OFFSET_Y");
+//    //    joint_state_with_offset.name.push_back("OFFSET_Z");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
+
+//    //    joint_state_with_offset.position.push_back(0);
+//    //    joint_state_with_offset.position.push_back(0);
+//    //    joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
+    /// ************************************************************************
+
     const auto joint_order = gaussian_joint_tracker_->joint_order();
 
-    Eigen::VectorXd obsrv(joint_msg.position.size());
-    for (int i = 0; i < joint_msg.position.size(); ++i)
+    Eigen::VectorXd obsrv(joint_state_with_offset.position.size());
+    for (int i = 0; i < joint_state_with_offset.position.size(); ++i)
     {
-        obsrv[joint_order[i]] = joint_msg.position[i];
+        obsrv[joint_order[i]] = joint_state_with_offset.position[i];
     }
 
     JointsObsrvEntry entry;
-    entry.timestamp = joint_msg.header.stamp.toSec();
+    entry.timestamp = joint_state_with_offset.header.stamp.toSec();
     entry.obsrv = obsrv;
     joints_obsrvs_buffer_.push_back(entry);
 
