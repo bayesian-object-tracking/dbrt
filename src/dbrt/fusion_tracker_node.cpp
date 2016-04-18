@@ -165,7 +165,7 @@ int main(int argc, char** argv)
                                        rendering_root_left,
                                        rendering_root_right,
                                        frame_id,
-                                       true));
+                                       false));
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
@@ -187,6 +187,9 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
+
+    urdf_kinematics->print_joints();
+    urdf_kinematics->print_links();
 
     typedef dbrt::RobotState<> State;
 
@@ -218,19 +221,19 @@ int main(int argc, char** argv)
     /// hack: we add a measurement = 0 for the six extra joints corresponding
     /// to the camera offset ***************************************************
     sensor_msgs::JointState joint_state_with_offset = *joint_state;
-//    joint_state_with_offset.name.push_back("OFFSET_X");
-//    joint_state_with_offset.name.push_back("OFFSET_Y");
-//    joint_state_with_offset.name.push_back("OFFSET_Z");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
+////    joint_state_with_offset.name.push_back("OFFSET_X");
+////    joint_state_with_offset.name.push_back("OFFSET_Y");
+////    joint_state_with_offset.name.push_back("OFFSET_Z");
+//    joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
+//    joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
+//    joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
 
+////    joint_state_with_offset.position.push_back(0);
+////    joint_state_with_offset.position.push_back(0);
+////    joint_state_with_offset.position.push_back(0);
 //    joint_state_with_offset.position.push_back(0);
 //    joint_state_with_offset.position.push_back(0);
 //    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
     /// ************************************************************************
 
 

@@ -420,19 +420,19 @@ void FusionTracker::joints_obsrv_callback(
     /// hack: we add a measurement = 0 for the six extra joints corresponding
     /// to the camera offset ***************************************************
     sensor_msgs::JointState joint_state_with_offset = joint_msg;
-    //    joint_state_with_offset.name.push_back("OFFSET_X");
-    //    joint_state_with_offset.name.push_back("OFFSET_Y");
-    //    joint_state_with_offset.name.push_back("OFFSET_Z");
-        joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
-        joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
-        joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
+//    //    joint_state_with_offset.name.push_back("OFFSET_X");
+//    //    joint_state_with_offset.name.push_back("OFFSET_Y");
+//    //    joint_state_with_offset.name.push_back("OFFSET_Z");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
+//        joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
 
-    //    joint_state_with_offset.position.push_back(0);
-    //    joint_state_with_offset.position.push_back(0);
-    //    joint_state_with_offset.position.push_back(0);
-        joint_state_with_offset.position.push_back(0);
-        joint_state_with_offset.position.push_back(0);
-        joint_state_with_offset.position.push_back(0);
+//    //    joint_state_with_offset.position.push_back(0);
+//    //    joint_state_with_offset.position.push_back(0);
+//    //    joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
+//        joint_state_with_offset.position.push_back(0);
     /// ************************************************************************
 
     const auto joint_order = gaussian_joint_tracker_->joint_order();
