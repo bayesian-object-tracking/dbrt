@@ -228,37 +228,19 @@ int main(int argc, char** argv)
                      joint_state_with_offset.name[i] << std::endl;
     }
 
-//    joint_state_with_offset.name.push_back("OFFSET_X");
-//    joint_state_with_offset.name.push_back("OFFSET_Y");
-//    joint_state_with_offset.name.push_back("OFFSET_Z");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
-    joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
+    joint_state_with_offset.name.push_back("XTION_X");
+    joint_state_with_offset.name.push_back("XTION_Y");
+    joint_state_with_offset.name.push_back("XTION_Z");
+    joint_state_with_offset.name.push_back("XTION_ROLL");
+    joint_state_with_offset.name.push_back("XTION_PITCH");
+    joint_state_with_offset.name.push_back("XTION_YAW");
 
-//    joint_state_with_offset.position.push_back(0);
-//    joint_state_with_offset.position.push_back(0);
-//    joint_state_with_offset.position.push_back(0);
     joint_state_with_offset.position.push_back(0);
     joint_state_with_offset.position.push_back(0);
     joint_state_with_offset.position.push_back(0);
-
-
-//    for(size_t i = 0; i < joint_state_with_offset.name.size(); i++)
-//    {
-//        if(joint_state_with_offset.name[i] == "R_EP")
-//        {
-//            joint_state_with_offset.name.erase(joint_state_with_offset.name.begin() + i);
-//            joint_state_with_offset.position.erase(joint_state_with_offset.position.begin() + i);
-//            joint_state_with_offset.velocity.erase(joint_state_with_offset.velocity.begin() + i);
-//            joint_state_with_offset.effort.erase(joint_state_with_offset.effort.begin() + i);
-
-
-//            std::cout << "removed joint R_EP" << std::endl;
-//            continue;
-//        }
-
-//    }
-
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
 
     for(size_t i = 0; i < joint_state_with_offset.name.size(); i++)
     {
