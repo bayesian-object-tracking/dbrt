@@ -164,7 +164,8 @@ int main(int argc, char** argv)
                                        robot_description_package_path,
                                        rendering_root_left,
                                        rendering_root_right,
-                                       frame_id));
+                                       frame_id,
+                                       true));
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
@@ -214,8 +215,27 @@ int main(int argc, char** argv)
             "/joint_states", nh_global, ros::Duration(1.));
     }
 
+    /// hack: we add a measurement = 0 for the six extra joints corresponding
+    /// to the camera offset ***************************************************
+    sensor_msgs::JointState joint_state_with_offset = *joint_state;
+//    joint_state_with_offset.name.push_back("OFFSET_X");
+//    joint_state_with_offset.name.push_back("OFFSET_Y");
+//    joint_state_with_offset.name.push_back("OFFSET_Z");
+    joint_state_with_offset.name.push_back("XTION_OFFSET_PITCH");
+    joint_state_with_offset.name.push_back("XTION_OFFSET_ROLL");
+    joint_state_with_offset.name.push_back("XTION_OFFSET_YAW");
+
+//    joint_state_with_offset.position.push_back(0);
+//    joint_state_with_offset.position.push_back(0);
+//    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    /// ************************************************************************
+
+
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        urdf_kinematics->GetInitialJoints(*joint_state);
+        urdf_kinematics->GetInitialJoints(joint_state_with_offset);
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {
