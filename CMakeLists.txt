@@ -6,9 +6,18 @@ project(dbrt)
 ############################
 option(DBOT_BUILD_GPU "Compile CUDA enabled trackers" ON)
 
-if(DBOT_BUILD_GPU)
+find_package(CUDA QUIET)
+if(DBOT_BUILD_GPU AND CUDA_FOUND)
+  # activate gpu implementations
   add_definitions(-DDBOT_BUILD_GPU=1)
-endif(DBOT_BUILD_GPU)
+  set(DBOT_GPU_SUPPORT "YES")
+else(DBOT_BUILD_GPU AND CUDA_FOUND AND GLEW_FOUND AND OPENGL_FOUND)
+  set(DBOT_GPU_SUPPORT "NO")
+  if(DBOT_BUILD_GPU)
+    message(WARNING "No CUDA support. Deactivating GPU implementation")
+  endif(DBOT_BUILD_GPU)
+  set(DBOT_BUILD_GPU OFF)
+endif(DBOT_BUILD_GPU AND CUDA_FOUND AND GLEW_FOUND AND OPENGL_FOUND)
 
 add_definitions(-std=c++0x -fno-omit-frame-pointer)
 add_definitions(-DPROFILING_ON=1) #print profiling output
