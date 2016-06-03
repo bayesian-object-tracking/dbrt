@@ -89,8 +89,8 @@ public:
         JointsObsrv& current_angle_measurement) const;
 
 protected:
-    void run_gaussian_tracker();
-    void run_particle_tracker();
+    void run_rotary_tracker();
+    void run_visual_tracker();
 
 private:
     int find_belief_entry(const std::deque<JointsBeliefEntry>& queue,

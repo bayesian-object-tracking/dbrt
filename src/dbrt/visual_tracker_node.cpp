@@ -45,7 +45,7 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
 #include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
     auto tf_connecting_frame =
             ri::read<std::string>("tf_connecting_frame", nh);
 
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
                     new dbrt::RobotTrackerPublisher<State>(
                         urdf_kinematics, renderer, "/estimated", "/estimated",
                         tf_connecting_frame));

@@ -45,7 +45,7 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>
-#include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
 #include <dbrt/robot_publisher.h>
 #include <dbrt/visual_tracker.hpp>
 

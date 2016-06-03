@@ -194,20 +194,6 @@ void RobotTrackerPublisher<State>::publish_root_link(const State& state,
     br.sendTransform(transform_mr_er);
 }
 
-
-/// \todo THIS FUNCTION HAS TO GO AWAY!!
-template <typename State>
-void RobotTrackerPublisher<State>::publish(
-    const State& state,
-    const sensor_msgs::Image& obsrv_image,
-    const std::shared_ptr<dbot::CameraData>& camera_data)
-{
-    std::cout << "DO NOT USE THE PUBLISH FUNCTION IN ROBOT_PUBLISHER " << std::endl;
-//    exit(-1);
-//    ros::Time t = ros::Time::now();
-    publish_tf(state, obsrv_image.header.stamp);
-}
-
 template <typename State>
 void RobotTrackerPublisher<State>::publish_image(
     const Eigen::VectorXd& depth_image,

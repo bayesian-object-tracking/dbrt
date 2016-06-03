@@ -21,9 +21,9 @@
 
 #include <exception>
 
-#include <dbot/util/object_resource_identifier.hpp>
+#include <dbot/common/object_resource_identifier.hpp>
 #include <dbot/tracker/object_tracker.hpp>
-#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
 #include <dbrt/rotary_tracker.hpp>

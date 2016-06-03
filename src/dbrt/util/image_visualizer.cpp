@@ -11,7 +11,7 @@
  * file distributed with this source code.
  */
 
-#include <dbot/util/helper_functions.hpp>
+#include <dbot/common/helper_functions.hpp>
 
 #include <dbrt/util/image_visualizer.hpp>
 

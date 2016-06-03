@@ -24,7 +24,7 @@
 
 
 
-#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 #include <dbrt/util/builder/visual_tracker_builder.hpp>
 
 namespace dbrt

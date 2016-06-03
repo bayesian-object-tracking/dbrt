@@ -29,9 +29,9 @@
 
 #include <sensor_msgs/Image.h>
 
-#include <dbot/util/camera_data.hpp>
-#include <dbot/util/object_model.hpp>
-#include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot/common/camera_data.hpp>
+#include <dbot/common/object_model.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
 #include <dbot_ros/utils/ros_interface.hpp>
 
 #include <dbrt/robot_publisher.h>

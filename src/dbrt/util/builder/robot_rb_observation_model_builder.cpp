@@ -30,8 +30,8 @@
 
 #include <dbrt/robot_state.hpp>
 
-#include <dbot/tracker/builder/rb_observation_model_builder.h>
-#include <dbot/tracker/builder/rb_observation_model_builder.hpp>
+#include <dbot/builder/rb_observation_model_builder.h>
+#include <dbot/builder/rb_observation_model_builder.hpp>
 
 
 namespace dbot

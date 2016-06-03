@@ -45,7 +45,7 @@ void FusionTracker::initialize(const std::vector<State>& initial_states)
     gaussian_joint_tracker_->initialize(initial_states);
 }
 
-void FusionTracker::run_gaussian_tracker()
+void FusionTracker::run_rotary_tracker()
 {
     while (running_)
     {
@@ -106,7 +106,7 @@ void FusionTracker::run_gaussian_tracker()
     }
 }
 
-void FusionTracker::run_particle_tracker()
+void FusionTracker::run_visual_tracker()
 {
     std::shared_ptr<VisualTracker> rbc_particle_filter_tracker =
         visual_tracker_factory_();
@@ -141,6 +141,8 @@ void FusionTracker::run_particle_tracker()
          * #9 SET ROTARY ANGEL BELIEFS
          * #10 FILL BUFFER WITH OLD JOINT OBSRV
          */
+
+        INIT_PROFILING;
 
         JointsBeliefEntry belief_entry;
         int belief_index;
@@ -259,8 +261,8 @@ void FusionTracker::run_particle_tracker()
 
             prev = entry;
         }
+        MEASURE("Visual tracker");
 
-        ROS_INFO("Visual information fused");
     }
 }
 
@@ -344,9 +346,9 @@ void FusionTracker::run()
 {
     running_ = true;
     gaussian_tracker_thread_ =
-        std::thread(&FusionTracker::run_gaussian_tracker, this);
+        std::thread(&FusionTracker::run_rotary_tracker, this);
     particle_tracker_thread_ =
-        std::thread(&FusionTracker::run_particle_tracker, this);
+        std::thread(&FusionTracker::run_visual_tracker, this);
 }
 
 void FusionTracker::shutdown()

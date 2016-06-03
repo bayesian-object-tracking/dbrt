@@ -29,7 +29,7 @@
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  */
 
-#include <dbot/util/rigid_body_renderer.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
 
 #include <dbrt/visual_tracker.hpp>
 

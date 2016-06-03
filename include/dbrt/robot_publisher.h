@@ -27,9 +27,9 @@
 #include <sensor_msgs/Image.h>
 #include <image_transport/image_transport.h>
 
-#include <dbot/util/rigid_body_renderer.hpp>
-#include <dbot/util/camera_data.hpp>
-#include <dbot/util/object_model.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/common/camera_data.hpp>
+#include <dbot/common/object_model.hpp>
 
 #include <dbot_ros/tracker_publisher.h>
 
@@ -49,7 +49,7 @@ typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> JointsObsrv;
  * estimated state and its marker.
  */
 template <typename State>
-class RobotTrackerPublisher: public dbot::TrackerPublisher<State>
+class RobotTrackerPublisher
 {
 public:
     RobotTrackerPublisher(
@@ -59,12 +59,6 @@ public:
         const std::string& data_prefix,
         const std::string& target_frame_id,
         const std::string& measured_tf_prefix="");
-
-    /// \todo THIS FUNCTION HAS TO GO AWAY!!
-    void publish(const State& state,
-                 const sensor_msgs::Image& obsrv_image,
-                 const std::shared_ptr<dbot::CameraData>& camera_data);
-
 
     void publish_joint_state(const State& state, const ros::Time time);
 

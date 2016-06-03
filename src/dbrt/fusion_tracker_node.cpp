@@ -30,9 +30,9 @@
 #include <fl/util/profiling.hpp>
 
 #include <dbot_ros/tracker_node.h>
-#include <dbot/util/rigid_body_renderer.hpp>
-#include <dbot/util/virtual_camera_data_provider.hpp>
-#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/common/virtual_camera_data_provider.hpp>
+#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbot_ros/tracker_publisher.h>
 #include <dbot_ros/utils/ros_interface.hpp>
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     /* - and robot mesh model       - */
     /* ------------------------------ */
     auto robot_description =
-            ri::read<std::string>("robot_description", ros::NodeHandle());
+            ri::read<std::string>("robot_description_downsampled", ros::NodeHandle());
     auto robot_description_package_path =
             ri::read<std::string>("robot_description_package_path", nh);
     auto rendering_root_left =

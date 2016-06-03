@@ -37,8 +37,8 @@
 //#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Image.h>
 
-#include <dbot/util/rigid_body_renderer.hpp>
-#include <dbot/tracker/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_publisher.h>
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
     auto tf_connecting_frame =
             ri::read<std::string>("tf_connecting_frame", nh);
 
-    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
+    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
         new dbrt::RobotTrackerPublisher<State>(
             urdf_kinematics, data_renderer, "/estimated", "/estimated"
                                                           ,tf_connecting_frame));
@@ -210,8 +210,9 @@ int main(int argc, char** argv)
     {
         auto image = *data_set->GetImage(i);
         tracker_node.tracking_callback(image);
-        data_tracker_publisher->publish(
-            tracker_node.current_state(), image, data_camera_data);
+        std::cout << "Please update the publisher calls" << std::endl;
+        // data_tracker_publisher->publish(
+        //     tracker_node.current_state(), image, data_camera_data);
 
         ros::spinOnce();
     }

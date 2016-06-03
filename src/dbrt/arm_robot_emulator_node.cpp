@@ -29,8 +29,8 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <dbot/util/rigid_body_renderer.hpp>
-#include <dbot/util/virtual_camera_data_provider.hpp>
+#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/common/virtual_camera_data_provider.hpp>
 #include <dbot_ros/tracker_node.h>
 #include <dbot_ros/tracker_publisher.h>
 #include <dbot_ros/utils/ros_interface.hpp>

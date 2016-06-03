@@ -27,8 +27,8 @@
 #include <memory>
 #include <mutex>
 
-#include <dbot/util/camera_data.hpp>
-#include <dbot/util/object_model.hpp>
+#include <dbot/common/camera_data.hpp>
+#include <dbot/common/object_model.hpp>
 
 #include <osr/pose_vector.hpp>
 #include <osr/composed_vector.hpp>

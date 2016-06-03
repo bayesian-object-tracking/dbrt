@@ -37,7 +37,7 @@
 
 #include <Eigen/Dense>
 
-#include <dbot/tracker/builder/state_transition_function_builder.hpp>
+#include <dbot/builder/state_transition_function_builder.hpp>
 #include <fl/model/process/linear_state_transition_model.hpp>
 
 #include <dbrt/util/builder/exceptions.hpp>
