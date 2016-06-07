@@ -263,7 +263,7 @@ int main(int argc, char** argv)
                      &dbrt::FusionTracker::image_obsrv_callback,
                      &fusion_tracker);
 
-    ros::Rate visualization_rate(24);
+    ros::Rate visualization_rate(100);
     ros::AsyncSpinner spinner(4);
     spinner.start();
 

@@ -26,8 +26,7 @@ namespace dbrt
 RotaryTracker::RotaryTracker(
     const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
     const std::vector<int>& joint_order)
-    : joint_filters_(joint_filters),
-      joint_order_(joint_order)
+    : joint_filters_(joint_filters), joint_order_(joint_order)
 {
 }
 
@@ -45,7 +44,7 @@ void RotaryTracker::track_callback(const sensor_msgs::JointState& joint_msg)
 
 const std::vector<int>& RotaryTracker::joint_order() const
 {
-   return joint_order_;
+    return joint_order_;
 }
 
 const std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs() const
@@ -164,34 +163,6 @@ auto RotaryTracker::track(const Obsrv& joints_obsrv) -> State
 
     //    std::lock_guard<std::mutex> lock(mutex_);
     current_state_ = state;
-
-    //    auto angle_bels = angle_beliefs();
-    //    auto old_beliefs = beliefs_;
-    //    set_angle_beliefs(angle_bels);
-
-    //    for(int i = 0; i < beliefs_.size(); i++)
-    //    {
-    //        std::cout << "joint angle " << i << " -----------------------" <<
-    //        std::endl;
-    //        std::cout << "old mean: " << old_beliefs[i].mean().transpose() <<
-    //        std::endl;
-    //        std::cout << "new mean: " << beliefs_[i].mean().transpose() <<
-    //        std::endl;
-    //        std::cout << "angle mean: " << angle_bels[i].mean().transpose() <<
-    //        std::endl;
-    //        std::cout << "old cov: " << std::endl <<
-    //        old_beliefs[i].covariance() << std::endl;
-    //        std::cout << "new cov: " << std::endl << beliefs_[i].covariance()
-    //        << std::endl;
-    //        std::cout << "angle cov: " << std::endl <<
-    //        angle_bels[i].covariance() << std::endl;
-    //    }
-
-    //    static int i;
-
-    //    std::cout << "covariance " << i << " ----------------" << std::endl;
-    //    i++;
-    //    std::cout << beliefs_[0].covariance() << std::endl;
 
     return state;
 }

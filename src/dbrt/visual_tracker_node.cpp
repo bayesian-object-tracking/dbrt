@@ -76,7 +76,6 @@ int main(int argc, char** argv)
     /*    - Filter builder                                                    */
     /* ---------------------------------------------------------------------- */
 
-
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
@@ -98,32 +97,28 @@ int main(int argc, char** argv)
     // from a ros camera topic
     auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
 
-
-
-
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
     // initialize the kinematics
     auto robot_description =
-            ri::read<std::string>("robot_description", ros::NodeHandle());
+        ri::read<std::string>("robot_description", ros::NodeHandle());
     auto robot_description_package_path =
-            ri::read<std::string>("robot_description_package_path", nh);
-    auto rendering_root_left =
-            ri::read<std::string>("rendering_root_left", nh);
+        ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left = ri::read<std::string>("rendering_root_left", nh);
     auto rendering_root_right =
-            ri::read<std::string>("rendering_root_right", nh);
+        ri::read<std::string>("rendering_root_right", nh);
 
     std::string prefixed_frame_id = camera_data->frame_id();
     std::size_t slash_index = prefixed_frame_id.find_last_of("/");
     std::string frame_id = prefixed_frame_id.substr(slash_index + 1);
 
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       frame_id));
+        new KinematicsFromURDF(robot_description,
+                               robot_description_package_path,
+                               rendering_root_left,
+                               rendering_root_right,
+                               frame_id));
 
     auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
         new dbrt::UrdfObjectModelLoader(urdf_kinematics));
@@ -132,21 +127,12 @@ int main(int argc, char** argv)
     auto object_model =
         std::make_shared<dbot::ObjectModel>(object_model_loader, false);
 
-
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
     typedef dbrt::RobotState<> State;
-
-    typedef dbrt::VisualTracker Tracker;
-
-    // parameter shorthand prefix
-    std::string pre = "particle_filter/";
-
-    auto tracker = dbrt::create_visual_tracker(
-        pre, urdf_kinematics, object_model, camera_data);
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
@@ -159,21 +145,27 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
+    auto tf_connecting_frame = ri::read<std::string>("tf_connecting_frame", nh);
 
-    auto tf_connecting_frame =
-            ri::read<std::string>("tf_connecting_frame", nh);
-
-    auto tracker_publisher = std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-                    new dbrt::RobotTrackerPublisher<State>(
-                        urdf_kinematics, renderer, "/estimated", "/estimated",
-                        tf_connecting_frame));
+    auto tracker_publisher =
+        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
+            new dbrt::RobotTrackerPublisher<State>(urdf_kinematics,
+                                                   renderer,
+                                                   "/estimated",
+                                                   "/estimated",
+                                                   tf_connecting_frame));
 
     /* ------------------------------ */
-    /* - Create tracker node        - */
+    /* - Create tracker             - */
     /* ------------------------------ */
-    dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
-                                                        camera_data,
-                                                        tracker_publisher);
+    // parameter shorthand prefix
+    std::string pre = "particle_filter/";
+    auto tracker = dbrt::create_visual_tracker(
+        pre, urdf_kinematics, object_model, camera_data);
+
+    // dbot::TrackerNode<dbrt::VisualTracker> tracker_node(tracker,
+    //                                                     camera_data,
+    //                                                     tracker_publisher);
 
     /* ------------------------------ */
     /* - Initialize using joint msg - */
@@ -204,11 +196,11 @@ int main(int argc, char** argv)
     /* - Create and run tracker     - */
     /* - node                       - */
     /* ------------------------------ */
-    ros::Subscriber subscriber =
-        nh.subscribe(depth_image_topic,
-                     1,
-                     &dbot::TrackerNode<dbrt::VisualTracker>::tracking_callback,
-                     &tracker_node);
+    // ros::Subscriber subscriber =
+    //     nh.subscribe(depth_image_topic,
+    //                  1,
+    //                  &dbot::TrackerNode<dbrt::VisualTracker>::tracking_callback,
+    //                  &tracker_node);
 
     ros::spin();
 

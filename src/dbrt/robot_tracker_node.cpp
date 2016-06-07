@@ -24,6 +24,6 @@
 
 namespace dbot
 {
-template class TrackerNode<dbrt::VisualTracker>;
-template class TrackerNode<dbrt::RotaryTracker>;
+// template class TrackerNode<dbrt::VisualTracker>;
+// template class TrackerNode<dbrt::RotaryTracker>;
 }

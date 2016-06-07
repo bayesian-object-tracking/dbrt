@@ -75,12 +75,12 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
         transition_parameters;
 
     // linear state transition parameters
-    transition_parameters.joint_sigmas = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/joint_sigmas", nh);
-    transition_parameters.bias_sigmas = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/bias_sigmas", nh);
-    transition_parameters.bias_factors = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/bias_factors", nh);
+    transition_parameters.joint_sigmas = ri::read<std::vector<double>>(
+        prefix + "joint_transition/joint_sigmas", nh);
+    transition_parameters.bias_sigmas = ri::read<std::vector<double>>(
+        prefix + "joint_transition/bias_sigmas", nh);
+    transition_parameters.bias_factors = ri::read<std::vector<double>>(
+        prefix + "joint_transition/bias_factors", nh);
     transition_parameters.joint_count = joint_count;
 
     auto transition_builder =
@@ -93,7 +93,7 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     dbrt::RotarySensorBuilder<Tracker>::Parameters sensor_parameters;
 
     sensor_parameters.joint_sigmas = ri::read<std::vector<double>>(
-                                 prefix + "joint_observation/joint_sigmas", nh);
+        prefix + "joint_observation/joint_sigmas", nh);
     sensor_parameters.joint_count = joint_count;
 
     PV(joint_count);
@@ -135,7 +135,6 @@ int main(int argc, char** argv)
     /*    - Filter builder                                                    */
     /* ---------------------------------------------------------------------- */
 
-
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
@@ -157,28 +156,24 @@ int main(int argc, char** argv)
     // from a ros camera topic
     auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
 
-
-
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
     // initialize the kinematics
     auto robot_description =
-            ri::read<std::string>("robot_description",
-                                            ros::NodeHandle());
+        ri::read<std::string>("robot_description", ros::NodeHandle());
     auto robot_description_package_path =
-            ri::read<std::string>("robot_description_package_path", nh);
-    auto rendering_root_left =
-            ri::read<std::string>("rendering_root_left", nh);
+        ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left = ri::read<std::string>("rendering_root_left", nh);
     auto rendering_root_right =
-            ri::read<std::string>("rendering_root_right", nh);
+        ri::read<std::string>("rendering_root_right", nh);
 
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       "NO_CAMERA_FRAME"));
+        new KinematicsFromURDF(robot_description,
+                               robot_description_package_path,
+                               rendering_root_left,
+                               rendering_root_right,
+                               "NO_CAMERA_FRAME"));
 
     auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
         new dbrt::UrdfObjectModelLoader(urdf_kinematics));
@@ -186,8 +181,6 @@ int main(int argc, char** argv)
     // Load the model usign the URDF loader
     auto object_model =
         std::make_shared<dbot::ObjectModel>(object_model_loader, false);
-
-
 
     /* ------------------------------ */
     /* - Few types we will be using - */
@@ -232,13 +225,15 @@ int main(int argc, char** argv)
                                     camera_data->resolution().height,
                                     camera_data->resolution().width));
 
-    auto tf_connecting_frame =
-            ri::read<std::string>("tf_connecting_frame", nh);
+    auto tf_connecting_frame = ri::read<std::string>("tf_connecting_frame", nh);
 
     auto tracker_publisher =
         std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-            new dbrt::RobotTrackerPublisher<State>(
-                urdf_kinematics, renderer, "/estimated", "/estimated", tf_connecting_frame));
+            new dbrt::RobotTrackerPublisher<State>(urdf_kinematics,
+                                                   renderer,
+                                                   "/estimated",
+                                                   "/estimated",
+                                                   tf_connecting_frame));
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
         urdf_kinematics->GetInitialJoints(*joint_state);
@@ -258,7 +253,7 @@ int main(int argc, char** argv)
     ros::Subscriber subscriber = nh.subscribe(
         "/joint_states", 1, &dbrt::RotaryTracker::track_callback, &(*tracker));
 
-    ros::Rate visualization_rate(24);
+    ros::Rate visualization_rate(100);
 
     while (ros::ok())
     {
@@ -268,7 +263,8 @@ int main(int argc, char** argv)
         /// \todo: THIS IS A HACK!! WE SHOULD PASS THE PROPER TIME WHICH
         /// CORRESPONDS TO THE MEASUREMENT
         std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!!!!" << std::endl;
+                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!!!!"
+                  << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_joint_state(current_state, time);
         tracker_publisher->publish_tf(current_state, time);

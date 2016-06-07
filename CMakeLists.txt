@@ -116,6 +116,7 @@ set(sources
     src/${PROJECT_NAME}/robot_tracker.cpp
     src/${PROJECT_NAME}/fusion_tracker.cpp
     src/${PROJECT_NAME}/visual_tracker.cpp
+    src/${PROJECT_NAME}/ros_visual_tracker.cpp
     src/${PROJECT_NAME}/rotary_tracker.cpp
     src/${PROJECT_NAME}/robot_tracker_node.cpp
     src/${PROJECT_NAME}/util/builder/visual_tracker_builder.cpp
@@ -138,7 +139,6 @@ target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
                                       ${OpenCV_LIBRARIES}
                                       assimp)
 
-# robot_tracker
 add_executable(visual_tracker
      src/${PROJECT_NAME}/visual_tracker_node.cpp)
 target_link_libraries(visual_tracker
@@ -157,23 +157,23 @@ target_link_libraries(rotary_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-add_executable(visual_tracker_offline
-     src/${PROJECT_NAME}/visual_tracker_offline_node.cpp)
-target_link_libraries(visual_tracker_offline
-     ${PROJECT_NAME}
-     ${catkin_LIBRARIES}
-     ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
-     yaml-cpp)
+# add_executable(visual_tracker_offline
+#      src/${PROJECT_NAME}/visual_tracker_offline_node.cpp)
+# target_link_libraries(visual_tracker_offline
+#      ${PROJECT_NAME}
+#      ${catkin_LIBRARIES}
+#      ${OpenCV_LIBS}
+#      ${PCL_LIBRARIES}
+#      yaml-cpp)
 
-add_executable(arm_robot_emulator
-     src/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
-target_link_libraries(arm_robot_emulator
-     ${PROJECT_NAME}
-     ${catkin_LIBRARIES}
-     ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
-     yaml-cpp)
+# add_executable(arm_robot_emulator
+#      src/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
+# target_link_libraries(arm_robot_emulator
+#      ${PROJECT_NAME}
+#      ${catkin_LIBRARIES}
+#      ${OpenCV_LIBS}
+#      ${PCL_LIBRARIES}
+#      yaml-cpp)
 
 add_executable(fusion_tracker
      src/${PROJECT_NAME}/fusion_tracker_node.cpp)

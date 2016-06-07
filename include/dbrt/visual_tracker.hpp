@@ -36,7 +36,7 @@
 
 #include <fl/model/process/interface/state_transition_function.hpp>
 
-#include <dbot/rao_blackwell_coordinate_particle_filter.hpp>
+#include <dbot/filter/rao_blackwell_coordinate_particle_filter.hpp>
 
 #include <dbrt/robot_tracker.hpp>
 
