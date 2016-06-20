@@ -17,13 +17,13 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/ros_visual_tracker.h>
+#include <dbrt/visual_tracker_ros.h>
 
 #include <dbot_ros/utils/ros_interface.hpp>
 
 namespace dbrt
 {
-RosVisualTracker::RosVisualTracker(
+VisualTrackerRos::VisualTrackerRos(
                                    const std::shared_ptr<VisualTracker>& tracker,
     const std::shared_ptr<dbot::CameraData>& camera_data)
     : tracker_(tracker),
@@ -33,7 +33,7 @@ RosVisualTracker::RosVisualTracker(
 {
 }
 
-void RosVisualTracker::track(const sensor_msgs::Image& ros_image)
+void VisualTrackerRos::track(const sensor_msgs::Image& ros_image)
 {
     auto image = ri::to_eigen_vector<typename Obsrv::Scalar>(
         ros_image, camera_data_->downsampling_factor());
@@ -45,7 +45,7 @@ void RosVisualTracker::track(const sensor_msgs::Image& ros_image)
 }
 
 
-void RosVisualTracker::update_obsrv(
+void VisualTrackerRos::update_obsrv(
     const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock_obsrv(obsrv_mutex_);
@@ -54,12 +54,12 @@ void RosVisualTracker::update_obsrv(
 }
 
 
-void RosVisualTracker::shutdown()
+void VisualTrackerRos::shutdown()
 {
     running_ = false;
 }
 
-void RosVisualTracker::run()
+void VisualTrackerRos::run()
 {
     running_ = true;
 
@@ -75,7 +75,7 @@ void RosVisualTracker::run()
     }
 }
 
-bool RosVisualTracker::process()
+bool VisualTrackerRos::process()
 {
     if (!obsrv_updated_) return false;
 
@@ -91,7 +91,7 @@ bool RosVisualTracker::process()
     return true;
 }
 
-auto RosVisualTracker::current_state() const -> const State &
+auto VisualTrackerRos::current_state() const -> const State &
 {
     return current_state_;
 }

@@ -29,7 +29,7 @@ namespace dbrt
 /**
  * \brief Represents a generic tracker node
  */
-class RosVisualTracker
+class VisualTrackerRos
 {
 public:
     typedef VisualTracker::State State;
@@ -37,9 +37,9 @@ public:
 
 public:
     /**
-     * \brief Creates a RosVisualTracker
+     * \brief Creates a VisualTrackerRos
      */
-    RosVisualTracker(const std::shared_ptr<VisualTracker>& tracker,
+    VisualTrackerRos(const std::shared_ptr<VisualTracker>& tracker,
                 const std::shared_ptr<dbot::CameraData>& camera_data);
 
     /**
@@ -67,6 +67,7 @@ protected:
     State current_state_;
     sensor_msgs::Image current_ros_image_;
     std::mutex obsrv_mutex_;
+    std::mutex state_mutex_;
     std::shared_ptr<VisualTracker> tracker_;
     std::shared_ptr<dbot::CameraData> camera_data_;
 };
