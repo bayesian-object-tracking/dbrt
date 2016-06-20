@@ -20,11 +20,7 @@
 #include <thread>
 #include <functional>
 
-#include <cv.h>
-#include <cv_bridge/cv_bridge.h>
-
 #include <ros/ros.h>
-//#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Image.h>
 
 #include <fl/util/profiling.hpp>
@@ -48,67 +44,9 @@
 #include <dbrt/rotary_tracker.hpp>
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/fusion_tracker.h>
-//#include <dbrt/fusion_tracker_node.h>
 
-#include <dbrt/util/builder/rotary_tracker_builder.hpp>
 #include <dbrt/util/builder/visual_tracker_factory.h>
-
-/**
- * \brief Create a gaussian filter tracking the robot joints based on joint
- *     measurements
- * \param prefix
- *     parameter prefix, e.g. fusion_tracker
- * \param kinematics
- *     URDF robot kinematics
- */
-std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
-    const std::string& prefix,
-    const int& joint_count,
-    const std::vector<int>& joint_order)
-{
-    ros::NodeHandle nh("~");
-
-    typedef dbrt::RotaryTracker Tracker;
-
-    /* ------------------------------ */
-    /* - State transition function  - */
-    /* ------------------------------ */
-    dbrt::FactorizedTransitionBuilder<Tracker>::Parameters
-        transition_parameters;
-
-    // linear state transition parameters
-    transition_parameters.joint_sigmas = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/joint_sigmas", nh);
-    transition_parameters.bias_sigmas = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/bias_sigmas", nh);
-    transition_parameters.bias_factors = ri::read<std::vector<double>> (
-                                 prefix + "joint_transition/bias_factors", nh);
-    transition_parameters.joint_count = joint_count;
-
-    auto transition_builder =
-        std::make_shared<dbrt::FactorizedTransitionBuilder<Tracker>>(
-            (transition_parameters));
-
-    /* ------------------------------ */
-    /* - Observation model          - */
-    /* ------------------------------ */
-    dbrt::RotarySensorBuilder<Tracker>::Parameters sensor_parameters;
-
-    sensor_parameters.joint_sigmas = ri::read<std::vector<double>>(
-                                 prefix + "joint_observation/joint_sigmas", nh);
-    sensor_parameters.joint_count = joint_count;
-
-    auto rotary_sensor_builder =
-        std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(sensor_parameters);
-
-    /* ------------------------------ */
-    /* - Build the tracker          - */
-    /* ------------------------------ */
-    auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
-        joint_count, joint_order, transition_builder, rotary_sensor_builder);
-
-    return tracker_builder.build();
-}
+#include <dbrt/rotary_tracker_factory.h>
 
 /**
  * \brief Node entry point
@@ -118,26 +56,21 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "fusion_tracker");
     ros::NodeHandle nh("~");
 
-
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
-    auto camera_info_topic = ri::read<std::string>("camera_info_topic", nh);
-    auto depth_image_topic = ri::read<std::string>("depth_image_topic", nh);
-    auto downsampling_factor = ri::read<int>("downsampling_factor", nh);
     dbot::CameraData::Resolution resolution;
     resolution.width = ri::read<int>("resolution/width", nh);
     resolution.height = ri::read<int>("resolution/height", nh);
 
-
-
     auto camera_data = std::make_shared<dbot::CameraData>(
-        std::make_shared<dbot::RosCameraDataProvider>(nh,
-                                                      camera_info_topic,
-                                                      depth_image_topic,
-                                                      resolution,
-                                                      downsampling_factor,
-                                                      2.0));
+        std::make_shared<dbot::RosCameraDataProvider>(
+            nh,
+            ri::read<std::string>("camera_info_topic", nh),
+            ri::read<std::string>("depth_image_topic", nh),
+            resolution,
+            ri::read<int>("downsampling_factor", nh),
+            2.0));
 
     // parameter shorthand prefix
     std::string prefix = "fusion_tracker/";
@@ -146,63 +79,39 @@ int main(int argc, char** argv)
     /* - Create the robot kinematics- */
     /* - and robot mesh model       - */
     /* ------------------------------ */
-    auto robot_description =
-            ri::read<std::string>("robot_description_downsampled", ros::NodeHandle());
-    auto robot_description_package_path =
-            ri::read<std::string>("robot_description_package_path", nh);
-    auto rendering_root_left =
-            ri::read<std::string>("rendering_root_left", nh);
-    auto rendering_root_right =
-            ri::read<std::string>("rendering_root_right", nh);
-
     std::string prefixed_frame_id = camera_data->frame_id();
     std::size_t slash_index = prefixed_frame_id.find_last_of("/");
     std::string frame_id = prefixed_frame_id.substr(slash_index + 1);
 
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       frame_id));
+    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(new KinematicsFromURDF(
+        ri::read<std::string>("robot_description", ros::NodeHandle()),
+        ri::read<std::string>("robot_description_package_path", nh),
+        ri::read<std::string>("rendering_root_left", nh),
+        ri::read<std::string>("rendering_root_right", nh),
+        frame_id));
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
 
-
-
-    /* ------------------------------ */
-    /* - Robot renderer             - */
-    /* ------------------------------ */
-    auto renderer = std::make_shared<dbot::RigidBodyRenderer>(
-        object_model->vertices(),
-        object_model->triangle_indices(),
-        camera_data->camera_matrix(),
-        camera_data->resolution().height,
-        camera_data->resolution().width);
-
     /* ------------------------------ */
     /* - Our state representation   - */
     /* ------------------------------ */
+    typedef dbrt::RobotState<> State;
     dbrt::RobotState<>::kinematics_ = urdf_kinematics;
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
-
-    typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
-
-    auto tf_connecting_frame =
-            ri::read<std::string>("tf_connecting_frame", nh);
-
     auto tracker_publisher =
-        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-            new dbrt::RobotTrackerPublisher<State>(
-                urdf_kinematics, renderer, "/estimated", "/estimated", tf_connecting_frame));
+        std::make_shared<dbrt::RobotTrackerPublisher<State>>(
+            urdf_kinematics,
+            "/estimated",
+            "/estimated",
+            ri::read<std::string>("tf_connecting_frame", nh));
 
     /* ------------------------------ */
-    /* - Initialize                 - */
+    /* - Get initial state          - */
     /* ------------------------------ */
     sensor_msgs::JointState::ConstPtr joint_state;
 
@@ -217,21 +126,17 @@ int main(int argc, char** argv)
     std::vector<Eigen::VectorXd> initial_states_vectors =
         urdf_kinematics->GetInitialJoints(*joint_state);
     std::vector<State> initial_states;
-    for (auto state : initial_states_vectors)
-    {
-        initial_states.push_back(state);
-    }
-
-    auto joint_order = urdf_kinematics->GetJointOrder(*joint_state);
+    for (auto state : initial_states_vectors) initial_states.push_back(state);
 
     /* ------------------------------ */
-    /* - Create Tracker and         - */
-    /* - tracker publisher          - */
+    /* - Create Tracker             - */
     /* ------------------------------ */
 
     ROS_INFO("creating trackers ... ");
-    auto gaussian_joint_robot_tracker = create_rotary_tracker(
-        prefix, urdf_kinematics->num_joints(), joint_order);
+    auto gaussian_joint_robot_tracker = dbrt::create_rotary_tracker(
+        prefix,
+        urdf_kinematics->num_joints(),
+        urdf_kinematics->GetJointOrder(*joint_state));
 
     auto camera_delay = ri::read<double>(prefix + "camera_delay", nh);
     dbrt::FusionTracker fusion_tracker(
@@ -258,15 +163,15 @@ int main(int argc, char** argv)
                      &fusion_tracker);
 
     ros::Subscriber image_subscriber =
-        nh.subscribe(depth_image_topic,
+        nh.subscribe(ri::read<std::string>("depth_image_topic", nh),
                      1,
                      &dbrt::FusionTracker::image_obsrv_callback,
                      &fusion_tracker);
 
-    ros::Rate visualization_rate(100);
     ros::AsyncSpinner spinner(4);
     spinner.start();
 
+    ros::Rate visualization_rate(100);
     while (ros::ok())
     {
         visualization_rate.sleep();
@@ -274,14 +179,14 @@ int main(int argc, char** argv)
         State current_state;
         double current_time;
         dbrt::JointsObsrv current_angle_measurement;
-        fusion_tracker.current_things(current_state, current_time,
-            current_angle_measurement);
+        fusion_tracker.current_things(
+            current_state, current_time, current_angle_measurement);
 
-        if (current_angle_measurement.size() > 0 )
+        if (current_angle_measurement.size() > 0)
         {
-            tracker_publisher->publish_root_link(current_state, ros::Time(current_time),
-                current_angle_measurement);
-            tracker_publisher->publish_tf_tree(current_state, ros::Time(current_time));
+            tracker_publisher->publish_tf(current_state,
+                                          current_angle_measurement,
+                                          ros::Time(current_time));
         }
 
         ros::spinOnce();
