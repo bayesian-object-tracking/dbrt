@@ -116,9 +116,9 @@ set(sources
     src/${PROJECT_NAME}/robot_tracker.cpp
     src/${PROJECT_NAME}/fusion_tracker.cpp
     src/${PROJECT_NAME}/visual_tracker.cpp
-    src/${PROJECT_NAME}/ros_visual_tracker.cpp
+    src/${PROJECT_NAME}/visual_tracker_ros.cpp
     src/${PROJECT_NAME}/rotary_tracker.cpp
-    src/${PROJECT_NAME}/robot_tracker_node.cpp
+    src/${PROJECT_NAME}/rotary_tracker_factory.cpp
     src/${PROJECT_NAME}/util/builder/visual_tracker_builder.cpp
     src/${PROJECT_NAME}/util/builder/visual_tracker_factory.cpp
     src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
