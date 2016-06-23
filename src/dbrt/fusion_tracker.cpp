@@ -21,7 +21,7 @@
 #include <sensor_msgs/JointState.h>
 #include <dbrt/fusion_tracker.h>
 
-#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
 
 namespace dbrt
 {

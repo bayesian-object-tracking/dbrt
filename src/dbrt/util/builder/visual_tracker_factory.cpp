@@ -30,7 +30,7 @@
 
 #include <dbrt/util/builder/visual_tracker_factory.h>
 
-#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
 #include <dbot/builder/rb_observation_model_builder.h>
 
 #include <dbrt/util/builder/transition_builder.hpp>

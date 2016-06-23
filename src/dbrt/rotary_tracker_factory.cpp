@@ -19,7 +19,7 @@
 #include <dbrt/rotary_tracker_factory.h>
 
 #include <ros/ros.h>
-#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
 #include <dbrt/util/builder/rotary_tracker_builder.hpp>
 
 namespace dbrt

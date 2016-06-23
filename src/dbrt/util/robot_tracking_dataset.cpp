@@ -22,8 +22,8 @@
 
 #include <dbot/common/helper_functions.hpp>
 
-#include <dbot_ros/utils/ros_interface.hpp>
-//#include <dbot_ros/utils/pcl_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
+//#include <dbot_ros/util/pcl_interface.hpp>
 #include <dbrt/util/robot_tracking_dataset.hpp>
 
 RobotTrackingDataset::RobotTrackingDataset(const std::string& path) : TrackingDataset(path),

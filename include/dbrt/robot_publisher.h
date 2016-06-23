@@ -31,11 +31,10 @@
 #include <dbot/common/camera_data.hpp>
 #include <dbot/common/object_model.hpp>
 
-#include <dbot_ros/tracker_publisher.h>
-
-#include <robot_state_pub/robot_state_publisher.h>
 #include <dbrt/util/robot_transformer.hpp>
 #include <dbrt/util/kinematics_from_urdf.hpp>
+
+#include <robot_state_pub/robot_state_publisher.h>
 
 namespace dbrt
 {

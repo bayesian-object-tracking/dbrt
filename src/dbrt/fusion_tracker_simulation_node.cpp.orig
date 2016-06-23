@@ -30,15 +30,14 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <dbot_ros/tracker_node.h>
 #include <dbot/common/rigid_body_renderer.hpp>
 #include <dbot/common/virtual_camera_data_provider.hpp>
 #include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbot_ros/tracker_publisher.h>
-#include <dbot_ros/utils/ros_interface.hpp>
-#include <dbot_ros/utils/tracking_dataset.h>
-#include <dbot_ros/utils/data_set_camera_data_provider.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
+#include <dbot_ros/util/tracking_dataset.h>
+#include <dbot_ros/util/data_set_camera_data_provider.hpp>
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_tracker.hpp>

@@ -32,7 +32,7 @@
 #include <dbot/common/camera_data.hpp>
 #include <dbot/common/object_model.hpp>
 #include <dbot/common/rigid_body_renderer.hpp>
-#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
 
 #include <dbrt/robot_publisher.h>
 #include <dbrt/util/kinematics_from_urdf.hpp>

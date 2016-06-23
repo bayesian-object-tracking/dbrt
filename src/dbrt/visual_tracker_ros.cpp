@@ -19,7 +19,7 @@
 
 #include <dbrt/visual_tracker_ros.h>
 
-#include <dbot_ros/utils/ros_interface.hpp>
+#include <dbot_ros/util/ros_interface.hpp>
 
 namespace dbrt
 {
