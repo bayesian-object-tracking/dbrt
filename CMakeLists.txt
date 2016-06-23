@@ -119,13 +119,12 @@ set(sources
     src/${PROJECT_NAME}/visual_tracker_ros.cpp
     src/${PROJECT_NAME}/rotary_tracker.cpp
     src/${PROJECT_NAME}/rotary_tracker_factory.cpp
-    src/${PROJECT_NAME}/util/builder/visual_tracker_builder.cpp
-    src/${PROJECT_NAME}/util/builder/visual_tracker_factory.cpp
-    src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
     src/${PROJECT_NAME}/util/urdf_object_loader.cpp
     src/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
-    src/${PROJECT_NAME}/util/robot_tracking_dataset.cpp
-    src/${PROJECT_NAME}/util/robot_transformer.cpp)
+    src/${PROJECT_NAME}/util/robot_transformer.cpp
+    src/${PROJECT_NAME}/builder/visual_tracker_builder.cpp
+    src/${PROJECT_NAME}/builder/visual_tracker_factory.cpp
+    src/${PROJECT_NAME}/builder/robot_rb_observation_model_builder.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}

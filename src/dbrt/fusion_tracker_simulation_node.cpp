@@ -49,8 +49,8 @@
 #include <dbrt/fusion_tracker.h>
 #include <dbrt/rotary_tracker.hpp>
 #include <dbrt/visual_tracker.hpp>
-#include <dbrt/util/builder/rotary_tracker_builder.hpp>
-#include <dbrt/util/builder/visual_tracker_factory.h>
+#include <dbrt/builder/rotary_tracker_builder.hpp>
+#include <dbrt/builder/visual_tracker_factory.h>
 
 /**
  * \brief Create a gaussian filter tracking the robot joints based on joint

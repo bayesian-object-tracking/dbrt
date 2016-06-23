@@ -46,7 +46,7 @@
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/visual_tracker_ros.h>
 
-#include <dbrt/util/builder/visual_tracker_factory.h>
+#include <dbrt/builder/visual_tracker_factory.h>
 
 int main(int argc, char** argv)
 {

@@ -43,7 +43,7 @@
 #include <dbrt/visual_tracker.hpp>
 #include <dbrt/fusion_tracker.h>
 
-#include <dbrt/util/builder/visual_tracker_factory.h>
+#include <dbrt/builder/visual_tracker_factory.h>
 #include <dbrt/rotary_tracker_factory.h>
 
 /**

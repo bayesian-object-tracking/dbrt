@@ -27,8 +27,8 @@
 
 #include <dbrt/util/kinematics_from_urdf.hpp>
 #include <dbrt/rotary_tracker.hpp>
-#include <dbrt/util/builder/factorized_transition_builder.hpp>
-#include <dbrt/util/builder/rotary_sensor_builder.hpp>
+#include <dbrt/builder/factorized_transition_builder.hpp>
+#include <dbrt/builder/rotary_sensor_builder.hpp>
 
 namespace dbrt
 {

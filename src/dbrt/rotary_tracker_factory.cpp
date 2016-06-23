@@ -20,7 +20,7 @@
 
 #include <ros/ros.h>
 #include <dbot_ros/util/ros_interface.hpp>
-#include <dbrt/util/builder/rotary_tracker_builder.hpp>
+#include <dbrt/builder/rotary_tracker_builder.hpp>
 
 namespace dbrt
 {
