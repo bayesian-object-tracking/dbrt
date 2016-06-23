@@ -123,10 +123,8 @@ set(sources
     src/${PROJECT_NAME}/util/builder/visual_tracker_factory.cpp
     src/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp
     src/${PROJECT_NAME}/util/urdf_object_loader.cpp
-    src/${PROJECT_NAME}/util/image_visualizer.cpp
     src/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
     src/${PROJECT_NAME}/util/robot_tracking_dataset.cpp
-    src/${PROJECT_NAME}/util/image_publisher.cpp
     src/${PROJECT_NAME}/util/robot_transformer.cpp)
 
 
