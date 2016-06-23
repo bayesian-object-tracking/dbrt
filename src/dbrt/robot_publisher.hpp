@@ -27,7 +27,6 @@
 
 #include <dbot_ros/util/ros_interface.hpp>
 
-#include <dbrt/util/image_visualizer.hpp>
 #include <dbrt/robot_publisher.h>
 
 namespace dbrt

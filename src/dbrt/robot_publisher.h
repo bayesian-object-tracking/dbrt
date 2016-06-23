@@ -23,9 +23,6 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/Image.h>
-#include <image_transport/image_transport.h>
 
 #include <dbot/common/rigid_body_renderer.hpp>
 #include <dbot/common/camera_data.hpp>
