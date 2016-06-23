@@ -79,7 +79,7 @@ endif()
 ###################################
 catkin_package(
     INCLUDE_DIRS
-        include
+        src
     LIBRARIES
         dbrt
     CATKIN_DEPENDS
@@ -106,10 +106,10 @@ catkin_package(
 ## Build ##
 ###########
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(src ${catkin_INCLUDE_DIRS})
 
-file(GLOB_RECURSE headers include/${PROJECT_NAME}/*.hpp
-                          include/${PROJECT_NAME}/*.h)
+file(GLOB_RECURSE headers src/${PROJECT_NAME}/*.hpp
+                          src/${PROJECT_NAME}/*.h)
 
 set(sources
     src/${PROJECT_NAME}/robot_publisher.cpp
@@ -155,14 +155,14 @@ target_link_libraries(rotary_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-# add_executable(visual_tracker_offline
-#      src/${PROJECT_NAME}/visual_tracker_offline_node.cpp)
-# target_link_libraries(visual_tracker_offline
-#      ${PROJECT_NAME}
-#      ${catkin_LIBRARIES}
-#      ${OpenCV_LIBS}
-#      ${PCL_LIBRARIES}
-#      yaml-cpp)
+add_executable(fusion_tracker
+     src/${PROJECT_NAME}/fusion_tracker_node.cpp)
+target_link_libraries(fusion_tracker
+     ${PROJECT_NAME}
+     ${catkin_LIBRARIES}
+     ${OpenCV_LIBS}
+     ${PCL_LIBRARIES}
+     yaml-cpp)
 
 # add_executable(arm_robot_emulator
 #      src/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
@@ -173,11 +173,3 @@ target_link_libraries(rotary_tracker
 #      ${PCL_LIBRARIES}
 #      yaml-cpp)
 
-add_executable(fusion_tracker
-     src/${PROJECT_NAME}/fusion_tracker_node.cpp)
-target_link_libraries(fusion_tracker
-     ${PROJECT_NAME}
-     ${catkin_LIBRARIES}
-     ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
-     yaml-cpp)
