@@ -23,7 +23,7 @@
 #include <tf/tf.h>
 
 #include <robot_state_pub/robot_state_publisher.h>
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
 
 namespace dbrt

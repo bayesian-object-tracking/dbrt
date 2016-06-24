@@ -55,182 +55,196 @@
 class PartMeshModel
 {
 public:
-  PartMeshModel(const boost::shared_ptr<urdf::Link> p_link,
-		const std::string &p_description_path,
-		unsigned p_index,
-		bool collision)
-    : proper_(false) 
-    , link_(p_link)
-    , name_(p_link->name)
-    , vertices_(new std::vector<Eigen::Vector3d>)
-    , indices_(new std::vector<std::vector<int> >)
-  {
-    
-    if(collision) {
-      if ((link_->collision.get() != NULL) &&
-	  (link_->collision->geometry.get() != NULL) && 
-	  (link_->collision->geometry->type == urdf::Geometry::MESH))
-	{ 
-	  boost::shared_ptr<urdf::Mesh> mesh = boost::dynamic_pointer_cast<urdf::Mesh> (link_->collision->geometry);
-      std::string filename (mesh->filename);
-      filename_ = filename;
+    PartMeshModel(const boost::shared_ptr<urdf::Link> p_link,
+                  const std::string& p_description_path,
+                  unsigned p_index,
+                  bool collision)
+        : proper_(false),
+          link_(p_link),
+          name_(p_link->name),
+          vertices_(new std::vector<Eigen::Vector3d>),
+          indices_(new std::vector<std::vector<int>>)
+    {
+        if (collision)
+        {
+            if ((link_->collision.get() != NULL) &&
+                (link_->collision->geometry.get() != NULL) &&
+                (link_->collision->geometry->type == urdf::Geometry::MESH))
+            {
+                boost::shared_ptr<urdf::Mesh> mesh =
+                    boost::dynamic_pointer_cast<urdf::Mesh>(
+                        link_->collision->geometry);
+                std::string filename(mesh->filename);
+                filename_ = filename;
 
-	  if (filename.substr(filename.size() - 4 , 4) == ".stl" || 
-	      filename.substr(filename.size() - 4 , 4) == ".dae")
-	    {
-	      if (filename.substr(filename.size() - 4 , 4) == ".dae")
-		filename.replace(filename.size() - 4 , 4, ".stl");
-//	      filename.erase(0,25);
-//	      filename = p_description_path + filename;
+                if (filename.substr(filename.size() - 4, 4) == ".stl" ||
+                    filename.substr(filename.size() - 4, 4) == ".dae")
+                {
+                    if (filename.substr(filename.size() - 4, 4) == ".dae")
+                        filename.replace(filename.size() - 4, 4, ".stl");
+                    //	      filename.erase(0,25);
+                    //	      filename = p_description_path + filename;
 
+                    // remove 'package://' from string
+                    std::string to_be_removed = "package://";
+                    std::string::size_type location =
+                        filename.find(to_be_removed);
+                    if (location != std::string::npos)
+                        filename.erase(location, to_be_removed.length());
 
-          // remove 'package://' from string
-          std::string to_be_removed = "package://";
-          std::string::size_type location = filename.find(to_be_removed);
-          if(location != std::string::npos)
-              filename.erase(location, to_be_removed.length());
+                    // remove first folder
+                    std::string::size_type location_2 = filename.find("/");
+                    if (location_2 != std::string::npos)
+                        filename.erase(0, location_2);
 
-          // remove first folder
-          std::string::size_type location_2 = filename.find("/");
-          if(location_2 != std::string::npos)
-              filename.erase(0, location_2);
+                    filename = p_description_path + filename;
 
-          filename = p_description_path + filename;
+                    if (!boost::filesystem::exists(filename))
+                    {
+                        std::cout << "mesh file " << filename
+                                  << " does not exist" << std::endl;
+                        exit(-1);
+                    }
 
-          if(!boost::filesystem::exists(filename))
-          {
-              std::cout << "mesh file " << filename << " does not exist" << std::endl;
-              exit(-1);
-          }
-	    	    
-	      scene_ =  aiImportFile(filename.c_str(),
-				     aiProcessPreset_TargetRealtime_Quality);
-	      numFaces_ = scene_->mMeshes[0]->mNumFaces;
+                    scene_ =
+                        aiImportFile(filename.c_str(),
+                                     aiProcessPreset_TargetRealtime_Quality);
+                    numFaces_ = scene_->mMeshes[0]->mNumFaces;
 
-	      original_transform_.linear() = Eigen::Quaterniond(link_->collision->origin.rotation.w,
-								link_->collision->origin.rotation.x, 
-								link_->collision->origin.rotation.y, 
-								link_->collision->origin.rotation.z).toRotationMatrix(); 
-	      original_transform_.translation() = Eigen::Vector3d(link_->collision->origin.position.x, 
-								  link_->collision->origin.position.y, 
-								  link_->collision->origin.position.z);
-	      std::cout << filename << std::endl;
-	      proper_=true;
-	    }
-	}
-    } else {
-      if ((link_->visual.get() != NULL) &&
-	  (link_->visual->geometry.get() != NULL) && 
-	  (link_->visual->geometry->type == urdf::Geometry::MESH))
-	{ 
-	  boost::shared_ptr<urdf::Mesh> mesh = boost::dynamic_pointer_cast<urdf::Mesh> (link_->visual->geometry);
-      std::string filename (mesh->filename);
-      filename_ = filename;
+                    original_transform_.linear() =
+                        Eigen::Quaterniond(link_->collision->origin.rotation.w,
+                                           link_->collision->origin.rotation.x,
+                                           link_->collision->origin.rotation.y,
+                                           link_->collision->origin.rotation.z)
+                            .toRotationMatrix();
+                    original_transform_.translation() =
+                        Eigen::Vector3d(link_->collision->origin.position.x,
+                                        link_->collision->origin.position.y,
+                                        link_->collision->origin.position.z);
+                    std::cout << filename << std::endl;
+                    proper_ = true;
+                }
+            }
+        }
+        else
+        {
+            if ((link_->visual.get() != NULL) &&
+                (link_->visual->geometry.get() != NULL) &&
+                (link_->visual->geometry->type == urdf::Geometry::MESH))
+            {
+                boost::shared_ptr<urdf::Mesh> mesh =
+                    boost::dynamic_pointer_cast<urdf::Mesh>(
+                        link_->visual->geometry);
+                std::string filename(mesh->filename);
+                filename_ = filename;
 
-	  if (filename.substr(filename.size() - 4 , 4) == ".stl" || 
-	      filename.substr(filename.size() - 4 , 4) == ".dae")
-	    {
-	      if (filename.substr(filename.size() - 4 , 4) == ".dae")
-		filename.replace(filename.size() - 4 , 4, ".stl");
+                if (filename.substr(filename.size() - 4, 4) == ".stl" ||
+                    filename.substr(filename.size() - 4, 4) == ".dae")
+                {
+                    if (filename.substr(filename.size() - 4, 4) == ".dae")
+                        filename.replace(filename.size() - 4, 4, ".stl");
 
-          // remove 'package://' from string
-          std::string to_be_removed = "package://";
-          std::string::size_type location = filename.find(to_be_removed);
-          if(location != std::string::npos)
-              filename.erase(location, to_be_removed.length());
+                    // remove 'package://' from string
+                    std::string to_be_removed = "package://";
+                    std::string::size_type location =
+                        filename.find(to_be_removed);
+                    if (location != std::string::npos)
+                        filename.erase(location, to_be_removed.length());
 
-          // remove first folder
-          std::string::size_type location_2 = filename.find("/");
-          if(location_2 != std::string::npos)
-              filename.erase(0, location_2);
+                    // remove first folder
+                    std::string::size_type location_2 = filename.find("/");
+                    if (location_2 != std::string::npos)
+                        filename.erase(0, location_2);
 
-          filename = p_description_path + filename;
+                    filename = p_description_path + filename;
 
-          if(!boost::filesystem::exists(filename))
-          {
-              std::cout << "mesh file " << filename << " does not exist" << std::endl;
-              exit(-1);
-          }
+                    if (!boost::filesystem::exists(filename))
+                    {
+                        std::cout << "mesh file " << filename
+                                  << " does not exist" << std::endl;
+                        exit(-1);
+                    }
 
+                    scene_ =
+                        aiImportFile(filename.c_str(),
+                                     aiProcessPreset_TargetRealtime_Quality);
+                    numFaces_ = scene_->mMeshes[0]->mNumFaces;
 
-	      scene_ =  aiImportFile(filename.c_str(),
-				     aiProcessPreset_TargetRealtime_Quality);
-	      numFaces_ = scene_->mMeshes[0]->mNumFaces;
-
-	      original_transform_.linear() = Eigen::Quaterniond(link_->visual->origin.rotation.w,
-								link_->visual->origin.rotation.x, 
-								link_->visual->origin.rotation.y, 
-								link_->visual->origin.rotation.z).toRotationMatrix(); 
-	      original_transform_.translation() = Eigen::Vector3d(link_->visual->origin.position.x, 
-								  link_->visual->origin.position.y, 
-								  link_->visual->origin.position.z);
-//	      std::cout << filename << std::endl;
-	      proper_=true;
-	    }
-	}
+                    original_transform_.linear() =
+                        Eigen::Quaterniond(link_->visual->origin.rotation.w,
+                                           link_->visual->origin.rotation.x,
+                                           link_->visual->origin.rotation.y,
+                                           link_->visual->origin.rotation.z)
+                            .toRotationMatrix();
+                    original_transform_.translation() =
+                        Eigen::Vector3d(link_->visual->origin.position.x,
+                                        link_->visual->origin.position.y,
+                                        link_->visual->origin.position.z);
+                    //	      std::cout << filename << std::endl;
+                    proper_ = true;
+                }
+            }
+        }
     }
-  }
 
-  boost::shared_ptr<std::vector<Eigen::Vector3d> > get_vertices()
-  {
-    const struct aiMesh* mesh = scene_->mMeshes[0];
-    unsigned num_vertices = mesh->mNumVertices;
-    vertices_->resize(num_vertices); 
-    for(unsigned v=0;v<num_vertices;++v)
-      {
-    Eigen::Vector3d point;
-	point(0) = mesh->mVertices[v].x;
-	point(1) = mesh->mVertices[v].y;
-	point(2) = mesh->mVertices[v].z;
-	vertices_->at(v) = original_transform_ * point;
-      }
-    return vertices_;
-  }
+    boost::shared_ptr<std::vector<Eigen::Vector3d>> get_vertices()
+    {
+        const struct aiMesh* mesh = scene_->mMeshes[0];
+        unsigned num_vertices = mesh->mNumVertices;
+        vertices_->resize(num_vertices);
+        for (unsigned v = 0; v < num_vertices; ++v)
+        {
+            Eigen::Vector3d point;
+            point(0) = mesh->mVertices[v].x;
+            point(1) = mesh->mVertices[v].y;
+            point(2) = mesh->mVertices[v].z;
+            vertices_->at(v) = original_transform_ * point;
+        }
+        return vertices_;
+    }
 
-  boost::shared_ptr<std::vector<std::vector<int> > > get_indices()
-  {
-    const struct aiMesh* mesh = scene_->mMeshes[0];
-    unsigned num_faces = mesh->mNumFaces;
-    unsigned size_of_face = 3; // assuming triangles, check!
-    indices_->resize(num_faces); 
-    for (unsigned t = 0; t < num_faces; ++t)
-      {
-	const struct aiFace* face_ai = &mesh->mFaces[t];
-	
-	// Check for triangle
-	if(face_ai->mNumIndices!=size_of_face) {
-	  std::cerr << "not a triangle!" << std::endl;
-	  exit(-1);
-	}
-	
-	// fill a triangle with indices
-	std::vector<int> triangle(size_of_face);
-	for(unsigned j = 0; j < face_ai->mNumIndices; j++)
-	  triangle[j] = face_ai->mIndices[j];
-	indices_->at(t) = triangle;
-      }
-    return indices_;
-  }
+    boost::shared_ptr<std::vector<std::vector<int>>> get_indices()
+    {
+        const struct aiMesh* mesh = scene_->mMeshes[0];
+        unsigned num_faces = mesh->mNumFaces;
+        unsigned size_of_face = 3;  // assuming triangles, check!
+        indices_->resize(num_faces);
+        for (unsigned t = 0; t < num_faces; ++t)
+        {
+            const struct aiFace* face_ai = &mesh->mFaces[t];
 
-  const std::string& get_name(){return name_;}
+            // Check for triangle
+            if (face_ai->mNumIndices != size_of_face)
+            {
+                std::cerr << "not a triangle!" << std::endl;
+                exit(-1);
+            }
 
-  bool proper_;
+            // fill a triangle with indices
+            std::vector<int> triangle(size_of_face);
+            for (unsigned j = 0; j < face_ai->mNumIndices; j++)
+                triangle[j] = face_ai->mIndices[j];
+            indices_->at(t) = triangle;
+        }
+        return indices_;
+    }
+
+    const std::string& get_name() { return name_; }
+    bool proper_;
 
 private:
-  const boost::shared_ptr<urdf::Link> link_;
-  const struct aiScene* scene_;
-  unsigned numFaces_;
-  
-  boost::shared_ptr<std::vector<Eigen::Vector3d> > vertices_;
-  boost::shared_ptr<std::vector<std::vector<int> > > indices_;
+    const boost::shared_ptr<urdf::Link> link_;
+    const struct aiScene* scene_;
+    unsigned numFaces_;
 
-  Eigen::Affine3d original_transform_;
+    boost::shared_ptr<std::vector<Eigen::Vector3d>> vertices_;
+    boost::shared_ptr<std::vector<std::vector<int>>> indices_;
 
-  std::string name_;
+    Eigen::Affine3d original_transform_;
 
-  std::string filename_;
+    std::string name_;
 
+    std::string filename_;
 };
 
-
-#endif // _PART_MESH_MODEL_
+#endif  // _PART_MESH_MODEL_

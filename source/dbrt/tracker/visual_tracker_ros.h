@@ -22,7 +22,7 @@
 #include <memory>
 #include <mutex>
 
-#include <dbrt/visual_tracker.hpp>
+#include <dbrt/tracker/visual_tracker.h>
 
 namespace dbrt
 {

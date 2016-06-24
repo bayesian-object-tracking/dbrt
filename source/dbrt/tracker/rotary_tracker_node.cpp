@@ -39,15 +39,15 @@
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot_ros/util/ros_camera_data_provider.hpp>
 
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/urdf_object_loader.h>
 
 #include <dbrt/robot_state.hpp>
-#include <dbrt/robot_tracker.hpp>
+#include <dbrt/tracker/robot_tracker.h>
 #include <dbot/common/rigid_body_renderer.hpp>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/visual_tracker.hpp>
+#include <dbrt/tracker/visual_tracker.h>
 
-#include <dbrt/rotary_tracker_factory.h>
+#include <dbrt/util/factory/rotary_tracker_factory.h>
 
 int main(int argc, char** argv)
 {

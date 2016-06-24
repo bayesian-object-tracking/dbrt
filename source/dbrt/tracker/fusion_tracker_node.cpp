@@ -36,15 +36,15 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/urdf_object_loader.h>
 
-#include <dbrt/robot_tracker.hpp>
-#include <dbrt/rotary_tracker.hpp>
-#include <dbrt/visual_tracker.hpp>
-#include <dbrt/fusion_tracker.h>
+#include <dbrt/tracker/robot_tracker.h>
+#include <dbrt/tracker/rotary_tracker.h>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/tracker/fusion_tracker.h>
 
-#include <dbrt/builder/visual_tracker_factory.h>
-#include <dbrt/rotary_tracker_factory.h>
+#include <dbrt/util/factory/visual_tracker_factory.h>
+#include <dbrt/util/factory/rotary_tracker_factory.h>
 
 /**
  * \brief Node entry point

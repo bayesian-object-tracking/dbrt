@@ -24,7 +24,7 @@
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt
 {

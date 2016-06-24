@@ -31,9 +31,9 @@
 #include <fl/model/observation/linear_gaussian_observation_model.hpp>
 #include <fl/model/process/linear_state_transition_model.hpp>
 #include <fl/model/process/interface/state_transition_function.hpp>
-#include <dbrt/robot_tracker.hpp>
-#include <dbrt/rotary_tracker.hpp>
-#include <dbrt/visual_tracker.hpp>
+#include <dbrt/tracker/robot_tracker.h>
+#include <dbrt/tracker/rotary_tracker.h>
+#include <dbrt/tracker/visual_tracker.h>
 
 namespace dbrt
 {

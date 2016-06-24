@@ -35,7 +35,7 @@
 #include <dbot_ros/util/ros_interface.hpp>
 
 #include <dbrt/robot_publisher.h>
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt
 {

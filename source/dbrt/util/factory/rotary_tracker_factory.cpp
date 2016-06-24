@@ -16,11 +16,11 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/rotary_tracker_factory.h>
+#include <dbrt/util/factory/rotary_tracker_factory.h>
 
 #include <ros/ros.h>
 #include <dbot_ros/util/ros_interface.hpp>
-#include <dbrt/builder/rotary_tracker_builder.hpp>
+#include <dbrt/util/factory/builder/rotary_tracker_builder.hpp>
 
 namespace dbrt
 {

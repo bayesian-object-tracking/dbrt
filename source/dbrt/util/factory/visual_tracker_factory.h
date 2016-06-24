@@ -35,9 +35,9 @@
 #include <dbot/common/camera_data.hpp>
 #include <dbot/common/object_model.hpp>
 
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
-#include <dbrt/visual_tracker.hpp>
+#include <dbrt/tracker/visual_tracker.h>
 
 namespace dbrt
 {

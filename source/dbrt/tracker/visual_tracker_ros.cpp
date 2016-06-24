@@ -12,12 +12,12 @@
  */
 
 /**
- * \file visual_tracker.hpp
+ * \file visual_tracker.h
  * \date June 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/visual_tracker_ros.h>
+#include <dbrt/tracker/visual_tracker_ros.h>
 
 #include <dbot_ros/util/ros_interface.hpp>
 

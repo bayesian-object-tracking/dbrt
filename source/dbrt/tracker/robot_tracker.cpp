@@ -21,7 +21,7 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <dbrt/robot_tracker.hpp>
+#include <dbrt/tracker/robot_tracker.h>
 
 namespace dbrt
 {

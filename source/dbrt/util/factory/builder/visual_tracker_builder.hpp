@@ -36,10 +36,10 @@
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
-#include <dbrt/visual_tracker.hpp>
-#include <dbrt/util/kinematics_from_urdf.hpp>
-#include <dbrt/builder/transition_builder.hpp>
-#include <dbrt/builder/exceptions.hpp>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/kinematics_from_urdf.h>
+#include <dbrt/util/factory/builder/transition_builder.hpp>
+#include <dbrt/util/factory/builder/exceptions.hpp>
 
 namespace dbrt
 {

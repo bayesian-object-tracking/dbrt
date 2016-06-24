@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/tracker/rotary_tracker.h>
 
 namespace dbrt
 {

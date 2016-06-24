@@ -40,13 +40,13 @@
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot_ros/util/ros_camera_data_provider.hpp>
 
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/urdf_object_loader.h>
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/visual_tracker.hpp>
-#include <dbrt/visual_tracker_ros.h>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/tracker/visual_tracker_ros.h>
 
-#include <dbrt/builder/visual_tracker_factory.h>
+#include <dbrt/util/factory/visual_tracker_factory.h>
 
 int main(int argc, char** argv)
 {

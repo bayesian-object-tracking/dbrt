@@ -19,7 +19,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <dbrt/fusion_tracker.h>
+#include <dbrt/tracker/fusion_tracker.h>
 
 #include <dbot_ros/util/ros_interface.hpp>
 

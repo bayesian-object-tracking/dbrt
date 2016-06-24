@@ -12,7 +12,7 @@
  */
 
 /**
- * \file gaussian_joint_robot_tracker.hpp
+ * \file gaussian_joint_robot_tracker.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -27,7 +27,7 @@
 #include <fl/model/observation/linear_gaussian_observation_model.hpp>
 #include <fl/model/process/linear_state_transition_model.hpp>
 #include <fl/model/process/interface/state_transition_function.hpp>
-#include <dbrt/robot_tracker.hpp>
+#include <dbrt/tracker/robot_tracker.h>
 
 namespace dbrt
 {

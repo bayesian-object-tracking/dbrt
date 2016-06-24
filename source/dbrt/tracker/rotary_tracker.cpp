@@ -17,7 +17,7 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/rotary_tracker.hpp>
+#include <dbrt/tracker/rotary_tracker.h>
 
 #include <Eigen/Core>
 

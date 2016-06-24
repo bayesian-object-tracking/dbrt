@@ -40,7 +40,7 @@
 #include <dbot/builder/state_transition_function_builder.hpp>
 #include <fl/model/process/linear_state_transition_model.hpp>
 
-#include <dbrt/builder/exceptions.hpp>
+#include <dbrt/util/factory/builder/exceptions.hpp>
 
 namespace dbrt
 {

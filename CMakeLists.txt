@@ -113,18 +113,18 @@ file(GLOB_RECURSE headers source/${PROJECT_NAME}/*.hpp
 
 set(sources
     source/${PROJECT_NAME}/robot_publisher.cpp
-    source/${PROJECT_NAME}/robot_tracker.cpp
-    source/${PROJECT_NAME}/fusion_tracker.cpp
-    source/${PROJECT_NAME}/visual_tracker.cpp
-    source/${PROJECT_NAME}/visual_tracker_ros.cpp
-    source/${PROJECT_NAME}/rotary_tracker.cpp
-    source/${PROJECT_NAME}/rotary_tracker_factory.cpp
-    source/${PROJECT_NAME}/util/urdf_object_loader.cpp
-    source/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
-    source/${PROJECT_NAME}/util/robot_transformer.cpp
-    source/${PROJECT_NAME}/builder/visual_tracker_builder.cpp
-    source/${PROJECT_NAME}/builder/visual_tracker_factory.cpp
-    source/${PROJECT_NAME}/builder/robot_rb_observation_model_builder.cpp)
+    source/${PROJECT_NAME}/urdf_object_loader.cpp
+    source/${PROJECT_NAME}/kinematics_from_urdf.cpp
+    source/${PROJECT_NAME}/robot_transformer.cpp
+    source/${PROJECT_NAME}/tracker/robot_tracker.cpp
+    source/${PROJECT_NAME}/tracker/fusion_tracker.cpp
+    source/${PROJECT_NAME}/tracker/visual_tracker.cpp
+    source/${PROJECT_NAME}/tracker/visual_tracker_ros.cpp
+    source/${PROJECT_NAME}/tracker/rotary_tracker.cpp
+    source/${PROJECT_NAME}/util/factory/rotary_tracker_factory.cpp
+    source/${PROJECT_NAME}/util/factory/visual_tracker_factory.cpp
+    source/${PROJECT_NAME}/util/factory/builder/visual_tracker_builder.cpp
+    source/${PROJECT_NAME}/util/factory/builder/robot_rb_observation_model_builder.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}
@@ -137,7 +137,7 @@ target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
                                       assimp)
 
 add_executable(visual_tracker
-     source/${PROJECT_NAME}/visual_tracker_node.cpp)
+     source/${PROJECT_NAME}/tracker/visual_tracker_node.cpp)
 target_link_libraries(visual_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
@@ -146,7 +146,7 @@ target_link_libraries(visual_tracker
      yaml-cpp)
 
 add_executable(rotary_tracker
-     source/${PROJECT_NAME}/rotary_tracker_node.cpp)
+     source/${PROJECT_NAME}/tracker/rotary_tracker_node.cpp)
 target_link_libraries(rotary_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
@@ -155,7 +155,7 @@ target_link_libraries(rotary_tracker
      yaml-cpp)
 
 add_executable(fusion_tracker
-     source/${PROJECT_NAME}/fusion_tracker_node.cpp)
+     source/${PROJECT_NAME}/tracker/fusion_tracker_node.cpp)
 target_link_libraries(fusion_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}

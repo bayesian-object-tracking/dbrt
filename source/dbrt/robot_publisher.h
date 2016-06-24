@@ -28,8 +28,8 @@
 #include <dbot/common/camera_data.hpp>
 #include <dbot/common/object_model.hpp>
 
-#include <dbrt/util/robot_transformer.hpp>
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/robot_transformer.h>
+#include <dbrt/kinematics_from_urdf.h>
 
 #include <robot_state_pub/robot_state_publisher.h>
 

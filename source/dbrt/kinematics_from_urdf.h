@@ -53,7 +53,7 @@
 #include <kdl/treefksolverpos_recursive.hpp>
 
 // tools
-#include <dbrt/util/part_mesh_model.hpp>
+#include <dbrt/part_mesh_model.hpp>
 
 #include <osr/pose_vector.hpp>
 

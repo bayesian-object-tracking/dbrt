@@ -19,7 +19,7 @@
 
 
 
-#include <dbrt/util/robot_transformer.hpp>
+#include <dbrt/robot_transformer.h>
 
 
 namespace dbrt

@@ -19,7 +19,7 @@
 
 #include <ros/ros.h>
 #include <fl/util/profiling.hpp>
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/urdf_object_loader.h>
 
 namespace dbrt
 {

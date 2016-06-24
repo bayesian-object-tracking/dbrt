@@ -28,13 +28,13 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/builder/visual_tracker_factory.h>
+#include <dbrt/util/factory/visual_tracker_factory.h>
 
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot/builder/rb_observation_model_builder.h>
 
-#include <dbrt/builder/transition_builder.hpp>
-#include <dbrt/builder/visual_tracker_builder.hpp>
+#include <dbrt/util/factory/builder/transition_builder.hpp>
+#include <dbrt/util/factory/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
 {

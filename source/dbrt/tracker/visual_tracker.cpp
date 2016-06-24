@@ -31,7 +31,7 @@
 
 #include <dbot/common/rigid_body_renderer.hpp>
 
-#include <dbrt/visual_tracker.hpp>
+#include <dbrt/tracker/visual_tracker.h>
 
 namespace dbrt
 {

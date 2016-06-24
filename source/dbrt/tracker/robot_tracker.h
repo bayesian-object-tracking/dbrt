@@ -12,7 +12,7 @@
  */
 
 /**
- * \file robot_tracker.hpp
+ * \file robot_tracker.h
  * \date December 2015
  * \author Jan Issac (jan.issac@gmail.com)
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
@@ -40,7 +40,7 @@
 #include <robot_state_pub/robot_state_publisher.h>
 
 #include <dbrt/robot_state.hpp>
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt
 {

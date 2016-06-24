@@ -22,7 +22,7 @@
 #include <memory>
 
 #include <dbot/common/object_model_loader.hpp>
-#include <dbrt/util/kinematics_from_urdf.hpp>
+#include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt
 {

@@ -38,7 +38,7 @@
 
 #include <dbot/filter/rao_blackwell_coordinate_particle_filter.hpp>
 
-#include <dbrt/robot_tracker.hpp>
+#include <dbrt/tracker/robot_tracker.h>
 
 namespace dbrt
 {
