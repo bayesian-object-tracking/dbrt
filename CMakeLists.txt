@@ -79,7 +79,7 @@ endif()
 ###################################
 catkin_package(
     INCLUDE_DIRS
-        src
+        source
     LIBRARIES
         dbrt
     CATKIN_DEPENDS
@@ -106,25 +106,25 @@ catkin_package(
 ## Build ##
 ###########
 
-include_directories(src ${catkin_INCLUDE_DIRS})
+include_directories(source ${catkin_INCLUDE_DIRS})
 
-file(GLOB_RECURSE headers src/${PROJECT_NAME}/*.hpp
-                          src/${PROJECT_NAME}/*.h)
+file(GLOB_RECURSE headers source/${PROJECT_NAME}/*.hpp
+                          source/${PROJECT_NAME}/*.h)
 
 set(sources
-    src/${PROJECT_NAME}/robot_publisher.cpp
-    src/${PROJECT_NAME}/robot_tracker.cpp
-    src/${PROJECT_NAME}/fusion_tracker.cpp
-    src/${PROJECT_NAME}/visual_tracker.cpp
-    src/${PROJECT_NAME}/visual_tracker_ros.cpp
-    src/${PROJECT_NAME}/rotary_tracker.cpp
-    src/${PROJECT_NAME}/rotary_tracker_factory.cpp
-    src/${PROJECT_NAME}/util/urdf_object_loader.cpp
-    src/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
-    src/${PROJECT_NAME}/util/robot_transformer.cpp
-    src/${PROJECT_NAME}/builder/visual_tracker_builder.cpp
-    src/${PROJECT_NAME}/builder/visual_tracker_factory.cpp
-    src/${PROJECT_NAME}/builder/robot_rb_observation_model_builder.cpp)
+    source/${PROJECT_NAME}/robot_publisher.cpp
+    source/${PROJECT_NAME}/robot_tracker.cpp
+    source/${PROJECT_NAME}/fusion_tracker.cpp
+    source/${PROJECT_NAME}/visual_tracker.cpp
+    source/${PROJECT_NAME}/visual_tracker_ros.cpp
+    source/${PROJECT_NAME}/rotary_tracker.cpp
+    source/${PROJECT_NAME}/rotary_tracker_factory.cpp
+    source/${PROJECT_NAME}/util/urdf_object_loader.cpp
+    source/${PROJECT_NAME}/util/kinematics_from_urdf.cpp
+    source/${PROJECT_NAME}/util/robot_transformer.cpp
+    source/${PROJECT_NAME}/builder/visual_tracker_builder.cpp
+    source/${PROJECT_NAME}/builder/visual_tracker_factory.cpp
+    source/${PROJECT_NAME}/builder/robot_rb_observation_model_builder.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}
@@ -137,7 +137,7 @@ target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
                                       assimp)
 
 add_executable(visual_tracker
-     src/${PROJECT_NAME}/visual_tracker_node.cpp)
+     source/${PROJECT_NAME}/visual_tracker_node.cpp)
 target_link_libraries(visual_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
@@ -146,7 +146,7 @@ target_link_libraries(visual_tracker
      yaml-cpp)
 
 add_executable(rotary_tracker
-     src/${PROJECT_NAME}/rotary_tracker_node.cpp)
+     source/${PROJECT_NAME}/rotary_tracker_node.cpp)
 target_link_libraries(rotary_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
@@ -155,7 +155,7 @@ target_link_libraries(rotary_tracker
      yaml-cpp)
 
 add_executable(fusion_tracker
-     src/${PROJECT_NAME}/fusion_tracker_node.cpp)
+     source/${PROJECT_NAME}/fusion_tracker_node.cpp)
 target_link_libraries(fusion_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
@@ -164,7 +164,7 @@ target_link_libraries(fusion_tracker
      yaml-cpp)
 
 # add_executable(arm_robot_emulator
-#      src/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
+#      source/${PROJECT_NAME}/arm_robot_emulator_node.cpp)
 # target_link_libraries(arm_robot_emulator
 #      ${PROJECT_NAME}
 #      ${catkin_LIBRARIES}
