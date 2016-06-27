@@ -33,8 +33,8 @@
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot/builder/rb_observation_model_builder.h>
 
-#include <dbrt/util/builder/transition_builder.hpp>
-#include <dbrt/util/builder/visual_tracker_builder.hpp>
+#include <dbrt/builder/transition_builder.hpp>
+#include <dbrt/builder/visual_tracker_builder.hpp>
 
 namespace dbrt
 {

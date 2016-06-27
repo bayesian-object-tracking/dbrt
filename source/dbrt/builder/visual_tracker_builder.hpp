@@ -38,8 +38,8 @@
 
 #include <dbrt/tracker/visual_tracker.h>
 #include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/util/builder/transition_builder.hpp>
-#include <dbrt/util/builder/exceptions.hpp>
+#include <dbrt/builder/transition_builder.hpp>
+#include <dbrt/builder/exceptions.hpp>
 
 namespace dbrt
 {

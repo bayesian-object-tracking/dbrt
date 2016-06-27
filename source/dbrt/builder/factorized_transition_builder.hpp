@@ -29,8 +29,8 @@
 
 #include <dbot/builder/state_transition_function_builder.hpp>
 
-#include <dbrt/util/builder/exceptions.hpp>
-#include <dbrt/util/builder/exceptions.hpp>
+#include <dbrt/builder/exceptions.hpp>
+#include <dbrt/builder/exceptions.hpp>
 
 namespace dbrt
 {
