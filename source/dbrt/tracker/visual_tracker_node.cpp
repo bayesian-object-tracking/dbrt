@@ -36,7 +36,7 @@
 
 #include <sensor_msgs/Image.h>
 
-#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/rigid_body_renderer.hpp>
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot_ros/util/ros_camera_data_provider.hpp>
 
@@ -46,7 +46,7 @@
 #include <dbrt/tracker/visual_tracker.h>
 #include <dbrt/tracker/visual_tracker_ros.h>
 
-#include <dbrt/util/factory/visual_tracker_factory.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
 
 int main(int argc, char** argv)
 {

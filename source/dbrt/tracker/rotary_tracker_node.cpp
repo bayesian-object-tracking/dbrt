@@ -43,11 +43,11 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/tracker/robot_tracker.h>
-#include <dbot/common/rigid_body_renderer.hpp>
+#include <dbot/rigid_body_renderer.hpp>
 #include <dbrt/robot_publisher.h>
 #include <dbrt/tracker/visual_tracker.h>
 
-#include <dbrt/util/factory/rotary_tracker_factory.h>
+#include <dbrt/tracker/rotary_tracker_factory.h>
 
 int main(int argc, char** argv)
 {

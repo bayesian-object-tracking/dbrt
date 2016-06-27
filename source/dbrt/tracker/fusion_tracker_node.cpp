@@ -25,8 +25,8 @@
 
 #include <fl/util/profiling.hpp>
 
-#include <dbot/common/rigid_body_renderer.hpp>
-#include <dbot/common/virtual_camera_data_provider.hpp>
+#include <dbot/rigid_body_renderer.hpp>
+#include <dbot/virtual_camera_data_provider.hpp>
 #include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbot_ros/util/ros_interface.hpp>
@@ -43,8 +43,8 @@
 #include <dbrt/tracker/visual_tracker.h>
 #include <dbrt/tracker/fusion_tracker.h>
 
-#include <dbrt/util/factory/visual_tracker_factory.h>
-#include <dbrt/util/factory/rotary_tracker_factory.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
+#include <dbrt/tracker/rotary_tracker_factory.h>
 
 /**
  * \brief Node entry point

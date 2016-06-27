@@ -24,9 +24,9 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 
-#include <dbot/common/rigid_body_renderer.hpp>
-#include <dbot/common/camera_data.hpp>
-#include <dbot/common/object_model.hpp>
+#include <dbot/rigid_body_renderer.hpp>
+#include <dbot/camera_data.hpp>
+#include <dbot/object_model.hpp>
 
 #include <dbrt/robot_transformer.h>
 #include <dbrt/kinematics_from_urdf.h>

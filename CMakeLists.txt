@@ -121,10 +121,9 @@ set(sources
     source/${PROJECT_NAME}/tracker/visual_tracker.cpp
     source/${PROJECT_NAME}/tracker/visual_tracker_ros.cpp
     source/${PROJECT_NAME}/tracker/rotary_tracker.cpp
-    source/${PROJECT_NAME}/util/factory/rotary_tracker_factory.cpp
-    source/${PROJECT_NAME}/util/factory/visual_tracker_factory.cpp
-    source/${PROJECT_NAME}/util/factory/builder/visual_tracker_builder.cpp
-    source/${PROJECT_NAME}/util/factory/builder/robot_rb_observation_model_builder.cpp)
+    source/${PROJECT_NAME}/tracker/rotary_tracker_factory.cpp
+    source/${PROJECT_NAME}/tracker/visual_tracker_factory.cpp
+    source/${PROJECT_NAME}/util/builder/robot_rb_observation_model_builder.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}

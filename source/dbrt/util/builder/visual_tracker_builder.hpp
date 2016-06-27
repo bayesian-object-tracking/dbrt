@@ -32,14 +32,14 @@
 
 #include <exception>
 
-#include <dbot/common/object_resource_identifier.hpp>
+#include <dbot/object_resource_identifier.hpp>
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbrt/tracker/visual_tracker.h>
 #include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/util/factory/builder/transition_builder.hpp>
-#include <dbrt/util/factory/builder/exceptions.hpp>
+#include <dbrt/util/builder/transition_builder.hpp>
+#include <dbrt/util/builder/exceptions.hpp>
 
 namespace dbrt
 {
@@ -122,16 +122,13 @@ public:
         auto state_transition_model = this->state_transition_builder_->build();
         auto obsrv_model = this->obsrv_model_builder_->build();
 
-        //        auto sampling_blocks =
-        //            this->create_sampling_blocks(urdf_kinematics_->num_joints(),
-        //            1);
-
         auto filter = std::make_shared<Filter>(state_transition_model,
                                                obsrv_model,
                                                params_.sampling_blocks,
                                                max_kl_divergence);
         return filter;
     }
+
     /**
      * \brief Creates a sampling block definition used by the coordinate
      *        particle filter

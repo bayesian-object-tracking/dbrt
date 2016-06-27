@@ -21,14 +21,14 @@
 
 #include <exception>
 
-#include <dbot/common/object_resource_identifier.hpp>
+#include <dbot/object_resource_identifier.hpp>
 #include <dbot/tracker/object_tracker.hpp>
 #include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
 
 #include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/tracker/rotary_tracker.h>
-#include <dbrt/util/factory/builder/factorized_transition_builder.hpp>
-#include <dbrt/util/factory/builder/rotary_sensor_builder.hpp>
+#include <dbrt/util/builder/factorized_transition_builder.hpp>
+#include <dbrt/util/builder/rotary_sensor_builder.hpp>
 
 namespace dbrt
 {

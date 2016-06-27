@@ -32,8 +32,8 @@
 
 #include <string>
 
-#include <dbot/common/camera_data.hpp>
-#include <dbot/common/object_model.hpp>
+#include <dbot/camera_data.hpp>
+#include <dbot/object_model.hpp>
 
 #include <dbrt/kinematics_from_urdf.h>
 
