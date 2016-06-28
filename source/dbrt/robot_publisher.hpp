@@ -68,6 +68,14 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
     {
         joint_state_.name.push_back(joint_names_[i]);
     }
+
+    pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
+        data_prefix + "/XTION/depth/camera_info", 0);
+
+    boost::shared_ptr<image_transport::ImageTransport> it(
+        new image_transport::ImageTransport(node_handle_));
+
+    pub_depth_image_ = it->advertise(data_prefix + "/XTION/depth/image", 0);
 }
 
 template <typename State>
@@ -127,11 +135,10 @@ tf::StampedTransform RobotTrackerPublisher<State>::get_root_transform(
         root_frame_id_, target_frame_id_, transform_r_t);
 
     // Compose the two tf_transforms
-    tf::StampedTransform transform_r_r(
-        transform_r_t * transform_t_r,
-        time,
-        root_frame_id_,
-        tf::resolve(tf_prefix_, root_frame_id_));
+    tf::StampedTransform transform_r_r(transform_r_t * transform_t_r,
+                                       time,
+                                       root_frame_id_,
+                                       tf::resolve(tf_prefix_, root_frame_id_));
 
     return transform_r_r;
 }
@@ -147,7 +154,7 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
     to_joint_map(joints_obsrv, obsrv_joint_map);
 
     // get the transform between the estimated root and measured root both
-    // linked at the specified target frame 
+    // linked at the specified target frame
     tf::StampedTransform root_transform = get_root_transform(
         state_joint_map, obsrv_joint_map, target_frame_id_, time);
 
@@ -182,5 +189,97 @@ void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
     tf::Transform transform;
     transform.setIdentity();
     br.sendTransform(tf::StampedTransform(transform, time, from, to));
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const Eigen::VectorXd& depth_image,
+    sensor_msgs::Image& image)
+{
+    Eigen::VectorXf float_vector = depth_image.cast<float>();
+
+    sensor_msgs::fillImage(image,
+                           sensor_msgs::image_encodings::TYPE_32FC1,
+                           camera_data->resolution().height,
+                           camera_data->resolution().width,
+                           camera_data->resolution().width * sizeof(float),
+                           float_vector.data());
+}
+
+template <typename State>
+bool RobotTrackerPublisher<State>::has_image_subscribers() const
+{
+    return pub_depth_image_.getNumSubscribers() > 0;
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_image(
+    const Eigen::VectorXd& depth_image,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
+{
+    if (pub_depth_image_.getNumSubscribers() > 0)
+    {
+        sensor_msgs::Image ros_image;
+        convert_to_depth_image_msg(camera_data, depth_image, ros_image);
+
+        ros_image.header.frame_id = tf_prefix_ + camera_data->frame_id();
+        ros_image.header.stamp = time;
+        pub_depth_image_.publish(ros_image);
+    }
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::publish_camera_info(
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
+{
+    auto camera_info = create_camera_info(camera_data, time);
+    pub_camera_info_.publish(camera_info);
+}
+
+template <typename State>
+sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
+    const std::shared_ptr<dbot::CameraData>& camera_data,
+    const ros::Time& time)
+{
+    sensor_msgs::CameraInfoPtr info_msg =
+        boost::make_shared<sensor_msgs::CameraInfo>();
+
+    info_msg->header.stamp = time;
+    // if internal registration is used, rgb camera intrinsic parameters are
+    // used
+    info_msg->header.frame_id = camera_data->frame_id();
+    info_msg->width = camera_data->native_resolution().width;
+    info_msg->height = camera_data->native_resolution().height;
+
+#if ROS_VERSION_MINIMUM(1, 3, 0)
+    info_msg->D = std::vector<double>(5, 0.0);
+    info_msg->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+#else
+    info_msg->D.assign(0.0);
+#endif
+    info_msg->K.assign(0.0);
+    info_msg->R.assign(0.0);
+    info_msg->P.assign(0.0);
+
+    auto camera_matrix = camera_data->camera_matrix();
+    camera_matrix.topLeftCorner(2, 3) *=
+        double(camera_data->downsampling_factor());
+
+    for (size_t col = 0; col < 3; col++)
+        for (size_t row = 0; row < 3; row++)
+            info_msg->K[col + row * 3] = camera_matrix(row, col);
+
+    // no rotation: identity
+    info_msg->R[0] = info_msg->R[4] = info_msg->R[8] = 1.0;
+    // no rotation, no translation => P=K(I|0)=(K|0)
+    info_msg->P[0] = info_msg->P[5] = info_msg->K[0];
+    info_msg->P[2] = info_msg->K[2];
+    info_msg->P[6] = info_msg->K[5];
+    info_msg->P[10] = 1.0;
+
+    return info_msg;
 }
 }

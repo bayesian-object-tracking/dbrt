@@ -23,6 +23,8 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/Image.h>
+#include <image_transport/image_transport.h>
 
 #include <dbot/rigid_body_renderer.hpp>
 #include <dbot/camera_data.hpp>
@@ -52,12 +54,20 @@ public:
         const std::string& data_prefix,
         const std::string& target_frame_id);
 
-    void publish_joint_state(const State& state, const ros::Time time);
-
     void publish_tf(const State& state, const ros::Time& time);
     void publish_tf(const State& state,
                     const JointsObsrv& obsrv,
                     const ros::Time& time);
+
+    void publish_joint_state(const State& state, const ros::Time time);
+
+    void publish_image(const Eigen::VectorXd& depth_image,
+                       const std::shared_ptr<dbot::CameraData>& camera_data,
+                       const ros::Time& time);
+
+    void publish_camera_info(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const ros::Time& time);
 
 protected:
     /**
@@ -77,6 +87,17 @@ protected:
         const std::string& connecting_frame,
         const ros::Time& time);
 
+    bool has_image_subscribers() const;
+
+    void convert_to_depth_image_msg(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const Eigen::VectorXd& depth_image,
+        sensor_msgs::Image& image);
+
+    sensor_msgs::CameraInfoPtr create_camera_info(
+        const std::shared_ptr<dbot::CameraData>& camera_data,
+        const ros::Time& time);
+
 protected:
     sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
@@ -92,5 +113,10 @@ protected:
     std::string target_frame_id_;
     std::string root_frame_id_;
     std::vector<std::string> joint_names_;
+
+
+
+    ros::Publisher pub_camera_info_;
+    image_transport::Publisher pub_depth_image_;
 };
 }

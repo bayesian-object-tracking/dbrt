@@ -169,7 +169,7 @@ int main(int argc, char** argv)
     ros::AsyncSpinner spinner(4);
     spinner.start();
 
-    ros::Rate visualization_rate(100);
+    ros::Rate visualization_rate(24);
     while (ros::ok())
     {
         visualization_rate.sleep();
@@ -185,6 +185,8 @@ int main(int argc, char** argv)
             tracker_publisher->publish_tf(current_state,
                                           current_angle_measurement,
                                           ros::Time(current_time));
+            // tracker_publisher->publish_tf(current_state,
+            //                               ros::Time(current_time));
         }
 
         ros::spinOnce();

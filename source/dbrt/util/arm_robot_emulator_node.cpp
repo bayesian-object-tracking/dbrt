@@ -20,21 +20,18 @@
 #include <thread>
 #include <functional>
 
-#include <cv.h>
-#include <cv_bridge/cv_bridge.h>
-
 #include <ros/ros.h>
-//#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Image.h>
 
 #include <fl/util/profiling.hpp>
 
 #include <dbot/rigid_body_renderer.hpp>
 #include <dbot/virtual_camera_data_provider.hpp>
-#include <dbot_ros/tracker_publisher.h>
+
 #include <dbot_ros/util/ros_interface.hpp>
+
 #include <dbrt/robot_state.hpp>
-#include <dbrt/util/urdf_object_loader.hpp>
+#include <dbrt/urdf_object_loader.h>
 #include <dbrt/util/robot_emulator.hpp>
 
 class ArmRobotAnimator : public dbrt::RobotAnimator

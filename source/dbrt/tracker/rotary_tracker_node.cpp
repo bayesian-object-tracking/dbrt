@@ -65,13 +65,6 @@ int main(int argc, char** argv)
         ri::read<std::string>("rendering_root_right", nh),
         "NO_CAMERA_FRAME"));
 
-    auto object_model_loader = std::shared_ptr<dbot::ObjectModelLoader>(
-        new dbrt::UrdfObjectModelLoader(urdf_kinematics));
-
-    // Load the model usign the URDF loader
-    auto object_model =
-        std::make_shared<dbot::ObjectModel>(object_model_loader, false);
-
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
@@ -118,7 +111,7 @@ int main(int argc, char** argv)
             urdf_kinematics,
             "/estimated",
             "/estimated",
-            ri::read<std::string>("tf_connecting_frame", nh));
+            "/ORIG");
     /* ------------------------------ */
     /* - Run tracker                - */
     /* ------------------------------ */
@@ -136,7 +129,7 @@ int main(int argc, char** argv)
         /// \todo: THIS IS A HACK!! WE SHOULD PASS THE PROPER TIME WHICH
         /// CORRESPONDS TO THE MEASUREMENT
         std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!!!!"
+                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
                   << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_tf(current_state, time);

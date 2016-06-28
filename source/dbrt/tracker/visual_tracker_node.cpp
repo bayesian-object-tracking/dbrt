@@ -186,7 +186,7 @@ int main(int argc, char** argv)
         auto current_state = tracker_ros.current_state();
 
         std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!!!!"
+                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
                   << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_tf(current_state, time);
