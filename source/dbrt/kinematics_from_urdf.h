@@ -65,7 +65,8 @@ public:
             const std::string& robot_description_package_path,
             const std::string& rendering_root_left,
             const std::string& rendering_root_right,
-            const std::string& camera_frame_id);
+            const std::string& camera_frame_id,
+            const bool& use_camera_offset=false);
 
     ~KinematicsFromURDF();
 
@@ -81,24 +82,14 @@ public:
     // Get the orientation of the robot link with index idx
     Eigen::Quaternion<double> get_link_orientation( int idx);
 
-
     osr::PoseVector get_link_pose(int index);
 
-
-//    /// \todo: this function should not be in this class
-//    // Get initial samples around input joint state
-//    std::vector<Eigen::VectorXd> GetInitialSamples(const sensor_msgs::JointState &state,
-//                                                   int initial_sample_count,
-//                                                   float ratio_std = 0.1);
-
     /// \todo this function shoudl not be in this class
+    /// or at least it should be renamed
     // Convert Joint message to Eigen vector
     std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &angles);
 
     std::vector<int> GetJointOrder(const sensor_msgs::JointState& state);
-
-    // Get dependencies
-//    void GetDependencies(std::vector<std::vector<size_t> >& dependencies);
 
     // return the KDL kinematic tree
     KDL::Tree GetTree();
@@ -122,17 +113,15 @@ public:
     // compute the transformations for all the links in one go
 
 private:
+    void check_size(int size);
+
     void ComputeLinkTransforms();
 
     // compute the camera frame for the current joint angles
     void SetCameraTransform();
-
     
     // get the joint index in state array
     int GetJointIndex(const std::string &name);
-
-    // get a random pertubation of a joint within its limits
-    double GetRandomPertubation(int jnt_index, double jnt_angle, double ratio);
 
     ros::NodeHandle nh_;
     ros::NodeHandle nh_priv_;
@@ -171,9 +160,8 @@ private:
     // rendering roots for left and right arm to exclude occluding head meshes
     std::string rendering_root_left_, rendering_root_right_;
 
-    // whether to render only collision model or full mesh model
-//    bool collision_;
-
+    bool use_camera_offset_;
+    osr::PoseVector camera_offset_;
 };
 
 #endif

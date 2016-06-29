@@ -40,20 +40,16 @@ protected:
 template <typename State>
 RobotTrackerPublisher<State>::RobotTrackerPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::string& tf_prefix,
-    const std::string& data_prefix,
+    const std::string& prefix,
     const std::string& target_frame_id)
     : node_handle_("~"),
-      tf_prefix_(tf_prefix),
+      prefix_(prefix),
       target_frame_id_(target_frame_id),
       robot_state_publisher_(
           std::make_shared<robot_state_pub::RobotStatePublisher>(
               urdf_kinematics->GetTree())),
       transformer_(robot_state_publisher_)
 {
-    pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
-        data_prefix + "/joint_states", 0);
-
     // get the name of the root frame
     root_frame_id_ = urdf_kinematics->GetRootFrameID();
 
@@ -69,13 +65,16 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
         joint_state_.name.push_back(joint_names_[i]);
     }
 
-    pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
-        data_prefix + "/XTION/depth/camera_info", 0);
+    // joint angle publisher
+    pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
+        prefix_ + "/joint_states", 0);
 
+    // camera publisher
+    pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
+        prefix_ + "/XTION/depth/camera_info", 0);
     boost::shared_ptr<image_transport::ImageTransport> it(
         new image_transport::ImageTransport(node_handle_));
-
-    pub_depth_image_ = it->advertise(data_prefix + "/XTION/depth/image", 0);
+    pub_depth_image_ = it->advertise(prefix_ + "/XTION/depth/image", 0);
 }
 
 template <typename State>
@@ -95,68 +94,33 @@ void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::to_joint_map(
-    const JointsObsrv& joint_values,
-    std::map<std::string, double>& joint_map) const
-{
-    joint_map.clear();
-    for (std::size_t i = 0; i < joint_names_.size(); ++i)
-    {
-        joint_map[joint_names_[i]] = joint_values[i];
-    }
-}
-
-template <typename State>
 void RobotTrackerPublisher<State>::publish_tf(const State& state,
                                               const ros::Time& time)
 {
     publish_id_transform(
-        time, root_frame_id_, tf::resolve(tf_prefix_, root_frame_id_));
+        time, "/" + root_frame_id_, tf::resolve(prefix_, root_frame_id_));
     publish_tf_tree(state, time);
 }
 
 template <typename State>
-tf::StampedTransform RobotTrackerPublisher<State>::get_root_transform(
-    const std::map<std::string, double>& joint_map_1,
-    const std::map<std::string, double>& joint_map_2,
-    const std::string& connecting_frame,
+void RobotTrackerPublisher<State>::publish_tf(
+    const State& state,
+    const JointsObsrv& obsrv,
+    const std::string& obsrv_tf_prefix,
     const ros::Time& time)
-{
-    // Lookup transform from target to root of joint map 1
-    transformer_.set_joints(joint_map_1);
-    tf::StampedTransform transform_t_r;
-    transformer_.lookup_transform(
-        target_frame_id_, root_frame_id_, transform_t_r);
-
-    // Lookup transform from root to target of joint map 2
-    transformer_.set_joints(joint_map_2);
-    tf::StampedTransform transform_r_t;
-    transformer_.lookup_transform(
-        root_frame_id_, target_frame_id_, transform_r_t);
-
-    // Compose the two tf_transforms
-    tf::StampedTransform transform_r_r(transform_r_t * transform_t_r,
-                                       time,
-                                       root_frame_id_,
-                                       tf::resolve(tf_prefix_, root_frame_id_));
-
-    return transform_r_r;
-}
-
-template <typename State>
-void RobotTrackerPublisher<State>::publish_tf(const State& state,
-                                              const JointsObsrv& joints_obsrv,
-                                              const ros::Time& time)
 {
     std::map<std::string, double> state_joint_map;
     std::map<std::string, double> obsrv_joint_map;
     state.GetJointState(state_joint_map);
-    to_joint_map(joints_obsrv, obsrv_joint_map);
+    to_joint_map(obsrv, obsrv_joint_map);
 
     // get the transform between the estimated root and measured root both
     // linked at the specified target frame
-    tf::StampedTransform root_transform = get_root_transform(
-        state_joint_map, obsrv_joint_map, target_frame_id_, time);
+    tf::StampedTransform root_transform = get_root_transform(state_joint_map,
+                                                             obsrv_joint_map,
+                                                             obsrv_tf_prefix,
+                                                             target_frame_id_,
+                                                             time);
 
     static tf::TransformBroadcaster br;
     br.sendTransform(root_transform);
@@ -171,11 +135,10 @@ void RobotTrackerPublisher<State>::publish_tf_tree(const State& state,
     // publish movable joints
     std::map<std::string, double> joint_positions;
     state.GetJointState(joint_positions);
-    robot_state_publisher_->publishTransforms(
-        joint_positions, time, tf_prefix_);
+    robot_state_publisher_->publishTransforms(joint_positions, time, prefix_);
 
     // publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(tf_prefix_, time);
+    robot_state_publisher_->publishFixedTransforms(prefix_, time);
 }
 
 template <typename State>
@@ -183,12 +146,54 @@ void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
                                                         const std::string& from,
                                                         const std::string& to)
 {
-    if (from.compare(to) == 0) return;
+    if (from == to) return;
 
     static tf::TransformBroadcaster br;
     tf::Transform transform;
     transform.setIdentity();
     br.sendTransform(tf::StampedTransform(transform, time, from, to));
+}
+
+template <typename State>
+tf::StampedTransform RobotTrackerPublisher<State>::get_root_transform(
+    const std::map<std::string, double>& state_joint_map,
+    const std::map<std::string, double>& obsrv_joint_map,
+    const std::string& obsrv_tf_prefix,
+    const std::string& connecting_frame,
+    const ros::Time& time)
+{
+    // Lookup transform from target to root of joint map 1
+    transformer_.set_joints(state_joint_map);
+    tf::StampedTransform transform_t_r;
+    transformer_.lookup_transform(
+        target_frame_id_, root_frame_id_, transform_t_r);
+
+    // Lookup transform from root to target of joint map 2
+    transformer_.set_joints(obsrv_joint_map);
+    tf::StampedTransform transform_r_t;
+    transformer_.lookup_transform(
+        root_frame_id_, target_frame_id_, transform_r_t);
+
+    // Compose the two tf_transforms
+    tf::StampedTransform transform_r_r(
+        transform_r_t * transform_t_r,
+        time,
+        tf::resolve(obsrv_tf_prefix, root_frame_id_),
+        tf::resolve(prefix_, root_frame_id_));
+
+    return transform_r_r;
+}
+
+template <typename State>
+void RobotTrackerPublisher<State>::to_joint_map(
+    const JointsObsrv& joint_values,
+    std::map<std::string, double>& joint_map) const
+{
+    joint_map.clear();
+    for (std::size_t i = 0; i < joint_names_.size(); ++i)
+    {
+        joint_map[joint_names_[i]] = joint_values[i];
+    }
 }
 
 template <typename State>
@@ -224,7 +229,7 @@ void RobotTrackerPublisher<State>::publish_image(
         sensor_msgs::Image ros_image;
         convert_to_depth_image_msg(camera_data, depth_image, ros_image);
 
-        ros_image.header.frame_id = tf_prefix_ + camera_data->frame_id();
+        ros_image.header.frame_id = prefix_ + camera_data->frame_id();
         ros_image.header.stamp = time;
         pub_depth_image_.publish(ros_image);
     }

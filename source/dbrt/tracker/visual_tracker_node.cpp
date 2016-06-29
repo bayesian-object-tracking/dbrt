@@ -165,7 +165,6 @@ int main(int argc, char** argv)
             new dbrt::RobotTrackerPublisher<State>(
                 urdf_kinematics,
                 "/estimated",
-                "/estimated",
                 ri::read<std::string>("tf_connecting_frame", nh)));
 
     /* ------------------------------ */

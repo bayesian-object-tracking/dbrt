@@ -110,8 +110,7 @@ int main(int argc, char** argv)
         std::make_shared<dbrt::RobotTrackerPublisher<dbrt::RobotState<>>>(
             urdf_kinematics,
             "/estimated",
-            "/estimated",
-            "/ORIG");
+            "Base");
     /* ------------------------------ */
     /* - Run tracker                - */
     /* ------------------------------ */

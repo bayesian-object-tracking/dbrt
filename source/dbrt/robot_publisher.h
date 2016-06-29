@@ -50,13 +50,13 @@ class RobotTrackerPublisher
 public:
     RobotTrackerPublisher(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::string& tf_prefix,
-        const std::string& data_prefix,
+        const std::string& prefix,
         const std::string& target_frame_id);
 
     void publish_tf(const State& state, const ros::Time& time);
     void publish_tf(const State& state,
                     const JointsObsrv& obsrv,
+                    const std::string& obsrv_tf_prefix,
                     const ros::Time& time);
 
     void publish_joint_state(const State& state, const ros::Time time);
@@ -82,8 +82,9 @@ protected:
                               const std::string& from,
                               const std::string& to);
     tf::StampedTransform get_root_transform(
-        const std::map<std::string, double>& joint_map_1,
-        const std::map<std::string, double>& joint_map_2,
+        const std::map<std::string, double>& state_joint_map,
+        const std::map<std::string, double>& obsrv_joint_map,
+        const std::string& obsrv_tf_prefix,
         const std::string& connecting_frame,
         const ros::Time& time);
 
@@ -101,7 +102,7 @@ protected:
 protected:
     sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
-    std::string tf_prefix_;
+    std::string prefix_;
     std::shared_ptr<robot_state_pub::RobotStatePublisher>
         robot_state_publisher_;
     ros::Publisher pub_joint_state_;

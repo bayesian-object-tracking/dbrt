@@ -81,7 +81,7 @@ public:
           paused_(false)
     {
         robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
-        urdf_kinematics_, "", "", "/blabla");
+            urdf_kinematics_, "", "");
     }
 
     void run()
@@ -93,21 +93,9 @@ public:
             std::thread(&RobotEmulator::run_visual_sensors, this);
     }
 
-    void pause()
-    {
-        paused_ = true;
-    }
-
-    void resume()
-    {
-        paused_ = false;
-    }
-
-    void toggle_pause()
-    {
-        paused_ = !paused_;
-    }
-
+    void pause() { paused_ = true; }
+    void resume() { paused_ = false; }
+    void toggle_pause() { paused_ = !paused_; }
     void shutdown()
     {
         running_ = false;
@@ -120,8 +108,8 @@ public:
         const double rate = joint_sensors_rate_;
         ros::Rate joint_rate(rate);
         while (ros::ok() && running_)
-        {            
-            while(ros::ok() && paused_)
+        {
+            while (ros::ok() && paused_)
             {
                 usleep(1000);
             }
@@ -141,7 +129,7 @@ public:
         ros::Rate image_rate(visual_sensor_rate_);
         while (running_)
         {
-            while(ros::ok() && paused_)
+            while (ros::ok() && paused_)
             {
                 usleep(1000);
             }
@@ -156,9 +144,8 @@ public:
             double timestamp = acquisition_time + image_timestamp_delay_;
 
             Eigen::VectorXd depth_image;
-            renderer_->Render(state,
-                              depth_image,
-                              std::numeric_limits<double>::quiet_NaN());
+            renderer_->Render(
+                state, depth_image, std::numeric_limits<double>::quiet_NaN());
 
             auto end = std::chrono::system_clock::now();
             auto elapsed_time =
@@ -166,8 +153,7 @@ public:
 
             // publish in parallel
             std::thread(
-                [
-                 state,
+                [state,
                  timestamp,
                  elapsed_time,
                  depth_image,
@@ -179,8 +165,8 @@ public:
                     double remaining_delay =
                         std::max(image_publishing_delay_ - elapsed_time, 0.0);
 
-                    ROS_INFO_STREAM("Visual simulation computation delay " <<
-                                    elapsed_time);
+                    ROS_INFO_STREAM("Visual simulation computation delay "
+                                    << elapsed_time);
 
                     std::this_thread::sleep_for(
                         std::chrono::duration<double>(remaining_delay));
@@ -189,8 +175,8 @@ public:
                         publisher_mutex_);
                     robot_publisher_->publish_camera_info(camera_data_,
                                                           ros::Time(timestamp));
-                    robot_publisher_->publish_image(depth_image, camera_data_,
-                                                   ros::Time(timestamp));
+                    robot_publisher_->publish_image(
+                        depth_image, camera_data_, ros::Time(timestamp));
 
                 })
                 .detach();
@@ -210,23 +196,22 @@ public:
         return state_;
     }
 
-//    const sensor_msgs::Image& observation()
-//    {
-//        std::lock_guard<std::mutex> image_lock(image_mutex_);
-//        return obsrv_image_;
-//    }
+    //    const sensor_msgs::Image& observation()
+    //    {
+    //        std::lock_guard<std::mutex> image_lock(image_mutex_);
+    //        return obsrv_image_;
+    //    }
 
-//    const Eigen::VectorXd& observation_vector()
-//    {
-//        std::lock_guard<std::mutex> image_lock(image_mutex_);
-//        return obsrv_vector_;
-//    }
+    //    const Eigen::VectorXd& observation_vector()
+    //    {
+    //        std::lock_guard<std::mutex> image_lock(image_mutex_);
+    //        return obsrv_vector_;
+    //    }
 
 private:
-
     double time_;
     Eigen::VectorXd state_;
-//    Eigen::VectorXd obsrv_vector_;
+    //    Eigen::VectorXd obsrv_vector_;
     sensor_msgs::Image obsrv_image_;
     std::shared_ptr<dbot::ObjectModel> object_model_;
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics_;
@@ -242,7 +227,7 @@ private:
 
     bool running_;
     mutable std::mutex state_mutex_;
-//    mutable std::mutex image_mutex_;
+    //    mutable std::mutex image_mutex_;
     mutable std::mutex publisher_mutex_;
     std::thread joint_sensor_thread_;
     std::thread visual_sensor_thread_;

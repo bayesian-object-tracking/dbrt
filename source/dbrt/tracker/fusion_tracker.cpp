@@ -108,6 +108,7 @@ void FusionTracker::run_rotary_tracker()
 
 void FusionTracker::run_visual_tracker()
 {
+
     std::shared_ptr<VisualTracker> rbc_particle_filter_tracker =
         visual_tracker_factory_();
 
@@ -158,11 +159,12 @@ void FusionTracker::run_visual_tracker()
 
         // #2
         belief_index = find_belief_entry(joints_obsrv_belief_buffer_local,
-                                         ros_image_.header.stamp.toSec()
-                                         + camera_delay_,
+                                         ros_image_.header.stamp.toSec(),
                                          belief_entry);
         if (belief_index < 0)
         {
+            std::cout << "belief_index < 0: " << belief_index << std::endl;
+
             std::lock_guard<std::mutex> belief_buffer_lock(
                 joints_obsrv_belief_buffer_mutex_);
             while (joints_obsrv_belief_buffer_local.size() > 0)
@@ -173,6 +175,15 @@ void FusionTracker::run_visual_tracker()
             }
             continue;
         }
+
+
+        // // just some print -----------------------------------------------------
+        // static ros::Time last_image_stamp;
+        // ros::Duration delta = ros_image_.header.stamp - last_image_stamp;
+        // last_image_stamp = ros_image_.header.stamp;
+        // std::cout << "time difference between processed images: " << delta <<
+        //              std::endl;
+        // // ---------------------------------------------------------------------
 
         // #3
         auto mean = get_state_from_belief(belief_entry);
@@ -186,6 +197,10 @@ void FusionTracker::run_visual_tracker()
             rbc_particle_filter_tracker->filter()->process_model());
 
         // #5
+//        std::cout << "setting covariance sqrt " << std::endl
+//                     << cov_sqrt << std::endl;
+
+
         process_model->noise_matrix(cov_sqrt);
 
         // #6
@@ -261,9 +276,9 @@ void FusionTracker::run_visual_tracker()
 
             prev = entry;
         }
-        MEASURE("Visual tracker");
-
+        MEASURE("total time for visual processing");
     }
+
 }
 
 int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
@@ -271,12 +286,12 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
                                      JointsBeliefEntry& belief_entry)
 {
     int index = 0;
-    double min = 1e9;
-    double max = -1e9;
+    double min = std::numeric_limits<double>::max();
+    double max = std::numeric_limits<double>::min();
     for (const auto entry : queue)
     {
-        min = std::min(min, entry.joints_obsrv_entry.timestamp - timestamp);
-        max = std::max(max, entry.joints_obsrv_entry.timestamp - timestamp);
+        min = std::min(min, entry.joints_obsrv_entry.timestamp);
+        max = std::max(max, entry.joints_obsrv_entry.timestamp);
 
         if (entry.joints_obsrv_entry.timestamp > timestamp)
         {
@@ -285,6 +300,13 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
         }
         index++;
     }
+
+    std::cout.precision(20);
+
+    std::cout << "could not find a matching belief for time stamp "
+                 << timestamp << std::endl;
+    std::cout << "latest belief: " << max << std::endl;
+    std::cout << "oldest belief: " << min << std::endl;
 
     return -1;
 }
@@ -382,16 +404,35 @@ void FusionTracker::joints_obsrv_callback(
 {
     std::lock_guard<std::mutex> lock(joints_obsrv_buffer_mutex_);
 
+    /// hack: we add a measurement = 0 for the six extra joints corresponding
+    /// to the camera offset ***************************************************
+    sensor_msgs::JointState joint_state_with_offset = joint_msg;
+
+    joint_state_with_offset.name.push_back("XTION_X");
+    joint_state_with_offset.name.push_back("XTION_Y");
+    joint_state_with_offset.name.push_back("XTION_Z");
+    joint_state_with_offset.name.push_back("XTION_ROLL");
+    joint_state_with_offset.name.push_back("XTION_PITCH");
+    joint_state_with_offset.name.push_back("XTION_YAW");
+
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    /// ************************************************************************
+
     const auto joint_order = gaussian_joint_tracker_->joint_order();
 
-    Eigen::VectorXd obsrv(joint_msg.position.size());
-    for (int i = 0; i < joint_msg.position.size(); ++i)
+    Eigen::VectorXd obsrv(joint_state_with_offset.position.size());
+    for (int i = 0; i < joint_state_with_offset.position.size(); ++i)
     {
-        obsrv[joint_order[i]] = joint_msg.position[i];
+        obsrv[joint_order[i]] = joint_state_with_offset.position[i];
     }
 
     JointsObsrvEntry entry;
-    entry.timestamp = joint_msg.header.stamp.toSec();
+    entry.timestamp = joint_state_with_offset.header.stamp.toSec();
     entry.obsrv = obsrv;
     joints_obsrvs_buffer_.push_back(entry);
 
@@ -408,6 +449,8 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 
     ros_image_updated_ = true;
     ros_image_ = ros_image;
+    ros_image_.header.stamp.fromSec(
+                ros_image_.header.stamp.toSec() - camera_delay_);
 }
 
 }
