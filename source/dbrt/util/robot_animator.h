@@ -1,3 +1,4 @@
+/* /\* */
 /*
  * This is part of the Bayesian Object Tracking (bot),
  * (https://github.com/bayesian-object-tracking)
@@ -12,19 +13,24 @@
  */
 
 /**
- * \file robot_tracker_publisher.cpp
+ * \file robot_animator.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/robot_state.hpp>
-#include <dbrt/robot_publisher.h>
-#include <dbrt/robot_publisher.hpp>
+#pragma once
+
+#include <Eigen/Dense>
 
 namespace dbrt
 {
-template class RobotPublisher<RobotState<>>;
-
-
+class RobotAnimator
+{
+public:
+    virtual void animate(const Eigen::VectorXd& current,
+                         double dt,
+                         double dilation,
+                         Eigen::VectorXd& next) = 0;
+};
 
 }

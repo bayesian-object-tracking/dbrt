@@ -161,8 +161,8 @@ int main(int argc, char** argv)
     /* - Tracker publisher          - */
     /* ------------------------------ */
     auto tracker_publisher =
-        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-            new dbrt::RobotTrackerPublisher<State>(
+        std::shared_ptr<dbrt::RobotPublisher<State>>(
+            new dbrt::RobotPublisher<State>(
                 urdf_kinematics,
                 "/estimated",
                 ri::read<std::string>("tf_connecting_frame", nh)));

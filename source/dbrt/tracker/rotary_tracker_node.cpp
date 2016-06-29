@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     /* - tracker publisher          - */
     /* ------------------------------ */
     auto tracker_publisher =
-        std::make_shared<dbrt::RobotTrackerPublisher<dbrt::RobotState<>>>(
+        std::make_shared<dbrt::RobotPublisher<dbrt::RobotState<>>>(
             urdf_kinematics,
             "/estimated",
             "Base");

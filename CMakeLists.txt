@@ -171,9 +171,9 @@ target_link_libraries(fusion_tracker
      ${PCL_LIBRARIES}
      yaml-cpp)
 
-add_executable(arm_robot_emulator
-     source/${PROJECT_NAME}/util/arm_robot_emulator_node.cpp)
-target_link_libraries(arm_robot_emulator
+add_executable(robot_emulator
+     source/${PROJECT_NAME}/util/robot_emulator_node.cpp)
+target_link_libraries(robot_emulator
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}

@@ -45,10 +45,10 @@ typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> JointsObsrv;
  * estimated state and its marker.
  */
 template <typename State>
-class RobotTrackerPublisher
+class RobotPublisher
 {
 public:
-    RobotTrackerPublisher(
+    RobotPublisher(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
         const std::string& prefix,
         const std::string& target_frame_id);

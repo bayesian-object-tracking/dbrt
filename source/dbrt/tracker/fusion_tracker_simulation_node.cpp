@@ -168,7 +168,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
         auto tracker_publisher =
         std::shared_ptr<dbot::TrackerPublisher<State>>(
-            new dbrt::RobotTrackerPublisher<State>(
+            new dbrt::RobotPublisher<State>(
                 urdf_kinematics, renderer, "/estimated"));
 
     /* ------------------------------ */
@@ -236,7 +236,7 @@ int main(int argc, char** argv)
     /* - Tracker publisher          - */
     /* ------------------------------ */
 //    auto tracker_publisher = std::shared_ptr<dbot::TrackerPublisher<State>>(
-//        new dbrt::RobotTrackerPublisher<State>(
+//        new dbrt::RobotPublisher<State>(
 //            urdf_kinematics, renderer, "/estimated"));
 
     /* ------------------------------ */

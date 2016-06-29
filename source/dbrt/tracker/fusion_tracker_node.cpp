@@ -187,8 +187,8 @@ int main(int argc, char** argv)
     auto tf_connecting_frame = ri::read<std::string>("tf_connecting_frame", nh);
 
     auto tracker_publisher =
-        std::shared_ptr<dbrt::RobotTrackerPublisher<State>>(
-            new dbrt::RobotTrackerPublisher<State>(urdf_kinematics,
+        std::shared_ptr<dbrt::RobotPublisher<State>>(
+            new dbrt::RobotPublisher<State>(urdf_kinematics,
                                                    "/estimated",
                                                    tf_connecting_frame));
 

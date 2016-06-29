@@ -11,7 +11,7 @@
  */
 
 /**
- * \file arm_robot_emulator_node.cpp
+ * \file robot_emulator_node.cpp
  * \date March 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -34,10 +34,10 @@
 #include <dbrt/urdf_object_loader.h>
 #include <dbrt/util/robot_emulator.hpp>
 
-class ArmRobotAnimator : public dbrt::RobotAnimator
+class RobotAnimator : public dbrt::RobotAnimator
 {
 public:
-    ArmRobotAnimator() : t_(0.) {}
+    RobotAnimator() : t_(0.) {}
     virtual void animate(const Eigen::VectorXd& current,
                          double dt,
                          double dilation,
@@ -70,11 +70,11 @@ protected:
  */
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "arm_robot_emulator");
+    ros::init(argc, argv, "robot_emulator");
     ros::NodeHandle nh("~");
 
     // parameter shorthand prefix
-    std::string prefix = "arm_robot_emulator/";
+    std::string prefix = "robot_emulator/";
 
 
     /* ------------------------------ */
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     ROS_INFO("Creating robot emulator... ");
 
     auto robot_animator =
-        std::shared_ptr<dbrt::RobotAnimator>(new ArmRobotAnimator());
+        std::shared_ptr<dbrt::RobotAnimator>(new RobotAnimator());
 
     auto joints = ri::read<std::vector<double>>(prefix + "initial_state", nh);
 

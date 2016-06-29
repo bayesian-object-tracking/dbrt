@@ -38,7 +38,7 @@ protected:
 };
 
 template <typename State>
-RobotTrackerPublisher<State>::RobotTrackerPublisher(
+RobotPublisher<State>::RobotPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
     const std::string& prefix,
     const std::string& target_frame_id)
@@ -78,7 +78,7 @@ RobotTrackerPublisher<State>::RobotTrackerPublisher(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
+void RobotPublisher<State>::publish_joint_state(const State& state,
                                                        const ros::Time time)
 {
     ROS_FATAL_COND(joint_state_.position.size() != state.size(),
@@ -94,7 +94,7 @@ void RobotTrackerPublisher<State>::publish_joint_state(const State& state,
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_tf(const State& state,
+void RobotPublisher<State>::publish_tf(const State& state,
                                               const ros::Time& time)
 {
     publish_id_transform(
@@ -103,7 +103,7 @@ void RobotTrackerPublisher<State>::publish_tf(const State& state,
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_tf(
+void RobotPublisher<State>::publish_tf(
     const State& state,
     const JointsObsrv& obsrv,
     const std::string& obsrv_tf_prefix,
@@ -129,7 +129,7 @@ void RobotTrackerPublisher<State>::publish_tf(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_tf_tree(const State& state,
+void RobotPublisher<State>::publish_tf_tree(const State& state,
                                                    const ros::Time& time)
 {
     // publish movable joints
@@ -142,7 +142,7 @@ void RobotTrackerPublisher<State>::publish_tf_tree(const State& state,
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
+void RobotPublisher<State>::publish_id_transform(const ros::Time& time,
                                                         const std::string& from,
                                                         const std::string& to)
 {
@@ -155,7 +155,7 @@ void RobotTrackerPublisher<State>::publish_id_transform(const ros::Time& time,
 }
 
 template <typename State>
-tf::StampedTransform RobotTrackerPublisher<State>::get_root_transform(
+tf::StampedTransform RobotPublisher<State>::get_root_transform(
     const std::map<std::string, double>& state_joint_map,
     const std::map<std::string, double>& obsrv_joint_map,
     const std::string& obsrv_tf_prefix,
@@ -185,7 +185,7 @@ tf::StampedTransform RobotTrackerPublisher<State>::get_root_transform(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::to_joint_map(
+void RobotPublisher<State>::to_joint_map(
     const JointsObsrv& joint_values,
     std::map<std::string, double>& joint_map) const
 {
@@ -197,7 +197,7 @@ void RobotTrackerPublisher<State>::to_joint_map(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
+void RobotPublisher<State>::convert_to_depth_image_msg(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const Eigen::VectorXd& depth_image,
     sensor_msgs::Image& image)
@@ -213,13 +213,13 @@ void RobotTrackerPublisher<State>::convert_to_depth_image_msg(
 }
 
 template <typename State>
-bool RobotTrackerPublisher<State>::has_image_subscribers() const
+bool RobotPublisher<State>::has_image_subscribers() const
 {
     return pub_depth_image_.getNumSubscribers() > 0;
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_image(
+void RobotPublisher<State>::publish_image(
     const Eigen::VectorXd& depth_image,
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
@@ -236,7 +236,7 @@ void RobotTrackerPublisher<State>::publish_image(
 }
 
 template <typename State>
-void RobotTrackerPublisher<State>::publish_camera_info(
+void RobotPublisher<State>::publish_camera_info(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
 {
@@ -245,7 +245,7 @@ void RobotTrackerPublisher<State>::publish_camera_info(
 }
 
 template <typename State>
-sensor_msgs::CameraInfoPtr RobotTrackerPublisher<State>::create_camera_info(
+sensor_msgs::CameraInfoPtr RobotPublisher<State>::create_camera_info(
     const std::shared_ptr<dbot::CameraData>& camera_data,
     const ros::Time& time)
 {

@@ -36,17 +36,10 @@
 
 #include <dbrt/robot_publisher.h>
 #include <dbrt/kinematics_from_urdf.h>
+#include <dbrt/util/robot_animator.h>
 
 namespace dbrt
 {
-class RobotAnimator
-{
-public:
-    virtual void animate(const Eigen::VectorXd& current,
-                         double dt,
-                         double dilation,
-                         Eigen::VectorXd& next) = 0;
-};
 
 template <typename State>
 class RobotEmulator
@@ -80,7 +73,7 @@ public:
           image_timestamp_delay_(image_timestamp_delay),
           paused_(false)
     {
-        robot_publisher_ = std::make_shared<RobotTrackerPublisher<State>>(
+        robot_publisher_ = std::make_shared<RobotPublisher<State>>(
             urdf_kinematics_, "", "");
     }
 
@@ -218,7 +211,7 @@ private:
     std::shared_ptr<dbot::RigidBodyRenderer> renderer_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<RobotAnimator> robot_animator_;
-    std::shared_ptr<RobotTrackerPublisher<State>> robot_publisher_;
+    std::shared_ptr<RobotPublisher<State>> robot_publisher_;
     double joint_sensors_rate_;
     double visual_sensor_rate_;
     double dilation_;
