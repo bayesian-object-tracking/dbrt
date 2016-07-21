@@ -191,7 +191,7 @@ void FusionTracker::run_visual_tracker()
 
         // #4
         auto process_model = std::static_pointer_cast<
-            fl::LinearStateTransitionModel<VisualTracker::State,
+            fl::LinearTransition<VisualTracker::State,
                                            VisualTracker::Noise,
                                            VisualTracker::Input>>(
             rbc_particle_filter_tracker->filter()->process_model());

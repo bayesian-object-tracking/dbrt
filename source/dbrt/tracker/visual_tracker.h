@@ -48,11 +48,11 @@ namespace dbrt
 class VisualTracker : public RobotTracker
 {
 public:
-    typedef fl::StateTransitionFunction<State, Noise, Input> StateTransition;
-    typedef dbot::RbObservationModel<State> ObservationModel;
+    typedef fl::TransitionFunction<State, Noise, Input> Transition;
+    typedef dbot::RbSensor<State> Sensor;
 
-    typedef dbot::RaoBlackwellCoordinateParticleFilter<StateTransition,
-                                                       ObservationModel> Filter;
+    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition,
+                                                       Sensor> Filter;
 
 public:
     /**

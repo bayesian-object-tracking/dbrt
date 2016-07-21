@@ -47,7 +47,7 @@ public:
 
     typedef typename Tracker::JointState State;
     typedef typename Tracker::JointObsrv Obsrv;
-    typedef typename Tracker::JointObsrvModel Model;
+    typedef typename Tracker::JointSensor Model;
 
     struct Parameters
     {

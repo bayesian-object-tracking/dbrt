@@ -74,7 +74,7 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     /* ------------------------------ */
     /* - Observation model          - */
     /* ------------------------------ */
-    dbot::RbObservationModelBuilder<State>::Parameters sensor_parameters;
+    dbot::RbSensorBuilder<State>::Parameters sensor_parameters;
 
     sensor_parameters.use_gpu = ri::read<bool>(prefix + "use_gpu", nh);
 
@@ -116,7 +116,7 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
         ri::read<std::string>(prefix + "gpu/geometry_shader_file", nh);
 
     auto sensor_builder =
-        std::make_shared<dbot::RbObservationModelBuilder<State>>(
+        std::make_shared<dbot::RbSensorBuilder<State>>(
             object_model, camera_data, sensor_parameters);
 
     /* ------------------------------ */

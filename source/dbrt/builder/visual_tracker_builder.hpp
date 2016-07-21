@@ -54,17 +54,17 @@ public:
 
     /* == Model Builder Interfaces ========================================== */
     typedef dbrt::TransitionBuilder<Tracker>
-        StateTransitionBuilder;
-    typedef dbot::RbObservationModelBuilder<State> ObservationModelBuilder;
+        TransitionBuilder;
+    typedef dbot::RbSensorBuilder<State> SensorBuilder;
 
     /* == Model Interfaces ================================================== */
-    typedef fl::StateTransitionFunction<State, Noise, Input> StateTransition;
-    typedef dbot::RbObservationModel<State> ObservationModel;
-    typedef typename ObservationModel::Observation Obsrv;
+    typedef fl::TransitionFunction<State, Noise, Input> Transition;
+    typedef dbot::RbSensor<State> Sensor;
+    typedef typename Sensor::Observation Obsrv;
 
     /* == Filter algorithm ================================================== */
-    typedef dbot::RaoBlackwellCoordinateParticleFilter<StateTransition,
-                                                       ObservationModel> Filter;
+    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition,
+                                                       Sensor> Filter;
 
     /* == Tracker parameters ================================================ */
     struct Parameters
@@ -78,8 +78,8 @@ public:
 public:
     VisualTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<StateTransitionBuilder>& state_transition_builder,
-        const std::shared_ptr<ObservationModelBuilder>& obsrv_model_builder,
+        const std::shared_ptr<TransitionBuilder>& state_transition_builder,
+        const std::shared_ptr<SensorBuilder>& obsrv_model_builder,
         const std::shared_ptr<dbot::ObjectModel>& object_model,
         const std::shared_ptr<dbot::CameraData>& camera_data,
         const Parameters& params)
@@ -166,8 +166,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<StateTransitionBuilder> state_transition_builder_;
-    std::shared_ptr<ObservationModelBuilder> obsrv_model_builder_;
+    std::shared_ptr<TransitionBuilder> state_transition_builder_;
+    std::shared_ptr<SensorBuilder> obsrv_model_builder_;
     std::shared_ptr<dbot::ObjectModel> object_model_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     Parameters params_;

@@ -36,5 +36,5 @@
 
 namespace dbot
 {
-template class RbObservationModelBuilder<dbrt::RobotState<>>;
+template class RbSensorBuilder<dbrt::RobotState<>>;
 }

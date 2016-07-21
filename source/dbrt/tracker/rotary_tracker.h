@@ -52,15 +52,15 @@ public:
     typedef Eigen::Matrix<fl::Real, JointInputDim, 1> JointInput;
 
     // Linear state transition function
-    typedef fl::LinearStateTransitionModel<JointState, JointNoise, JointInput>
+    typedef fl::LinearTransition<JointState, JointNoise, JointInput>
         JointStateModel;
 
     // Linear observation function
-    typedef fl::LinearGaussianObservationModel<JointObsrv, JointState>
-        JointObsrvModel;
+    typedef fl::LinearGaussianSensor<JointObsrv, JointState>
+        JointSensor;
 
     // Kalman filter for a single joint
-    typedef fl::GaussianFilter<JointStateModel, JointObsrvModel> JointFilter;
+    typedef fl::GaussianFilter<JointStateModel, JointSensor> JointFilter;
 
     // Belief representation of a single joint, i.e. a Gaussian
     typedef typename JointFilter::Belief JointBelief;

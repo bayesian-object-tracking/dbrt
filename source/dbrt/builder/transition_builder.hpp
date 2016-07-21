@@ -67,7 +67,7 @@ public:
     typedef typename Tracker::Noise Noise;
     typedef typename Tracker::Input Input;
 
-    typedef fl::LinearStateTransitionModel<State, Noise, Input> Model;
+    typedef fl::LinearTransition<State, Noise, Input> Model;
 
     struct Parameters
     {
