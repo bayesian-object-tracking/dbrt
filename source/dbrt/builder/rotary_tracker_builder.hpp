@@ -73,11 +73,11 @@ public:
 
         for (int i = 0; i < joint_count_; ++i)
         {
-            auto state_transition_model =
+            auto transition =
                 this->transition_builder_->build(i);
-            auto obsrv_model = this->sensor_builder_->build(i);
+            auto sensor = this->sensor_builder_->build(i);
 
-            auto filter = JointFilter(*state_transition_model, *obsrv_model);
+            auto filter = JointFilter(*transition, *sensor);
 
             joint_filters->push_back(filter);
         }

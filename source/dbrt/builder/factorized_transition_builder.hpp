@@ -23,11 +23,11 @@
 
 #include <fl/util/profiling.hpp>
 #include <fl/util/meta.hpp>
-#include <fl/model/process/linear_state_transition_model.hpp>
+#include <fl/model/transition/linear_transition.hpp>
 
 #include <Eigen/Dense>
 
-#include <dbot/builder/state_transition_function_builder.hpp>
+#include <dbot/builder/transition_function_builder.hpp>
 
 #include <dbrt/builder/exceptions.hpp>
 #include <dbrt/builder/exceptions.hpp>

@@ -23,15 +23,15 @@
  */
 
 /**
- * \file robot_rb_observation_model_builder.cpp
+ * \file robot_rb_sensor_builder.cpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #include <dbrt/robot_state.hpp>
 
-#include <dbot/builder/rb_observation_model_builder.h>
-#include <dbot/builder/rb_observation_model_builder.hpp>
+#include <dbot/builder/rb_sensor_builder.h>
+#include <dbot/builder/rb_sensor_builder.hpp>
 
 
 namespace dbot

@@ -78,13 +78,13 @@ public:
 public:
     VisualTrackerBuilder(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::shared_ptr<TransitionBuilder>& state_transition_builder,
-        const std::shared_ptr<SensorBuilder>& obsrv_model_builder,
+        const std::shared_ptr<TransitionBuilder>& transition_builder,
+        const std::shared_ptr<SensorBuilder>& sensor_builder,
         const std::shared_ptr<dbot::ObjectModel>& object_model,
         const std::shared_ptr<dbot::CameraData>& camera_data,
         const Parameters& params)
-        : state_transition_builder_(state_transition_builder),
-          obsrv_model_builder_(obsrv_model_builder),
+        : transition_builder_(transition_builder),
+          sensor_builder_(sensor_builder),
           object_model_(object_model),
           camera_data_(camera_data),
           params_(params),
@@ -119,11 +119,11 @@ public:
             throw InvalidNumberOfSamplingBlocksException();
         }
 
-        auto state_transition_model = this->state_transition_builder_->build();
-        auto obsrv_model = this->obsrv_model_builder_->build();
+        auto transition = this->transition_builder_->build();
+        auto sensor = this->sensor_builder_->build();
 
-        auto filter = std::make_shared<Filter>(state_transition_model,
-                                               obsrv_model,
+        auto filter = std::make_shared<Filter>(transition,
+                                               sensor,
                                                params_.sampling_blocks,
                                                max_kl_divergence);
         return filter;
@@ -166,8 +166,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<TransitionBuilder> state_transition_builder_;
-    std::shared_ptr<SensorBuilder> obsrv_model_builder_;
+    std::shared_ptr<TransitionBuilder> transition_builder_;
+    std::shared_ptr<SensorBuilder> sensor_builder_;
     std::shared_ptr<dbot::ObjectModel> object_model_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     Parameters params_;

@@ -132,7 +132,7 @@ set(sources
     source/${PROJECT_NAME}/tracker/rotary_tracker.cpp
     source/${PROJECT_NAME}/tracker/rotary_tracker_factory.cpp
     source/${PROJECT_NAME}/tracker/visual_tracker_factory.cpp
-    source/${PROJECT_NAME}/builder/robot_rb_observation_model_builder.cpp)
+    source/${PROJECT_NAME}/builder/robot_rb_sensor_builder.cpp)
 
 
 add_library(${PROJECT_NAME} ${dbot_headers}

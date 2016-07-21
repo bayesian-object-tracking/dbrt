@@ -12,7 +12,7 @@
  */
 
 /**
- * \file robot_joint_observation_model_builder.hpp
+ * \file robot_joint_sensor_builder.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -23,11 +23,11 @@
 
 #include <fl/util/profiling.hpp>
 #include <fl/util/meta.hpp>
-#include <fl/model/observation/linear_gaussian_observation_model.hpp>
+#include <fl/model/sensor/linear_gaussian_sensor.hpp>
 
 #include <Eigen/Dense>
 
-#include <dbot/builder/state_transition_function_builder.hpp>
+#include <dbot/builder/transition_function_builder.hpp>
 
 #include <dbrt/builder/exceptions.hpp>
 #include <dbrt/builder/exceptions.hpp>

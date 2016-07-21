@@ -34,7 +34,7 @@
 
 #include <image_transport/image_transport.h>
 
-#include <fl/model/process/interface/state_transition_function.hpp>
+#include <fl/model/transition/interface/transition_function.hpp>
 
 #include <dbot/filter/rao_blackwell_coordinate_particle_filter.hpp>
 

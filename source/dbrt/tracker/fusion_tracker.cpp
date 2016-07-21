@@ -190,18 +190,18 @@ void FusionTracker::run_visual_tracker()
         auto cov_sqrt = get_covariance_sqrt_from_belief(belief_entry);
 
         // #4
-        auto process_model = std::static_pointer_cast<
+        auto transition = std::static_pointer_cast<
             fl::LinearTransition<VisualTracker::State,
                                            VisualTracker::Noise,
                                            VisualTracker::Input>>(
-            rbc_particle_filter_tracker->filter()->process_model());
+            rbc_particle_filter_tracker->filter()->transition());
 
         // #5
 //        std::cout << "setting covariance sqrt " << std::endl
 //                     << cov_sqrt << std::endl;
 
 
-        process_model->noise_matrix(cov_sqrt);
+        transition->noise_matrix(cov_sqrt);
 
         // #6
         rbc_particle_filter_tracker->initialize({mean});

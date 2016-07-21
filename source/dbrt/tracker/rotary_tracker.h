@@ -24,9 +24,9 @@
 #include <sensor_msgs/JointState.h>
 
 #include <fl/filter/gaussian/gaussian_filter_linear.hpp>
-#include <fl/model/observation/linear_gaussian_observation_model.hpp>
-#include <fl/model/process/linear_state_transition_model.hpp>
-#include <fl/model/process/interface/state_transition_function.hpp>
+#include <fl/model/sensor/linear_gaussian_sensor.hpp>
+#include <fl/model/transition/linear_transition.hpp>
+#include <fl/model/transition/interface/transition_function.hpp>
 #include <dbrt/tracker/robot_tracker.h>
 
 namespace dbrt
