@@ -48,6 +48,7 @@
 #include <dbrt/tracker/visual_tracker.h>
 
 #include <dbrt/tracker/rotary_tracker_factory.h>
+#include <dbrt/util/kinematics_factory.h>
 
 int main(int argc, char** argv)
 {
@@ -58,17 +59,12 @@ int main(int argc, char** argv)
     /* - Create the robot model     - */
     /* ------------------------------ */
     // initialize the kinematics
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(new KinematicsFromURDF(
-        ri::read<std::string>("robot_description", ros::NodeHandle()),
-        ri::read<std::string>("robot_description_package_path", nh),
-        ri::read<std::string>("rendering_root_left", nh),
-        ri::read<std::string>("rendering_root_right", nh),
-        "NO_CAMERA_FRAME"));
+    auto kinematics = dbrt::create_kinematics(nh, "NO_CAMERA_FRAME");
 
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
-    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    dbrt::RobotState<>::kinematics_ = kinematics;
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
 
     // parameter shorthand prefix
@@ -91,14 +87,14 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     auto tracker = dbrt::create_rotary_tracker(
         pre,
-        urdf_kinematics->num_joints(),
-        urdf_kinematics->GetJointOrder(*joint_state));
+        kinematics->num_joints(),
+        kinematics->GetJointOrder(*joint_state));
 
     /* ------------------------------ */
     /* - Initialize tracker         - */
     /* ------------------------------ */
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        urdf_kinematics->GetInitialJoints(*joint_state);
+        kinematics->GetInitialJoints(*joint_state);
     std::vector<dbrt::RobotState<>> initial_states;
     for (auto state : initial_states_vectors) initial_states.push_back(state);
     tracker->initialize(initial_states);
@@ -108,9 +104,10 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     auto tracker_publisher =
         std::make_shared<dbrt::RobotPublisher<dbrt::RobotState<>>>(
-            urdf_kinematics,
+            kinematics,
             "/estimated",
             "Base");
+
     /* ------------------------------ */
     /* - Run tracker                - */
     /* ------------------------------ */

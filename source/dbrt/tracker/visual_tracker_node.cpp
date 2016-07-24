@@ -45,81 +45,40 @@
 #include <dbrt/robot_publisher.h>
 #include <dbrt/tracker/visual_tracker.h>
 #include <dbrt/tracker/visual_tracker_ros.h>
-
 #include <dbrt/tracker/visual_tracker_factory.h>
+#include <dbrt/util/camera_data_factory.h>
+#include <dbrt/util/kinematics_factory.h>
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "visual_tracker");
     ros::NodeHandle nh("~");
 
-    /* ---------------------------------------------------------------------- */
-    /* Roa-Blackwellized Coordinate Particle Filter Robot Tracker             */
-    /*                                                                        */
-    /* Ingredients:                                                           */
-    /*   - TrackerNode                                                        */
-    /*     - Tracker                                                          */
-    /*       - Rbc Particle Filter Algorithm                                  */
-    /*         - Robot state transition model                                 */
-    /*         - Observation model                                            */
-    /*       - Object model                                                   */
-    /*       - Camera data                                                    */
-    /*     - Tracker publisher to advertise the estimated state               */
-    /*                                                                        */
-    /*  Construnction of the tracker will utilize few builders and factories. */
-    /*  For that, we need the following builders/factories:                   */
-    /*    - Robot state transition model builder                              */
-    /*    - Observation model builder to build GPU or CPU based models        */
-    /*    - Filter builder                                                    */
-    /* ---------------------------------------------------------------------- */
-
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
-    dbot::CameraData::Resolution resolution;
-    resolution.width = ri::read<int>("resolution/width", nh);
-    resolution.height = ri::read<int>("resolution/height", nh);
+    auto camera_data = dbrt::create_camera_data(nh);
 
-    auto camera_data_provider = std::shared_ptr<dbot::CameraDataProvider>(
-        new dbot::RosCameraDataProvider(
-            nh,
-            ri::read<std::string>("camera_info_topic", nh),
-            ri::read<std::string>("depth_image_topic", nh),
-            resolution,
-            ri::read<int>("downsampling_factor", nh),
-            2.0));
-
-    // Create camera data from the RosCameraDataProvider which takes the data
-    // from a ros camera topic
-    auto camera_data = std::make_shared<dbot::CameraData>(camera_data_provider);
+    /* ------------------------------ */
+    /* - Create the robot kinematics- */
+    /* - and robot mesh model       - */
+    /* ------------------------------ */
+    auto kinematics = dbrt::create_kinematics(nh, camera_data->frame_id());
 
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
-    // initialize the kinematics
-
-    std::string prefixed_frame_id = camera_data->frame_id();
-    std::size_t slash_index = prefixed_frame_id.find_last_of("/");
-    std::string frame_id = prefixed_frame_id.substr(slash_index + 1);
-
-    std::shared_ptr<KinematicsFromURDF> urdf_kinematics(new KinematicsFromURDF(
-        ri::read<std::string>("robot_description", ros::NodeHandle()),
-        ri::read<std::string>("robot_description_package_path", nh),
-        ri::read<std::string>("rendering_root_left", nh),
-        ri::read<std::string>("rendering_root_right", nh),
-        frame_id));
-
     auto object_model_loader =
-        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics);
+        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics);
 
     // Load the model usign the URDF loader
     auto object_model = std::make_shared<dbot::ObjectModel>(
-        std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
+        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
 
     /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
-    dbrt::RobotState<>::kinematics_ = urdf_kinematics;
+    dbrt::RobotState<>::kinematics_ = kinematics;
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
     typedef dbrt::RobotState<> State;
 
@@ -129,7 +88,7 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
     auto tracker = dbrt::create_visual_tracker(
-        pre, urdf_kinematics, object_model, camera_data);
+        pre, kinematics, object_model, camera_data);
     dbrt::VisualTrackerRos tracker_ros(tracker, camera_data);
 
     /* ------------------------------ */
@@ -147,7 +106,7 @@ int main(int argc, char** argv)
     }
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        urdf_kinematics->GetInitialJoints(*joint_state);
+        kinematics->GetInitialJoints(*joint_state);
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {
@@ -163,7 +122,7 @@ int main(int argc, char** argv)
     auto tracker_publisher =
         std::shared_ptr<dbrt::RobotPublisher<State>>(
             new dbrt::RobotPublisher<State>(
-                urdf_kinematics,
+                kinematics,
                 "/estimated",
                 ri::read<std::string>("tf_connecting_frame", nh)));
 

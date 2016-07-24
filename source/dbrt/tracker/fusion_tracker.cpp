@@ -27,16 +27,16 @@ namespace dbrt
 {
 FusionTracker::FusionTracker(
     const std::shared_ptr<dbot::CameraData>& camera_data,
-    const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
+    const RotaryTrackerFactory& rotary_tracker_factory,
     const VisualTrackerFactory& visual_tracker_factory,
     double camera_delay)
     : camera_data_(camera_data),
-      gaussian_joint_tracker_(gaussian_joint_tracker),
       visual_tracker_factory_(visual_tracker_factory),
       running_(true),
       camera_delay_(camera_delay),
       ros_image_updated_(false)
 {
+    gaussian_joint_tracker_ = rotary_tracker_factory();
 }
 
 void FusionTracker::initialize(const std::vector<State>& initial_states)
@@ -47,6 +47,7 @@ void FusionTracker::initialize(const std::vector<State>& initial_states)
 
 void FusionTracker::run_rotary_tracker()
 {
+
     while (running_)
     {
         usleep(10);

@@ -54,6 +54,9 @@ public:
     typedef std::function<std::shared_ptr<VisualTracker>()>
         VisualTrackerFactory;
 
+    typedef std::function<std::shared_ptr<RotaryTracker>()>
+        RotaryTrackerFactory;
+
     struct JointsObsrvEntry
     {
         double timestamp;
@@ -68,7 +71,7 @@ public:
 
 public:
     FusionTracker(const std::shared_ptr<dbot::CameraData>& camera_data,
-                  const std::shared_ptr<RotaryTracker>& gaussian_joint_tracker,
+                  const RotaryTrackerFactory& rotary_tracker_factory,
                   const VisualTrackerFactory& visual_tracker_factory,
                   double camera_delay);
 

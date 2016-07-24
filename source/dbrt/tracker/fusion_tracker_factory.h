@@ -23,8 +23,8 @@
  */
 
 /**
- * \file ros_rbc_particle_filter_tracker_factory.hpp
- * \date November 2015
+ * \file fusion_tracker_factory.h
+ * \date July 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
@@ -32,27 +32,15 @@
 
 #include <string>
 
-#include <dbot/camera_data.hpp>
-#include <dbot/object_model.hpp>
-
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 #include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/tracker/fusion_tracker.h>
 
 namespace dbrt
 {
-/**
- * \brief Create a particle filter tracking the robot joints based on depth
- *     images measurements
- * \param prefix
- *     parameter prefix, e.g. fusion_tracker
- * \param urdf_kinematics
- *     URDF robot kinematics
- */
-std::shared_ptr<dbrt::VisualTracker>
-create_visual_tracker(
-    const std::string& prefix,
-    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::shared_ptr<dbot::ObjectModel>& object_model,
-    const std::shared_ptr<dbot::CameraData>& camera_data);
-
+std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
+    const std::shared_ptr<KinematicsFromURDF>& kinematics,
+    const std::shared_ptr<dbot::CameraData> camera_data,
+    sensor_msgs::JointState::ConstPtr joint_state);
 }
