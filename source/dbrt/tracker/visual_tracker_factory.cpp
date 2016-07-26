@@ -33,6 +33,7 @@
 #include <dbot_ros/util/ros_interface.hpp>
 #include <dbot/builder/rb_sensor_builder.h>
 
+#include <dbrt/urdf_object_loader.h>
 #include <dbrt/builder/transition_builder.hpp>
 #include <dbrt/builder/visual_tracker_builder.hpp>
 
@@ -43,19 +44,30 @@ namespace dbrt
  *     images measurements
  * \param prefix
  *     parameter prefix, e.g. fusion_tracker
- * \param urdf_kinematics
+ * \param kinematics
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
-    const std::string& prefix,
-    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::shared_ptr<dbot::ObjectModel>& object_model,
-    const std::shared_ptr<dbot::CameraData>& camera_data)
+    std::string prefix,
+    std::shared_ptr<KinematicsFromURDF> kinematics,
+    std::shared_ptr<dbot::CameraData> camera_data)
 {
     ros::NodeHandle nh("~");
 
     typedef dbrt::VisualTracker Tracker;
     typedef Tracker::State State;
+
+    /* ------------------------------ */
+    /* - Create the robot model     - */
+    /* ------------------------------ */
+    auto object_model_loader =
+        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics);
+
+    // Load the model usign the URDF loader
+    auto object_model = std::make_shared<dbot::ObjectModel>(
+        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
+
+    ROS_INFO("Robot model loaded");
 
     /* ------------------------------ */
     /* - State transition function  - */
@@ -65,11 +77,17 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     // linear state transition parameters
     transition_parameters.joint_sigmas = ri::read<std::vector<double>>(
         prefix + "joint_transition/joint_sigmas", nh);
-    transition_parameters.joint_count = urdf_kinematics->num_joints();
+    ROS_INFO("Transition parameter loaded");
+    transition_parameters.joint_count = kinematics->num_joints();
+    PV(transition_parameters.joint_count);
+
+    ROS_INFO("Transition parameter loaded");
 
     auto transition_builder =
         std::make_shared<dbrt::TransitionBuilder<Tracker>>(
             transition_parameters);
+
+    ROS_INFO("Transition model created");
 
     /* ------------------------------ */
     /* - Observation model          - */
@@ -115,9 +133,10 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     sensor_parameters.geometry_shader_file =
         ri::read<std::string>(prefix + "gpu/geometry_shader_file", nh);
 
-    auto sensor_builder =
-        std::make_shared<dbot::RbSensorBuilder<State>>(
-            object_model, camera_data, sensor_parameters);
+    auto sensor_builder = std::make_shared<dbot::RbSensorBuilder<State>>(
+        object_model, camera_data, sensor_parameters);
+
+    ROS_INFO("Observation model created");
 
     /* ------------------------------ */
     /* - Create Filter & Tracker    - */
@@ -133,7 +152,7 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
         ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks", nh);
 
     auto tracker_builder =
-        dbrt::VisualTrackerBuilder<Tracker>(urdf_kinematics,
+        dbrt::VisualTrackerBuilder<Tracker>(kinematics,
                                             transition_builder,
                                             sensor_builder,
                                             object_model,

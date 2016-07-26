@@ -67,7 +67,7 @@ namespace dbrt
 {
 std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     const std::shared_ptr<KinematicsFromURDF>& kinematics,
-    const std::shared_ptr<dbot::CameraData> camera_data,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
     sensor_msgs::JointState::ConstPtr joint_state)
 {
     ros::NodeHandle nh("~");
@@ -75,24 +75,9 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     // parameter shorthand prefix
     std::string prefix = "fusion_tracker/";
 
-    auto object_model = std::make_shared<dbot::ObjectModel>(
-        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
-
-    /* ------------------------------ */
-    /* - Robot renderer             - */
-    /* ------------------------------ */
-    auto renderer = std::make_shared<dbot::RigidBodyRenderer>(
-        object_model->vertices(),
-        object_model->triangle_indices(),
-        camera_data->camera_matrix(),
-        camera_data->resolution().height,
-        camera_data->resolution().width);
-
     /* ------------------------------ */
     /* - Our state representation   - */
     /* ------------------------------ */
-    dbrt::RobotState<>::kinematics_ = kinematics;
-    dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
@@ -145,18 +130,17 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     /* - tracker publisher          - */
     /* ------------------------------ */
 
-    ROS_INFO("creating trackers ... ");
     auto fusion_tracker = std::make_shared<dbrt::FusionTracker>(
         camera_data,
-        [&]()
+        [&, prefix]()
         {
             return dbrt::create_rotary_tracker(
                 prefix, kinematics->num_joints(), joint_order);
         },
-        [&]()
+        [&, prefix]()
         {
             return dbrt::create_visual_tracker(
-                prefix, kinematics, object_model, camera_data);
+                                               prefix, kinematics, camera_data);
         },
         ri::read<double>(prefix + "camera_delay", nh));
 

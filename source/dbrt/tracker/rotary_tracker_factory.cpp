@@ -33,9 +33,9 @@ namespace dbrt
  *     URDF robot kinematics
  */
 std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
-    const std::string& prefix,
-    const int& joint_count,
-    const std::vector<int>& joint_order)
+    std::string prefix,
+    int joint_count,
+    std::vector<int> joint_order)
 {
     ros::NodeHandle nh("~");
 

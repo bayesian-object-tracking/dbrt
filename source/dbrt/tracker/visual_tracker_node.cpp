@@ -66,16 +66,6 @@ int main(int argc, char** argv)
     auto kinematics = dbrt::create_kinematics(nh, camera_data->frame_id());
 
     /* ------------------------------ */
-    /* - Create the robot model     - */
-    /* ------------------------------ */
-    auto object_model_loader =
-        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics);
-
-    // Load the model usign the URDF loader
-    auto object_model = std::make_shared<dbot::ObjectModel>(
-        std::make_shared<dbrt::UrdfObjectModelLoader>(kinematics), false);
-
-    /* ------------------------------ */
     /* - Few types we will be using - */
     /* ------------------------------ */
     dbrt::RobotState<>::kinematics_ = kinematics;
@@ -87,8 +77,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     // parameter shorthand prefix
     std::string pre = "particle_filter/";
-    auto tracker = dbrt::create_visual_tracker(
-        pre, kinematics, object_model, camera_data);
+    auto tracker = dbrt::create_visual_tracker(pre, kinematics, camera_data);
     dbrt::VisualTrackerRos tracker_ros(tracker, camera_data);
 
     /* ------------------------------ */
@@ -105,8 +94,36 @@ int main(int argc, char** argv)
             "/joint_states", nh_global, ros::Duration(1.));
     }
 
+    sensor_msgs::JointState joint_state_with_offset = *joint_state;
+
+    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
+    {
+        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
+                  << std::endl;
+    }
+
+    joint_state_with_offset.name.push_back("XTION_X");
+    joint_state_with_offset.name.push_back("XTION_Y");
+    joint_state_with_offset.name.push_back("XTION_Z");
+    joint_state_with_offset.name.push_back("XTION_ROLL");
+    joint_state_with_offset.name.push_back("XTION_PITCH");
+    joint_state_with_offset.name.push_back("XTION_YAW");
+
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+
+    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
+    {
+        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
+                  << std::endl;
+    }
+
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        kinematics->GetInitialJoints(*joint_state);
+        kinematics->GetInitialJoints(joint_state_with_offset);
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {
@@ -119,12 +136,11 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Tracker publisher          - */
     /* ------------------------------ */
-    auto tracker_publisher =
-        std::shared_ptr<dbrt::RobotPublisher<State>>(
-            new dbrt::RobotPublisher<State>(
-                kinematics,
-                "/estimated",
-                ri::read<std::string>("tf_connecting_frame", nh)));
+    auto tracker_publisher = std::shared_ptr<dbrt::RobotPublisher<State>>(
+        new dbrt::RobotPublisher<State>(
+            kinematics,
+            "/estimated",
+            ri::read<std::string>("tf_connecting_frame", nh)));
 
     /* ------------------------------ */
     /* - Create and run tracker     - */
@@ -142,10 +158,11 @@ int main(int argc, char** argv)
     {
         visualization_rate.sleep();
         auto current_state = tracker_ros.current_state();
+        PVT(current_state);
 
-        std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
-                  << std::endl;
+        // std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
+        //              "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
+        //           << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_tf(current_state, time);
 

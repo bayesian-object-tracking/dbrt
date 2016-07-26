@@ -58,7 +58,6 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
-    // initialize the kinematics
     auto kinematics = dbrt::create_kinematics(nh, "NO_CAMERA_FRAME");
 
     /* ------------------------------ */
@@ -82,19 +81,52 @@ int main(int argc, char** argv)
             "/joint_states", nh_global, ros::Duration(1.));
     }
 
+    /// hack: we add a measurement = 0 for the six extra joints corresponding
+    /// to the camera offset ***************************************************
+    sensor_msgs::JointState joint_state_with_offset = *joint_state;
+
+    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
+    {
+        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
+                  << std::endl;
+    }
+
+    joint_state_with_offset.name.push_back("XTION_X");
+    joint_state_with_offset.name.push_back("XTION_Y");
+    joint_state_with_offset.name.push_back("XTION_Z");
+    joint_state_with_offset.name.push_back("XTION_ROLL");
+    joint_state_with_offset.name.push_back("XTION_PITCH");
+    joint_state_with_offset.name.push_back("XTION_YAW");
+
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+    joint_state_with_offset.position.push_back(0);
+
+    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
+    {
+        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
+                  << std::endl;
+    }
+
+    PV(kinematics->num_joints());
+    PV(joint_state_with_offset.position.size());
+
     /* ------------------------------ */
     /* - Create tracker             - */
     /* ------------------------------ */
     auto tracker = dbrt::create_rotary_tracker(
         pre,
         kinematics->num_joints(),
-        kinematics->GetJointOrder(*joint_state));
+        kinematics->GetJointOrder(joint_state_with_offset));
 
     /* ------------------------------ */
     /* - Initialize tracker         - */
     /* ------------------------------ */
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        kinematics->GetInitialJoints(*joint_state);
+        kinematics->GetInitialJoints(joint_state_with_offset);
     std::vector<dbrt::RobotState<>> initial_states;
     for (auto state : initial_states_vectors) initial_states.push_back(state);
     tracker->initialize(initial_states);
@@ -124,9 +156,9 @@ int main(int argc, char** argv)
 
         /// \todo: THIS IS A HACK!! WE SHOULD PASS THE PROPER TIME WHICH
         /// CORRESPONDS TO THE MEASUREMENT
-        std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-                     "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
-                  << std::endl;
+        // std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
+        //              "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
+        //           << std::endl;
         ros::Time time = ros::Time::now();
         tracker_publisher->publish_tf(current_state, time);
 

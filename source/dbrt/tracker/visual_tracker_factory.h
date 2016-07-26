@@ -48,11 +48,8 @@ namespace dbrt
  * \param urdf_kinematics
  *     URDF robot kinematics
  */
-std::shared_ptr<dbrt::VisualTracker>
-create_visual_tracker(
-    const std::string& prefix,
-    const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::shared_ptr<dbot::ObjectModel>& object_model,
-    const std::shared_ptr<dbot::CameraData>& camera_data);
-
+std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
+    std::string prefix,
+    std::shared_ptr<KinematicsFromURDF> urdf_kinematics,
+    std::shared_ptr<dbot::CameraData> camera_data);
 }

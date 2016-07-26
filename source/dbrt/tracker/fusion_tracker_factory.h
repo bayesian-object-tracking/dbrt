@@ -41,6 +41,6 @@ namespace dbrt
 {
 std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     const std::shared_ptr<KinematicsFromURDF>& kinematics,
-    const std::shared_ptr<dbot::CameraData> camera_data,
+    const std::shared_ptr<dbot::CameraData>& camera_data,
     sensor_msgs::JointState::ConstPtr joint_state);
 }

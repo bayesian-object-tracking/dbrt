@@ -37,7 +37,6 @@
 
 #include <dbrt/robot_state.hpp>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/urdf_object_loader.h>
 #include <dbrt/tracker/robot_tracker.h>
 #include <dbrt/tracker/rotary_tracker.h>
 #include <dbrt/tracker/visual_tracker.h>
@@ -46,6 +45,9 @@
 
 #include <dbrt/util/camera_data_factory.h>
 #include <dbrt/util/kinematics_factory.h>
+#include <dbrt/tracker/fusion_tracker_factory.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
+#include <dbrt/tracker/rotary_tracker_factory.h>
 
 /**
  * \brief Node entry point
@@ -67,6 +69,8 @@ int main(int argc, char** argv)
     /* - and robot mesh model       - */
     /* ------------------------------ */
     auto kinematics = dbrt::create_kinematics(nh, camera_data->frame_id());
+    dbrt::RobotState<>::kinematics_ = kinematics;
+    dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
 
     /* ------------------------------ */
     /* - Initial states               */
@@ -87,6 +91,8 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     auto fusion_tracker = dbrt::create_fusion_tracker(
         kinematics, camera_data, init_joint_state);
+
+
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
