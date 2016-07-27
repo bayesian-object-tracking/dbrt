@@ -51,5 +51,6 @@ namespace dbrt
 std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     std::string prefix,
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics,
-    std::shared_ptr<dbot::CameraData> camera_data);
+    std::shared_ptr<dbot::CameraData> camera_data,
+    sensor_msgs::JointState::ConstPtr joint_state);
 }

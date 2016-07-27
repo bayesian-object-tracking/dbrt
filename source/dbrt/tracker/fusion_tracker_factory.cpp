@@ -134,13 +134,12 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
         camera_data,
         [&, prefix]()
         {
-            return dbrt::create_rotary_tracker(
-                prefix, kinematics->num_joints(), joint_order);
+            return dbrt::create_rotary_tracker(prefix, kinematics, joint_state);
         },
         [&, prefix]()
         {
             return dbrt::create_visual_tracker(
-                                               prefix, kinematics, camera_data);
+                prefix, kinematics, camera_data, joint_state);
         },
         ri::read<double>(prefix + "camera_delay", nh));
 

@@ -73,14 +73,6 @@ int main(int argc, char** argv)
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */
-    /* - Create tracker             - */
-    /* ------------------------------ */
-    // parameter shorthand prefix
-    std::string pre = "particle_filter/";
-    auto tracker = dbrt::create_visual_tracker(pre, kinematics, camera_data);
-    dbrt::VisualTrackerRos tracker_ros(tracker, camera_data);
-
-    /* ------------------------------ */
     /* - Initialize using joint msg - */
     /* ------------------------------ */
     sensor_msgs::JointState::ConstPtr joint_state;
@@ -94,44 +86,14 @@ int main(int argc, char** argv)
             "/joint_states", nh_global, ros::Duration(1.));
     }
 
-    sensor_msgs::JointState joint_state_with_offset = *joint_state;
-
-    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
-    {
-        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
-                  << std::endl;
-    }
-
-    joint_state_with_offset.name.push_back("XTION_X");
-    joint_state_with_offset.name.push_back("XTION_Y");
-    joint_state_with_offset.name.push_back("XTION_Z");
-    joint_state_with_offset.name.push_back("XTION_ROLL");
-    joint_state_with_offset.name.push_back("XTION_PITCH");
-    joint_state_with_offset.name.push_back("XTION_YAW");
-
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-
-    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
-    {
-        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
-                  << std::endl;
-    }
-
-    std::vector<Eigen::VectorXd> initial_states_vectors =
-        kinematics->GetInitialJoints(joint_state_with_offset);
-    std::vector<State> initial_states;
-    for (auto state : initial_states_vectors)
-    {
-        initial_states.push_back(state);
-    }
-    tracker->initialize(initial_states);
-
-    ROS_INFO("Running visual tracker");
+    /* ------------------------------ */
+    /* - Create tracker             - */
+    /* ------------------------------ */
+    // parameter shorthand prefix
+    std::string pre = "particle_filter/";
+    auto tracker =
+        dbrt::create_visual_tracker(pre, kinematics, camera_data, joint_state);
+    dbrt::VisualTrackerRos tracker_ros(tracker, camera_data);
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
@@ -143,8 +105,7 @@ int main(int argc, char** argv)
             ri::read<std::string>("tf_connecting_frame", nh)));
 
     /* ------------------------------ */
-    /* - Create and run tracker     - */
-    /* - node                       - */
+    /* - Run tracker                - */
     /* ------------------------------ */
     ros::Subscriber subscriber =
         nh.subscribe(ri::read<std::string>("depth_image_topic", nh),
@@ -152,13 +113,14 @@ int main(int argc, char** argv)
                      &dbrt::VisualTrackerRos::track,
                      &tracker_ros);
 
+    ROS_INFO("Running visual tracker");
+
     ros::Rate visualization_rate(100);
 
     while (ros::ok())
     {
         visualization_rate.sleep();
         auto current_state = tracker_ros.current_state();
-        PVT(current_state);
 
         // std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
         //              "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
