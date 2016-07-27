@@ -1,4 +1,2 @@
-state_filtering
-===============
+# ROS Depth Based Robot Tracking Library (dbrt)
 
-Object State Filtering
