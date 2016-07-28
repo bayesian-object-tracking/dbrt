@@ -35,3 +35,16 @@ roslaunch dbrt_apollo visual_tracker.launch
 ```bash
 roslaunch dbrt_apollo fusion_tracker.launch
 ```
+
+## Running robot trackers with custom configuration
+The predefined launch files allow you to pass a custom config file
+```bash
+roslaunch dbrt_apollo rotary_tracker.launch rotary_tracker_config:=my_custom_rotary_tracker_config.yaml
+```
+```bash
+roslaunch dbrt_apollo visual_tracker.launch visual_tracker_config:=my_custom_visual_tracker_config.yaml
+```
+```bash
+roslaunch dbrt_apollo fusion_tracker.launch fusion_tracker_config:=my_custom_fusion_tracker_config.yaml
+```
+
