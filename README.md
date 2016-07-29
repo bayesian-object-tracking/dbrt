@@ -6,7 +6,7 @@ This package provides three robot trackers
 * Visual tracker: This tracker uses depth images from a Kinect or XTION to 
   estimate the joint state. The filter is based on the Rao-Blackwellized 
   corrdinate descent particle filter implemented in 
-  (dbot)[https://github.com/bayesian-object-tracking/dbot] package. The tracking 
+  [dbot](https://github.com/bayesian-object-tracking/dbot) package. The tracking 
   rate lies between 5Hz to 30Hz depending on the degree-of-freedom and model
   configurations. 
 * Fusion tracker: This tracker fuses both filters mentioned above. The fusion 
@@ -17,7 +17,7 @@ This package provides three robot trackers
 
 These trackers are robot specific. You will need to create your own package and
 add your config files and URDF models there. 
-Take (dbrt_apollo)[https://git-amd.tuebingen.mpg.de/amd-clmc/dbrt_apollo.git] 
+Take [dbrt_apollo](http://git-amd.tuebingen.mpg.de/amd-clmc/dbrt_apollo)
 Apollo robot configuration package as an example or a template.
 
 Make sure the robot is publishing the joint state to `/joint_states` topic. If 
