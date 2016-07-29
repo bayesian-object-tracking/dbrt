@@ -17,7 +17,7 @@ This package provides three robot trackers
 
 These trackers are robot specific. You will need to create your own package and
 add your config files and URDF models there. 
-Take (dbrt_apollo)[git@git-amd.tuebingen.mpg.de:amd-clmc/dbrt_apollo.git] 
+Take (dbrt_apollo)[https://git-amd.tuebingen.mpg.de/amd-clmc/dbrt_apollo.git] 
 Apollo robot configuration package as an example or a template.
 
 Make sure the robot is publishing the joint state to `/joint_states` topic. If 
