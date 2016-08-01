@@ -49,6 +49,7 @@ public:
     using Base::operator=;
 
 public:
+    /// \todo this function should not be named count, this is confusing
     virtual int count() const
     {
         CheckKinematics();

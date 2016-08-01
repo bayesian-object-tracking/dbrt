@@ -116,7 +116,7 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     /// ************************************************************************
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        kinematics->GetInitialJoints(joint_state_with_offset);
+        {kinematics->sensor_msg_to_eigen(joint_state_with_offset)};
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {

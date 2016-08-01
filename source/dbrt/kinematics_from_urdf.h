@@ -87,7 +87,7 @@ public:
     /// \todo this function shoudl not be in this class
     /// or at least it should be renamed
     // Convert Joint message to Eigen vector
-    std::vector<Eigen::VectorXd> GetInitialJoints(const sensor_msgs::JointState &angles);
+    Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState &angles);
 
     std::vector<int> GetJointOrder(const sensor_msgs::JointState& state);
 

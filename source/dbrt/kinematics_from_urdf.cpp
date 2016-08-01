@@ -264,29 +264,25 @@ osr::PoseVector KinematicsFromURDF::get_link_pose(int index)
     return pose_vector;
 }
 
-std::vector<Eigen::VectorXd> KinematicsFromURDF::GetInitialJoints(
-        const sensor_msgs::JointState& angles)
+Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
+        const sensor_msgs::JointState& sensor_msg)
 {
-    check_size(angles.position.size());
+    check_size(sensor_msg.position.size());
 
-    std::vector<Eigen::VectorXd> samples;
-    Eigen::VectorXd sample(num_joints());
-    // loop over all joint and fill in KDL array
-    for (std::vector<double>::const_iterator jnt = angles.position.begin();
-         jnt != angles.position.end(); ++jnt)
+    Eigen::VectorXd eigen(sensor_msg.position.size());
+
+    for(size_t i = 0; i < sensor_msg.position.size(); i++)
     {
-        int tmp_index = GetJointIndex(angles.name[jnt - angles.position.begin()]);
+        int joint_index = GetJointIndex(sensor_msg.name[i]);
 
-        if (tmp_index >= 0)
-            sample(tmp_index) = *jnt;
+        if (joint_index >= 0)
+            eigen(joint_index) = sensor_msg.position[i];
         else
             ROS_ERROR("i: %d, No joint index for %s",
-                      (int)(jnt - angles.position.begin()),
-                      angles.name[jnt - angles.position.begin()].c_str());
+                      int(i), sensor_msg.name[i].c_str());
     }
-    samples.push_back(sample);
 
-    return samples;
+    return eigen;
 }
 
 std::vector<int> KinematicsFromURDF::GetJointOrder(

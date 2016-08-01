@@ -183,7 +183,7 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     joint_state_with_offset.position.push_back(0);
 
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        kinematics->GetInitialJoints(joint_state_with_offset);
+        {kinematics->sensor_msg_to_eigen(joint_state_with_offset)};
     std::vector<dbrt::RobotState<>> initial_states;
     for (auto state : initial_states_vectors) initial_states.push_back(state);
     tracker->initialize(initial_states);
