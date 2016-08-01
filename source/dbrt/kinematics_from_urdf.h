@@ -70,46 +70,29 @@ public:
 
     ~KinematicsFromURDF();
 
-    // outputs a list of mesh model objects
-    void get_part_meshes(std::vector<boost::shared_ptr<PartMeshModel> >&
-                         part_meshes);
-
-    // Initialises the KDL data and specifically the camera pose
+    /// mutators ***************************************************************
     void set_joint_angles(const Eigen::VectorXd& joint_state);
 
-    // Get the position of the robot link with index idx
-    Eigen::VectorXd get_link_position( int index);
-
-    // Get the orientation of the robot link with index idx
+    /// accessors **************************************************************
+    Eigen::VectorXd get_link_position(int index);
     Eigen::Quaternion<double> get_link_orientation( int index);
-
     osr::PoseVector get_link_pose(int index);
 
-    // Convert Joint message to Eigen vector
-    Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState &angles);
-
     std::vector<int> get_joint_order(const sensor_msgs::JointState& state);
-
-    // return the KDL kinematic tree
+    void get_part_meshes(
+            std::vector<boost::shared_ptr<PartMeshModel> >& part_meshes);
     KDL::Tree get_tree();
 
-    // Get the number of joints
     int num_joints();
-
     int num_links();
-
-
-
     std::string get_link_name(int idx);
-
     std::vector<std::string> get_joint_map();
-
     std::string get_root_frame_id();
 
-
+    /// convenience ************************************************************
+    Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState &angles);
     void print_joints();
     void print_links();
-    // compute the transformations for all the links in one go
 
 private:
     void check_size(int size);
@@ -119,8 +102,6 @@ private:
     // get the joint index in state array
     int name_to_index(const std::string &name);
 
-    ros::NodeHandle nh_;
-    ros::NodeHandle nh_priv_;
     //std::string tf_correction_root_;
     std::string description_path_;
 
@@ -131,8 +112,6 @@ private:
 
     // maps joint indices to joint names and joint limits
     std::vector<std::string> joint_map_;
-    std::vector<float> lower_limit_;
-    std::vector<float> upper_limit_;
 
     // maps mesh indices to link names
     std::vector<std::string> mesh_names_;
@@ -149,9 +128,6 @@ private:
     // Contains Camera pose relative to base
     KDL::Frame    cam_frame_;
     std::string   cam_frame_name_;
-
-    // random generator for joint angle sampling
-    boost::mt19937 generator_;
 
     // rendering roots for left and right arm to exclude occluding head meshes
     std::string rendering_root_left_, rendering_root_right_;

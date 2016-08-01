@@ -64,8 +64,6 @@ KinematicsFromURDF::KinematicsFromURDF(const std::string& robot_description,
     segment_map_ = kin_tree_.getSegments();
     boost::shared_ptr<const urdf::Joint> joint;
     joint_map_.resize(kin_tree_.getNrOfJoints());
-    lower_limit_.resize(kin_tree_.getNrOfJoints());
-    upper_limit_.resize(kin_tree_.getNrOfJoints());
     for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin();
          seg_it != segment_map_.end();
          ++seg_it)
@@ -86,8 +84,6 @@ KinematicsFromURDF::KinematicsFromURDF(const std::string& robot_description,
                     joint->type != urdf::Joint::FIXED)
             {
                 joint_map_[seg_it->second.q_nr] = joint->name;
-                lower_limit_[seg_it->second.q_nr] = joint->limits->lower;
-                upper_limit_[seg_it->second.q_nr] = joint->limits->upper;
             }
         }
     }
