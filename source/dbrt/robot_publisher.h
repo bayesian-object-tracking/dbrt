@@ -72,7 +72,7 @@ public:
 protected:
     /**
      * This mapping function is required since the received JointsObsrv order
-     * differs from the state type order provided through state.GetJointMap by
+     * differs from the state type order provided through state.get_joint_map by
      * the URDF model.
      */
     void to_joint_map(const JointsObsrv& joint_values,

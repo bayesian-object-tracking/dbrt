@@ -96,7 +96,7 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* ------------------------------ */
     auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
         joint_count,
-        kinematics->GetJointOrder(joint_state_with_offset),
+        kinematics->get_joint_order(joint_state_with_offset),
         transition_builder,
         rotary_sensor_builder);
 

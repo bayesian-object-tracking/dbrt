@@ -123,7 +123,7 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
         initial_states.push_back(state);
     }
 
-    auto joint_order = kinematics->GetJointOrder(joint_state_with_offset);
+//    auto joint_order = kinematics->get_joint_order(joint_state_with_offset);
 
     /* ------------------------------ */
     /* - Create Tracker and         - */

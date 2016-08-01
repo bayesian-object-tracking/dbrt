@@ -80,7 +80,7 @@ public:
     {
         joint_positions.clear();
         CheckKinematics();
-        std::vector<std::string> joint_map = kinematics_->GetJointMap();
+        std::vector<std::string> joint_map = kinematics_->get_joint_map();
         for (std::vector<std::string>::const_iterator it = joint_map.begin();
              it != joint_map.end();
              ++it)

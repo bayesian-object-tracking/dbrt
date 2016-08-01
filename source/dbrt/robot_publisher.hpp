@@ -47,14 +47,14 @@ RobotPublisher<State>::RobotPublisher(
       target_frame_id_(target_frame_id),
       robot_state_publisher_(
           std::make_shared<robot_state_pub::RobotStatePublisher>(
-              urdf_kinematics->GetTree())),
+              urdf_kinematics->get_tree())),
       transformer_(robot_state_publisher_)
 {
     // get the name of the root frame
-    root_frame_id_ = urdf_kinematics->GetRootFrameID();
+    root_frame_id_ = urdf_kinematics->get_root_frame_id();
 
     // get joint map
-    joint_names_ = urdf_kinematics->GetJointMap();
+    joint_names_ = urdf_kinematics->get_joint_map();
 
     // setup basic joint state message
     joint_state_.position.resize(joint_names_.size());

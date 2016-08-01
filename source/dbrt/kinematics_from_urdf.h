@@ -71,28 +71,27 @@ public:
     ~KinematicsFromURDF();
 
     // outputs a list of mesh model objects
-    void get_part_meshes(std::vector<boost::shared_ptr<PartMeshModel> > &part_meshes);
+    void get_part_meshes(std::vector<boost::shared_ptr<PartMeshModel> >&
+                         part_meshes);
 
     // Initialises the KDL data and specifically the camera pose
     void set_joint_angles(const Eigen::VectorXd& joint_state);
 
     // Get the position of the robot link with index idx
-    Eigen::VectorXd get_link_position( int idx);
+    Eigen::VectorXd get_link_position( int index);
 
     // Get the orientation of the robot link with index idx
-    Eigen::Quaternion<double> get_link_orientation( int idx);
+    Eigen::Quaternion<double> get_link_orientation( int index);
 
     osr::PoseVector get_link_pose(int index);
 
-    /// \todo this function shoudl not be in this class
-    /// or at least it should be renamed
     // Convert Joint message to Eigen vector
     Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState &angles);
 
-    std::vector<int> GetJointOrder(const sensor_msgs::JointState& state);
+    std::vector<int> get_joint_order(const sensor_msgs::JointState& state);
 
     // return the KDL kinematic tree
-    KDL::Tree GetTree();
+    KDL::Tree get_tree();
 
     // Get the number of joints
     int num_joints();
@@ -101,11 +100,11 @@ public:
 
 
 
-    std::string GetLinkName(int idx);
+    std::string get_link_name(int idx);
 
-    std::vector<std::string> GetJointMap();
+    std::vector<std::string> get_joint_map();
 
-    std::string GetRootFrameID();
+    std::string get_root_frame_id();
 
 
     void print_joints();
@@ -115,13 +114,10 @@ public:
 private:
     void check_size(int size);
 
-    void ComputeLinkTransforms();
-
-    // compute the camera frame for the current joint angles
-    void SetCameraTransform();
+    void compute_transforms();
     
     // get the joint index in state array
-    int GetJointIndex(const std::string &name);
+    int name_to_index(const std::string &name);
 
     ros::NodeHandle nh_;
     ros::NodeHandle nh_priv_;

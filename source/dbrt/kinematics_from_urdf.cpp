@@ -168,7 +168,7 @@ void KinematicsFromURDF::set_joint_angles(const Eigen::VectorXd& joint_state)
     {
         jnt_array_.data = joint_state.topRows(kin_tree_.getNrOfJoints());
         // Given the new joint angles, compute all link transforms in one go
-        ComputeLinkTransforms();
+        compute_transforms();
     }
 
     if(use_camera_offset_)
@@ -177,7 +177,7 @@ void KinematicsFromURDF::set_joint_angles(const Eigen::VectorXd& joint_state)
     }
 }
 
-void KinematicsFromURDF::ComputeLinkTransforms()
+void KinematicsFromURDF::compute_transforms()
 {
     // get the transform from base to camera
     if (tree_solver_->JntToCart(jnt_array_, cam_frame_, cam_frame_name_) < 0)
@@ -204,11 +204,11 @@ void KinematicsFromURDF::ComputeLinkTransforms()
     }
 }
 
-Eigen::VectorXd KinematicsFromURDF::get_link_position(int idx)
+Eigen::VectorXd KinematicsFromURDF::get_link_position(int index)
 {
     Eigen::VectorXd pos(3);
 
-    KDL::Frame& frame = frame_map_[mesh_names_[idx]];
+    KDL::Frame& frame = frame_map_[mesh_names_[index]];
     pos << frame.p.x(), frame.p.y(), frame.p.z();
 
     if(use_camera_offset_)
@@ -241,10 +241,10 @@ void KinematicsFromURDF::print_links()
     std::cout << std::endl;
 }
 
-Eigen::Quaternion<double> KinematicsFromURDF::get_link_orientation(int idx)
+Eigen::Quaternion<double> KinematicsFromURDF::get_link_orientation(int index)
 {
     Eigen::Quaternion<double> quat;
-    frame_map_[mesh_names_[idx]].M.GetQuaternion(
+    frame_map_[mesh_names_[index]].M.GetQuaternion(
                 quat.x(), quat.y(), quat.z(), quat.w());
 
     if(use_camera_offset_)
@@ -273,7 +273,7 @@ Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
 
     for(size_t i = 0; i < sensor_msg.position.size(); i++)
     {
-        int joint_index = GetJointIndex(sensor_msg.name[i]);
+        int joint_index = name_to_index(sensor_msg.name[i]);
 
         if (joint_index >= 0)
             eigen(joint_index) = sensor_msg.position[i];
@@ -285,24 +285,24 @@ Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
     return eigen;
 }
 
-std::vector<int> KinematicsFromURDF::GetJointOrder(
+std::vector<int> KinematicsFromURDF::get_joint_order(
         const sensor_msgs::JointState& state)
 {
     std::vector<int> order(state.name.size());
     for (int i = 0; i < state.name.size(); ++i)
     {
-        order[i] = GetJointIndex(state.name[i]);
+        order[i] = name_to_index(state.name[i]);
     }
 
     return order;
 }
 
-KDL::Tree KinematicsFromURDF::GetTree()
+KDL::Tree KinematicsFromURDF::get_tree()
 {
     return kin_tree_;
 }
 
-int KinematicsFromURDF::GetJointIndex(const std::string& name)
+int KinematicsFromURDF::name_to_index(const std::string& name)
 {
     for (unsigned int i = 0; i < joint_map_.size(); ++i)
     {
@@ -314,7 +314,7 @@ int KinematicsFromURDF::GetJointIndex(const std::string& name)
     return -1;
 }
 
-std::string KinematicsFromURDF::GetLinkName(int idx)
+std::string KinematicsFromURDF::get_link_name(int idx)
 {
     return mesh_names_[idx];
 }
@@ -334,12 +334,12 @@ int KinematicsFromURDF::num_links()
     return mesh_names_.size();
 }
 
-std::vector<std::string> KinematicsFromURDF::GetJointMap()
+std::vector<std::string> KinematicsFromURDF::get_joint_map()
 {
     return joint_map_;
 }
 
-std::string KinematicsFromURDF::GetRootFrameID()
+std::string KinematicsFromURDF::get_root_frame_id()
 {
     return kin_tree_.getRootSegment()->first;
 }
