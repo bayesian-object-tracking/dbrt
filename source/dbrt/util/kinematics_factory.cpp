@@ -28,12 +28,14 @@ std::shared_ptr<KinematicsFromURDF> create_kinematics(
     const std::string& camera_frame_id)
 {
     auto robot_description = ri::read<std::string>(
-        "robot_description_downsampled", ros::NodeHandle());
+        ri::read<std::string>("robot_description_name", nh), ros::NodeHandle());
     auto robot_description_package_path =
         ri::read<std::string>("robot_description_package_path", nh);
     auto rendering_root_left = ri::read<std::string>("rendering_root_left", nh);
     auto rendering_root_right =
         ri::read<std::string>("rendering_root_right", nh);
+
+    auto estimate_camera_offset = ri::read<bool>("estimate_camera_offset", nh);
 
     std::string prefixed_frame_id = camera_frame_id;
     std::size_t slash_index = prefixed_frame_id.find_last_of("/");
@@ -44,6 +46,6 @@ std::shared_ptr<KinematicsFromURDF> create_kinematics(
                                                 rendering_root_left,
                                                 rendering_root_right,
                                                 frame_id,
-                                                false);
+                                                estimate_camera_offset);
 }
 }
