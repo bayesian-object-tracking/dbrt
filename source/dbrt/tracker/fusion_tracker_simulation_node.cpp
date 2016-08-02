@@ -32,7 +32,7 @@
 
 #include <dbot/rigid_body_renderer.hpp>
 #include <dbot/virtual_camera_data_provider.hpp>
-#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/builder/particle_tracker_builder.hpp>
 
 #include <dbot_ros/tracker_publisher.h>
 #include <dbot_ros/util/ros_interface.hpp>

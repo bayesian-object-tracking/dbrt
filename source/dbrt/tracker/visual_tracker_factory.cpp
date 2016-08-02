@@ -23,7 +23,7 @@
  */
 
 /**
- * \file ros_rbc_particle_filter_tracker_factory.hpp
+ * \file ros_particle_tracker_factory.hpp
  * \date March 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
