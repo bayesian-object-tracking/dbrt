@@ -32,7 +32,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-
 #ifndef POSE_TRACKING_INTERFACE_UTILS_KINEMATICS_FROM_URDF_HPP
 #define POSE_TRACKING_INTERFACE_UTILS_KINEMATICS_FROM_URDF_HPP
 
@@ -60,13 +59,12 @@
 class KinematicsFromURDF
 {
 public:
-
     KinematicsFromURDF(const std::string& robot_description,
-            const std::string& robot_description_package_path,
-            const std::string& rendering_root_left,
-            const std::string& rendering_root_right,
-            const std::string& camera_frame_id,
-            const bool& use_camera_offset=false);
+                       const std::string& robot_description_package_path,
+                       const std::string& rendering_root_left,
+                       const std::string& rendering_root_right,
+                       const std::string& camera_frame_id,
+                       const bool& use_camera_offset = false);
 
     ~KinematicsFromURDF();
 
@@ -75,12 +73,12 @@ public:
 
     /// accessors **************************************************************
     Eigen::VectorXd get_link_position(int index);
-    Eigen::Quaternion<double> get_link_orientation( int index);
+    Eigen::Quaternion<double> get_link_orientation(int index);
     osr::PoseVector get_link_pose(int index);
 
     std::vector<int> get_joint_order(const sensor_msgs::JointState& state);
     void get_part_meshes(
-            std::vector<boost::shared_ptr<PartMeshModel> >& part_meshes);
+        std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes);
     KDL::Tree get_tree();
 
     int num_joints();
@@ -90,19 +88,24 @@ public:
     std::string get_root_frame_id();
 
     /// convenience ************************************************************
-    Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState &angles);
+    Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState& angles);
     void print_joints();
     void print_links();
 
 private:
+    void rename_camera_frame(const std::string& camera_frame,
+                             urdf::Model& urdf);
+    void inject_offset_joints_and_links(const std::string& camera_frame,
+                                        urdf::Model& urdf);
+
     void check_size(int size);
 
     void compute_transforms();
-    
-    // get the joint index in state array
-    int name_to_index(const std::string &name);
 
-    //std::string tf_correction_root_;
+    // get the joint index in state array
+    int name_to_index(const std::string& name);
+
+    // std::string tf_correction_root_;
     std::string description_path_;
 
     // model as constructed form the robot urdf description
@@ -121,13 +124,13 @@ private:
     // KDL segment map connecting link segments to joints
     KDL::SegmentMap segment_map_;
     // Forward kinematics solver
-    KDL::TreeFkSolverPos_recursive *tree_solver_;
+    KDL::TreeFkSolverPos_recursive* tree_solver_;
 
     // KDL copy of the joint state
     KDL::JntArray jnt_array_;
     // Contains Camera pose relative to base
-    KDL::Frame    cam_frame_;
-    std::string   cam_frame_name_;
+    KDL::Frame cam_frame_;
+    std::string cam_frame_name_;
 
     // rendering roots for left and right arm to exclude occluding head meshes
     std::string rendering_root_left_, rendering_root_right_;

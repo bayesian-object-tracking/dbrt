@@ -36,22 +36,133 @@
 #include <fl/util/profiling.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-KinematicsFromURDF::KinematicsFromURDF(const std::string& robot_description,
-        const std::string& robot_description_package_path,
-        const std::string& rendering_root_left,
-        const std::string& rendering_root_right,
-        const std::string& camera_frame_id,
-        const bool& use_camera_offset):
-    description_path_(robot_description_package_path),
-    rendering_root_left_(rendering_root_left),
-    rendering_root_right_(rendering_root_right),
-    cam_frame_name_(camera_frame_id),
-    use_camera_offset_(use_camera_offset)
+KinematicsFromURDF::KinematicsFromURDF(
+    const std::string& robot_description,
+    const std::string& robot_description_package_path,
+    const std::string& rendering_root_left,
+    const std::string& rendering_root_right,
+    const std::string& camera_frame_id,
+    const bool& use_camera_offset)
+    : description_path_(robot_description_package_path),
+      rendering_root_left_(rendering_root_left),
+      rendering_root_right_(rendering_root_right),
+      cam_frame_name_(camera_frame_id),
+      use_camera_offset_(use_camera_offset)
 {
-
     camera_offset_.setZero();
     // Initialize URDF object from robot description
     if (!urdf_.initString(robot_description)) ROS_ERROR("Failed to parse urdf");
+
+    if (use_camera_offset_)
+    {
+        inject_offset_joints_and_links(cam_frame_name_, urdf_);
+    }
+
+    PInfo("==================================================================");
+
+    // PInfo("Joints
+    // -----------------------------------------------------------");
+    // for (auto joint_pair : urdf_.joints_)
+    // {
+    //     if (joint_pair.first.substr(0, 5) != "XTION") continue;
+
+    //     std::cout << joint_pair.first << ": \n";
+    //     auto joint = joint_pair.second;
+    //     PF(joint->name);
+    //     PF(joint->child_link_name);
+    //     PF(joint->parent_link_name);
+
+    //     PF(joint->axis.x);
+    //     PF(joint->axis.y);
+    //     PF(joint->axis.z);
+
+    //     // PF(joint->parent_to_joint_origin_transform.position.x);
+    //     // PF(joint->parent_to_joint_origin_transform.position.y);
+    //     // PF(joint->parent_to_joint_origin_transform.position.z);
+    //     // PF(joint->parent_to_joint_origin_transform.rotation.w);
+    //     // PF(joint->parent_to_joint_origin_transform.rotation.x);
+    //     // PF(joint->parent_to_joint_origin_transform.rotation.y);
+    //     // PF(joint->parent_to_joint_origin_transform.rotation.z);
+
+    //     // if (joint->limits)
+    //     // {
+    //     //     PF(joint->limits->lower);
+    //     //     PF(joint->limits->upper);
+    //     //     PF(joint->limits->effort);
+    //     //     PF(joint->limits->velocity);
+    //     // }
+
+    //     // if (joint->dynamics)
+    //     // {
+    //     //     PF(joint->dynamics->damping);
+    //     //     PF(joint->dynamics->friction);
+    //     // }
+
+    //     // // not in there
+    //     // if (joint->safety)
+    //     // {
+    //     //     PF(joint->safety->soft_upper_limit);
+    //     //     PF(joint->safety->soft_lower_limit);
+    //     //     PF(joint->safety->k_position);
+    //     //     PF(joint->safety->k_velocity);
+    //     // }
+
+    //     // // not in there
+    //     // if (joint->calibration)
+    //     // {
+    //     //     PF(joint->calibration->reference_position);
+    //     // }
+
+    //     // // not in there
+    //     // if (joint->mimic)
+    //     // {
+    //     //     PF(joint->mimic->offset);
+    //     //     PF(joint->mimic->multiplier);
+    //     //     PF(joint->mimic->joint_name);
+    //     // }
+
+    //     std::cout << "---" << std::endl;
+    // }
+
+    PInfo("Links ------------------------------------------------------------");
+    for (auto link_pair : urdf_.links_)
+    {
+        auto link = link_pair.second;
+
+        if (link_pair.first.length() < 6 ||
+            link_pair.first.substr(0, 5) != "XTION")
+            continue;
+
+        std::cout << link_pair.first << ": ";
+
+        PF(link->name);
+        // PF(link->inertial);
+        // PF(link->visual);
+        // PF(link->collision);
+        // PF(link->collision_array.size());
+        // PF(link->visual_array.size());
+        // PF(link->visual_groups.size());
+        // PF(link->collision_groups.size());
+        PF(link->parent_joint);
+        if (link->parent_joint)
+        {
+            PF(link->parent_joint->name);
+        }
+        PF(link->child_joints.size());
+        if (link->child_joints.size())
+        {
+            PF(link->child_joints[0]->name);
+        }
+        PF(link->child_links.size());
+        if (link->child_links.size())
+        {
+            PF(link->child_links[0]->name);
+        }
+
+        std::cout << "---" << std::endl;
+    }
+
+    PInfo("==================================================================");
 
     // set up kinematic tree from URDF
     if (!kdl_parser::treeFromUrdfModel(urdf_, kin_tree_))
@@ -71,35 +182,151 @@ KinematicsFromURDF::KinematicsFromURDF(const std::string& robot_description,
         if (seg_it->second.segment.getJoint().getType() != KDL::Joint::None)
         {
             joint = urdf_.getJoint(
-                        seg_it->second.segment.getJoint().getName().c_str());
-            // check, if joint can be found in the URDF model of the object/robot
+                seg_it->second.segment.getJoint().getName().c_str());
+            // check, if joint can be found in the URDF model of the
+            // object/robot
             if (!joint)
             {
-                ROS_FATAL("Joint '%s' has not been found in the URDF robot model! "
-                            "Aborting ...", joint->name.c_str());
+                ROS_FATAL(
+                    "Joint '%s' has not been found in the URDF robot model! "
+                    "Aborting ...",
+                    joint->name.c_str());
                 return;
             }
             // extract joint information
             if (joint->type != urdf::Joint::UNKNOWN &&
-                    joint->type != urdf::Joint::FIXED)
+                joint->type != urdf::Joint::FIXED)
             {
                 joint_map_[seg_it->second.q_nr] = joint->name;
             }
         }
     }
 
-    if(use_camera_offset_)
-    {
-        joint_map_.push_back("OFFSET_X");
-        joint_map_.push_back("OFFSET_Y");
-        joint_map_.push_back("OFFSET_Z");
-        joint_map_.push_back("OFFSET_A");
-        joint_map_.push_back("OFFSET_B");
-        joint_map_.push_back("OFFSET_C");
-    }
-
     // initialise kinematic tree solver
     tree_solver_ = new KDL::TreeFkSolverPos_recursive(kin_tree_);
+}
+
+void KinematicsFromURDF::rename_camera_frame(const std::string& camera_frame,
+                                             urdf::Model& urdf)
+{
+    // rename joint child link name of the camera
+    for (auto& joint_entry : urdf.joints_)
+    {
+        auto& joint = joint_entry.second;
+        if (joint->child_link_name == camera_frame)
+        {
+            joint->child_link_name += "_DEFAULT";
+            break;
+        }
+    }
+
+    // rename camera link name
+    for (auto& link_entry : urdf.links_)
+    {
+        auto& link = link_entry.second;
+        if (link->name == camera_frame)
+        {
+            // rename link name
+            link->name += "_DEFAULT";
+
+            // add new entry using the new name
+            urdf.links_[link->name] = link;
+
+            // remove old entry mapped by old name
+            auto camera_link_it = urdf.links_.find(camera_frame);
+            urdf.links_.erase(camera_link_it);
+
+            return;
+        }
+    }
+
+    ROS_ERROR_STREAM("Camera frame ID" << camera_frame
+                                       << " does not exist in URDF.");
+}
+
+void KinematicsFromURDF::inject_offset_joints_and_links(
+    const std::string& camera_frame,
+    urdf::Model& urdf)
+{
+    rename_camera_frame(camera_frame, urdf);
+
+    std::string camera_frame_ = "XTION";
+    std::vector<std::string> dofs = {camera_frame_ + "_X",
+                                     camera_frame_ + "_Y",
+                                     camera_frame_ + "_Z",
+                                     camera_frame_ + "_PITCH",
+                                     camera_frame_ + "_YAW",
+                                     camera_frame_ + "_ROLL"};
+
+    std::string current_parent_link = camera_frame + "_DEFAULT";
+    std::shared_ptr<urdf::Joint> current_parent_joint;
+
+    int i = 0;
+    for (auto dof : dofs)
+    {
+        // construct joint
+        auto joint = boost::make_shared<urdf::Joint>();
+        joint->name = dof;  // + "_JOINT";
+        joint->type = i < 3 ? urdf::Joint::PRISMATIC : urdf::Joint::REVOLUTE;
+        joint->axis.x = double(i == 0 || i == 3);
+        joint->axis.y = double(i == 1 || i == 4);
+        joint->axis.z = double(i == 2 || i == 5);
+        joint->child_link_name = dof + "_LINK";
+        joint->parent_link_name = current_parent_link;
+
+        // add joint
+        urdf.joints_[joint->name] = joint;
+
+        // update parent link name for next joint
+        current_parent_link = joint->child_link_name;
+
+        // last dof has no link
+        if (i > 4) continue;
+
+        auto link = boost::make_shared<urdf::Link>();
+        link->name = dof + "_LINK";
+        link->parent_joint = joint;
+
+        // add link
+        urdf.links_[link->name] = link;
+
+        ++i;
+    }
+
+    // update camera root link child joints and links
+    auto camera_root_link = urdf.links_[camera_frame + "_DEFAULT"];
+    camera_root_link->child_joints.push_back(urdf.joints_[dofs[0]]);
+    camera_root_link->child_links.push_back(urdf.links_[dofs[0] + "_LINK"]);
+
+    // add leaf original camera frame
+    auto camera_leaf_link = boost::make_shared<urdf::Link>();
+    camera_leaf_link->name = camera_frame;
+    camera_leaf_link->parent_joint = urdf.joints_[dofs[5]];
+    urdf.links_[camera_frame] = camera_leaf_link;
+
+    i = 0;
+    for (auto dof : dofs)
+    {
+        auto link = urdf.links_[dof + "_LINK"];
+        link->child_joints.push_back(urdf.joints_[dofs[i + 1]]);
+
+        // ROLL is the last joint and the next link is the camera frame.
+        // This means there is no ROLL link and there fore we do the next step
+        // until PITCH link and YAW obtains the camera frame as child link
+        if (i < 4)
+        {            
+            link->child_links.push_back(urdf.links_[dofs[i + 1] + "_LINK"]);
+        }
+        else
+        {
+            // YAW link gets camera frame as child link
+            link->child_links.push_back(urdf.links_[camera_frame]);
+        }
+
+        ++i;
+        // last dof has no link
+        if (i > 4) break;
+    }
 }
 
 KinematicsFromURDF::~KinematicsFromURDF()
@@ -108,7 +335,7 @@ KinematicsFromURDF::~KinematicsFromURDF()
 }
 
 void KinematicsFromURDF::get_part_meshes(
-        std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes)
+    std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes)
 {
     // Load robot mesh for each link
     std::vector<boost::shared_ptr<urdf::Link>> links;
@@ -128,14 +355,11 @@ void KinematicsFromURDF::get_part_meshes(
         if (tmp_link->name.compare(global_root) == 0) continue;
 
         boost::shared_ptr<PartMeshModel> part_ptr(
-                    new PartMeshModel(links[i], description_path_, i, false));
+            new PartMeshModel(links[i], description_path_, i, false));
 
         if (part_ptr->proper_)  // if the link has an actual mesh file to read
         {
-            //	  std::cout << "link " << links[i]->name << " is descendant of "
-            //<< tmp_link->name << std::endl;
             part_meshes.push_back(part_ptr);
-            // Produces an index map for the links
             mesh_names_.push_back(part_ptr->get_name());
         }
     }
@@ -144,16 +368,15 @@ void KinematicsFromURDF::get_part_meshes(
 void KinematicsFromURDF::check_size(int size)
 {
     int expected_size = kin_tree_.getNrOfJoints();
-    if(use_camera_offset_) { expected_size += camera_offset_.size(); }
 
-    if(expected_size != size)
+    if (expected_size != size)
     {
         std::cout << "a state of size: " << size
-          << " was passed. expected size: " << expected_size << std::endl;
+                  << " was passed. expected size: " << expected_size
+                  << std::endl;
         exit(-1);
     }
 }
-
 
 void KinematicsFromURDF::set_joint_angles(const Eigen::VectorXd& joint_state)
 {
@@ -165,11 +388,6 @@ void KinematicsFromURDF::set_joint_angles(const Eigen::VectorXd& joint_state)
         jnt_array_.data = joint_state.topRows(kin_tree_.getNrOfJoints());
         // Given the new joint angles, compute all link transforms in one go
         compute_transforms();
-    }
-
-    if(use_camera_offset_)
-    {
-        camera_offset_ = joint_state.bottomRows(camera_offset_.size());
     }
 }
 
@@ -192,7 +410,7 @@ void KinematicsFromURDF::compute_transforms()
         {
             KDL::Frame frame;
             if (tree_solver_->JntToCart(
-                        jnt_array_, frame, seg_it->second.segment.getName()) < 0)
+                    jnt_array_, frame, seg_it->second.segment.getName()) < 0)
                 ROS_ERROR("TreeSolver returned an error for link %s",
                           seg_it->second.segment.getName().c_str());
             frame_map_[seg_it->second.segment.getName()] = cam_frame_ * frame;
@@ -207,10 +425,6 @@ Eigen::VectorXd KinematicsFromURDF::get_link_position(int index)
     KDL::Frame& frame = frame_map_[mesh_names_[index]];
     pos << frame.p.x(), frame.p.y(), frame.p.z();
 
-    if(use_camera_offset_)
-    {
-        pos = pos + camera_offset_.position();
-    }
     return pos;
 }
 
@@ -241,15 +455,10 @@ Eigen::Quaternion<double> KinematicsFromURDF::get_link_orientation(int index)
 {
     Eigen::Quaternion<double> quat;
     frame_map_[mesh_names_[index]].M.GetQuaternion(
-                quat.x(), quat.y(), quat.z(), quat.w());
+        quat.x(), quat.y(), quat.z(), quat.w());
 
-    if(use_camera_offset_)
-    {
-        quat = camera_offset_.orientation().quaternion() * quat;
-    }
     return quat;
 }
-
 
 osr::PoseVector KinematicsFromURDF::get_link_pose(int index)
 {
@@ -261,13 +470,13 @@ osr::PoseVector KinematicsFromURDF::get_link_pose(int index)
 }
 
 Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
-        const sensor_msgs::JointState& sensor_msg)
+    const sensor_msgs::JointState& sensor_msg)
 {
     check_size(sensor_msg.position.size());
 
     Eigen::VectorXd eigen(sensor_msg.position.size());
 
-    for(size_t i = 0; i < sensor_msg.position.size(); i++)
+    for (size_t i = 0; i < sensor_msg.position.size(); i++)
     {
         int joint_index = name_to_index(sensor_msg.name[i]);
 
@@ -275,14 +484,15 @@ Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
             eigen(joint_index) = sensor_msg.position[i];
         else
             ROS_ERROR("i: %d, No joint index for %s",
-                      int(i), sensor_msg.name[i].c_str());
+                      int(i),
+                      sensor_msg.name[i].c_str());
     }
 
     return eigen;
 }
 
 std::vector<int> KinematicsFromURDF::get_joint_order(
-        const sensor_msgs::JointState& state)
+    const sensor_msgs::JointState& state)
 {
     std::vector<int> order(state.name.size());
     for (int i = 0; i < state.name.size(); ++i)
@@ -317,11 +527,8 @@ std::string KinematicsFromURDF::get_link_name(int idx)
 
 int KinematicsFromURDF::num_joints()
 {
-    int n_joints  = kin_tree_.getNrOfJoints();
-    if(use_camera_offset_ == true)
-    {
-        n_joints += camera_offset_.size();
-    }
+    int n_joints = kin_tree_.getNrOfJoints();
+
     return n_joints;
 }
 
