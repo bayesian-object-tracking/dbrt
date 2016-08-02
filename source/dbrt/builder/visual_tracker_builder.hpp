@@ -33,7 +33,7 @@
 #include <exception>
 
 #include <dbot/object_resource_identifier.hpp>
-#include <dbot/tracker/object_tracker.hpp>
+#include <dbot/tracker/tracker.hpp>
 #include <dbot/builder/particle_tracker_builder.hpp>
 
 #include <dbrt/tracker/visual_tracker.h>
