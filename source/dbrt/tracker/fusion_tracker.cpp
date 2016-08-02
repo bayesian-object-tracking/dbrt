@@ -110,14 +110,14 @@ void FusionTracker::run_rotary_tracker()
 void FusionTracker::run_visual_tracker()
 {
 
-    std::shared_ptr<VisualTracker> rbc_particle_filter_tracker =
+    std::shared_ptr<VisualTracker> particle_tracker =
         visual_tracker_factory_();
 
     State current_state;
     double garbage;
 
     current_state_and_time(current_state, garbage);
-    rbc_particle_filter_tracker->initialize({current_state});
+    particle_tracker->initialize({current_state});
 
     while (running_)
     {
@@ -195,7 +195,7 @@ void FusionTracker::run_visual_tracker()
             fl::LinearTransition<VisualTracker::State,
                                            VisualTracker::Noise,
                                            VisualTracker::Input>>(
-            rbc_particle_filter_tracker->filter()->transition());
+            particle_tracker->filter()->transition());
 
         // #5
 //        std::cout << "setting covariance sqrt " << std::endl
@@ -205,7 +205,7 @@ void FusionTracker::run_visual_tracker()
         transition->noise_matrix(cov_sqrt);
 
         // #6
-        rbc_particle_filter_tracker->initialize({mean});
+        particle_tracker->initialize({mean});
 
         // #7
         sensor_msgs::Image ros_image;
@@ -219,8 +219,8 @@ void FusionTracker::run_visual_tracker()
         auto image = ri::to_eigen_vector<double>(
             ros_image, camera_data_->downsampling_factor());
         State current_state;
-        current_state = rbc_particle_filter_tracker->track(image);
-        auto cov = rbc_particle_filter_tracker->filter()->belief().covariance();
+        current_state = particle_tracker->track(image);
+        auto cov = particle_tracker->filter()->belief().covariance();
 
         // #8
         auto angle_beliefs = get_angel_beliefs_from_moments(current_state, cov);

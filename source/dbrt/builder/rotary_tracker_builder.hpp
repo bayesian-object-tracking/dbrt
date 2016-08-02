@@ -12,7 +12,7 @@
  */
 
 /**
- * \file rbc_particle_filter_tracker_builder.hpp
+ * \file particle_tracker_builder.hpp
  * \date November 2015
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -22,8 +22,8 @@
 #include <exception>
 
 #include <dbot/object_resource_identifier.hpp>
-#include <dbot/tracker/object_tracker.hpp>
-#include <dbot/builder/rbc_particle_filter_tracker_builder.hpp>
+#include <dbot/tracker/tracker.hpp>
+#include <dbot/builder/particle_tracker_builder.hpp>
 
 #include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/tracker/rotary_tracker.h>
