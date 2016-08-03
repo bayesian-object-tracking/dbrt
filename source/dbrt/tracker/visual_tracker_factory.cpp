@@ -35,6 +35,7 @@
 
 #include <dbrt/urdf_object_loader.h>
 #include <dbrt/builder/visual_tracker_builder.hpp>
+#include <dbrt/util/parameter_tools.hpp>
 
 namespace dbrt
 {
@@ -44,58 +45,6 @@ namespace dbrt
 //     SamplingBlocksDefinition& sampling_blocks_definition)
 // {
 // }
-
-typedef std::vector<std::map<std::string, std::vector<std::string>>>
-    SamplingBlocksDefinition;
-
-std::vector<std::vector<int>> definition_to_sampling_block(
-    const SamplingBlocksDefinition& definition,
-    const std::shared_ptr<KinematicsFromURDF>& kinematics)
-{
-    std::vector<std::vector<int>> sampling_blocks;
-    for (auto block_definition : definition)
-    {
-        std::vector<int> block_vector;
-        for (auto joint_name : block_definition.begin()->second)
-        {
-            block_vector.push_back(kinematics->name_to_index(joint_name));
-        }
-        sampling_blocks.push_back(block_vector);
-    }
-
-    return sampling_blocks;
-}
-
-SamplingBlocksDefinition merge_sampling_block_definitions(
-    const SamplingBlocksDefinition& definition_A,
-    const SamplingBlocksDefinition& definition_B)
-{
-    SamplingBlocksDefinition merged = definition_A;
-
-    for (auto block_definition_B : definition_B)
-    {
-        auto block_B = block_definition_B.begin();
-
-        bool added = false;
-        for (auto& block_definition_A : merged)
-        {
-            auto block_A = block_definition_A.begin();
-            if (block_A->first == block_B->first)
-            {
-                block_A->second.insert(std::end(block_A->second),
-                                       std::begin(block_B->second),
-                                       std::end(block_B->second));
-                added = true;
-            }
-        }
-        if (!added)
-        {
-            merged.push_back(block_definition_B);
-        }
-    }
-
-    return merged;
-}
 
 /**
  * \brief Create a particle filter tracking the robot joints based on depth
@@ -116,6 +65,12 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     typedef dbrt::VisualTracker Tracker;
     typedef Tracker::State State;
 
+    bool estimate_camera_offset =
+        ri::read<bool>("camera_offset/estimate_camera_offset", nh);
+
+    auto camera_transition_joint_sigmas_map = read_maps_from_map_list(
+        "camera_offset/joint_transition/joint_sigmas", nh);
+
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
@@ -133,9 +88,18 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     /* ------------------------------ */
     dbrt::TransitionBuilder<Tracker>::Parameters transition_parameters;
 
+    auto transition_joint_sigmas_map =
+        read_maps_from_map_list(prefix + "joint_transition/joint_sigmas", nh);
+    if (estimate_camera_offset)
+    {
+        transition_joint_sigmas_map.insert(
+            camera_transition_joint_sigmas_map.begin(),
+            camera_transition_joint_sigmas_map.end());
+    }
+
     // linear state transition parameters
-    transition_parameters.joint_sigmas = ri::read<std::vector<double>>(
-        prefix + "joint_transition/joint_sigmas", nh);
+    transition_parameters.joint_sigmas =
+        extract_ordered_values(transition_joint_sigmas_map, kinematics);
     ROS_INFO("Transition parameter loaded");
     transition_parameters.joint_count = kinematics->num_joints();
     PV(transition_parameters.joint_count);
@@ -223,15 +187,15 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     tracker_parameters.sampling_blocks =
         definition_to_sampling_block(merged_definitions, kinematics);
 
-    for (auto block: tracker_parameters.sampling_blocks)
+    for (auto block : tracker_parameters.sampling_blocks)
+    {
+        std::cout << "[";
+        for (auto index : block)
         {
-            std::cout << "[";
-            for (auto index: block)
-                {
-                    std::cout << index << ", ";
-                }
-            std::cout << "]\n";
+            std::cout << index << ", ";
         }
+        std::cout << "]\n";
+    }
 
     auto tracker_builder =
         dbrt::VisualTrackerBuilder<Tracker>(kinematics,

@@ -49,6 +49,9 @@
 #include <dbrt/tracker/visual_tracker_factory.h>
 #include <dbrt/tracker/rotary_tracker_factory.h>
 
+#include <XmlRpcException.h>
+
+
 /**
  * \brief Node entry point
  */
@@ -56,6 +59,22 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "fusion_tracker");
     ros::NodeHandle nh("~");
+
+    // try
+    // {
+    //     auto sampling_blocks_definition = ri::read<SamplingBlocksDefinition>(
+    //         "fusion_tracker/sampling_blocks_definition", nh);
+
+    //     for (auto block_definition : sampling_blocks_definition)
+    //     {
+    //         for (auto block : block_definition)
+    //         {
+    //             std::cout << block.first << ": [";
+    //             for (auto ind : block.second) std::cout << ind << ", ";
+    //             std::cout << "]\n";
+    //         }
+    //     }
+    // }
 
     typedef dbrt::RobotState<> State;
 
@@ -81,18 +100,15 @@ int main(int argc, char** argv)
     while (!init_joint_state)
     {
         ROS_INFO("Waiting for initial joint state");
-        init_joint_state =
-            ros::topic::waitForMessage<sensor_msgs::JointState>(
-                "/joint_states", nh_global, ros::Duration(2.));
+        init_joint_state = ros::topic::waitForMessage<sensor_msgs::JointState>(
+            "/joint_states", nh_global, ros::Duration(2.));
     }
 
     /* ------------------------------ */
     /* - Create Tracker               */
     /* ------------------------------ */
-    auto fusion_tracker = dbrt::create_fusion_tracker(
-        kinematics, camera_data, init_joint_state);
-
-
+    auto fusion_tracker =
+        dbrt::create_fusion_tracker(kinematics, camera_data, init_joint_state);
 
     /* ------------------------------ */
     /* - Tracker publisher          - */
