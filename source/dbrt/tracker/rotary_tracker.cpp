@@ -25,47 +25,14 @@ namespace dbrt
 {
 RotaryTracker::RotaryTracker(
     const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
-    const std::vector<int>& joint_order)
-    : joint_filters_(joint_filters), joint_order_(joint_order)
+    const std::shared_ptr<KinematicsFromURDF>& kinematics)
+    : joint_filters_(joint_filters), kinematics_(kinematics)
 {
 }
 
 void RotaryTracker::track_callback(const sensor_msgs::JointState& joint_msg)
 {
-
-    /// hack: we add a measurement = 0 for the six extra joints corresponding
-    /// to the camera offset ***************************************************
-    sensor_msgs::JointState joint_state_with_offset = joint_msg;
-
-    joint_state_with_offset.name.push_back("XTION_X");
-    joint_state_with_offset.name.push_back("XTION_Y");
-    joint_state_with_offset.name.push_back("XTION_Z");
-    joint_state_with_offset.name.push_back("XTION_ROLL");
-    joint_state_with_offset.name.push_back("XTION_PITCH");
-    joint_state_with_offset.name.push_back("XTION_YAW");
-
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    /// ************************************************************************
-
-
-    Obsrv obsrv(joint_state_with_offset.position.size());
-
-    for (int i = 0; i < joint_state_with_offset.position.size(); ++i)
-    {
-        obsrv[joint_order_[i]] = joint_state_with_offset.position[i];
-    }
-
-    track(obsrv);
-}
-
-const std::vector<int>& RotaryTracker::joint_order() const
-{
-    return joint_order_;
+    track(kinematics_->sensor_msg_to_eigen(joint_msg));
 }
 
 const std::vector<RotaryTracker::JointBelief>& RotaryTracker::beliefs() const

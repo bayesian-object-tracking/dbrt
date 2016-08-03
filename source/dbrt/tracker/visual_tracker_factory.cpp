@@ -161,29 +161,13 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
 
     auto tracker = tracker_builder.build();
 
-
     /* ------------------------------ */
     /* - Initialize tracker         - */
     /* ------------------------------ */
-    /// hack: we add a measurement = 0 for the six extra joints corresponding
-    /// to the camera offset ***************************************************
-    sensor_msgs::JointState joint_state_with_offset = *joint_state;
-    joint_state_with_offset.name.push_back("XTION_X");
-    joint_state_with_offset.name.push_back("XTION_Y");
-    joint_state_with_offset.name.push_back("XTION_Z");
-    joint_state_with_offset.name.push_back("XTION_ROLL");
-    joint_state_with_offset.name.push_back("XTION_PITCH");
-    joint_state_with_offset.name.push_back("XTION_YAW");
 
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
 
-    std::vector<Eigen::VectorXd> initial_states_vectors =
-        {kinematics->sensor_msg_to_eigen(joint_state_with_offset)};
+    std::vector<Eigen::VectorXd> initial_states_vectors = {
+        kinematics->sensor_msg_to_eigen(*joint_state)};
     std::vector<dbrt::RobotState<>> initial_states;
     for (auto state : initial_states_vectors) initial_states.push_back(state);
     tracker->initialize(initial_states);

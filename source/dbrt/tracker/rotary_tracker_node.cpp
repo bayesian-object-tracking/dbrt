@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     /* ------------------------------ */
     /* - Create the robot model     - */
     /* ------------------------------ */
-    auto kinematics = dbrt::create_kinematics(nh, "NO_CAMERA_FRAME");
+    auto kinematics = dbrt::create_kinematics(nh, "XTION_RGB");
 
     /* ------------------------------ */
     /* - Few types we will be using - */

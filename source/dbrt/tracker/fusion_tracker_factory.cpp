@@ -84,46 +84,13 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     /* - Initialize                 - */
     /* ------------------------------ */
 
-    /// hack: we add a measurement = 0 for the six extra joints corresponding
-    /// to the camera offset ***************************************************
-    sensor_msgs::JointState joint_state_with_offset = *joint_state;
-
-    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
-    {
-        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
-                  << std::endl;
-    }
-
-    joint_state_with_offset.name.push_back("XTION_X");
-    joint_state_with_offset.name.push_back("XTION_Y");
-    joint_state_with_offset.name.push_back("XTION_Z");
-    joint_state_with_offset.name.push_back("XTION_ROLL");
-    joint_state_with_offset.name.push_back("XTION_PITCH");
-    joint_state_with_offset.name.push_back("XTION_YAW");
-
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-
-    for (size_t i = 0; i < joint_state_with_offset.name.size(); i++)
-    {
-        std::cout << "joint " << i << " : " << joint_state_with_offset.name[i]
-                  << std::endl;
-    }
-    /// ************************************************************************
-
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        {kinematics->sensor_msg_to_eigen(joint_state_with_offset)};
+        {kinematics->sensor_msg_to_eigen(*joint_state)};
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {
         initial_states.push_back(state);
     }
-
-//    auto joint_order = kinematics->get_joint_order(joint_state_with_offset);
 
     /* ------------------------------ */
     /* - Create Tracker and         - */
@@ -132,6 +99,7 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
 
     auto fusion_tracker = std::make_shared<dbrt::FusionTracker>(
         camera_data,
+        kinematics,
         [&, prefix]()
         {
             return dbrt::create_rotary_tracker(prefix, kinematics, joint_state);

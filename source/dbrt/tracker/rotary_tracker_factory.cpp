@@ -74,29 +74,11 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     auto rotary_sensor_builder =
         std::make_shared<dbrt::RotarySensorBuilder<Tracker>>(sensor_parameters);
 
-    /// hack: we add a measurement = 0 for the six extra joints corresponding
-    /// to the camera offset ***************************************************
-    sensor_msgs::JointState joint_state_with_offset = *joint_state;
-    joint_state_with_offset.name.push_back("XTION_X");
-    joint_state_with_offset.name.push_back("XTION_Y");
-    joint_state_with_offset.name.push_back("XTION_Z");
-    joint_state_with_offset.name.push_back("XTION_ROLL");
-    joint_state_with_offset.name.push_back("XTION_PITCH");
-    joint_state_with_offset.name.push_back("XTION_YAW");
-
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-    joint_state_with_offset.position.push_back(0);
-
     /* ------------------------------ */
     /* - Build the tracker          - */
     /* ------------------------------ */
     auto tracker_builder = dbrt::RotaryTrackerBuilder<Tracker>(
-        joint_count,
-        kinematics->get_joint_order(joint_state_with_offset),
+        kinematics,
         transition_builder,
         rotary_sensor_builder);
 
@@ -106,7 +88,7 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     /* - Initialize tracker         - */
     /* ------------------------------ */
     std::vector<Eigen::VectorXd> initial_states_vectors =
-        {kinematics->sensor_msg_to_eigen(joint_state_with_offset)};
+        {kinematics->sensor_msg_to_eigen(*joint_state)};
     std::vector<dbrt::RobotState<>> initial_states;
     for (auto state : initial_states_vectors) initial_states.push_back(state);
     tracker->initialize(initial_states);

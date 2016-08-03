@@ -13,7 +13,7 @@
 
 /**
  * \file camera_data_factory.h
- * \date July 2016
+ * \date july 2016
  * \author jan issac (jan.issac@gmail.com)
  */
 

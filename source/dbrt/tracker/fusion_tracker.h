@@ -71,6 +71,7 @@ public:
 
 public:
     FusionTracker(const std::shared_ptr<dbot::CameraData>& camera_data,
+                  const std::shared_ptr<KinematicsFromURDF>& kinematics,
                   const RotaryTrackerFactory& rotary_tracker_factory,
                   const VisualTrackerFactory& visual_tracker_factory,
                   double camera_delay);
@@ -110,6 +111,7 @@ private:
 private:
     VisualTrackerFactory visual_tracker_factory_;
     std::shared_ptr<dbot::CameraData> camera_data_;
+    std::shared_ptr<KinematicsFromURDF> kinematics_;
     std::shared_ptr<RotaryTracker> gaussian_joint_tracker_;
 
     bool running_;

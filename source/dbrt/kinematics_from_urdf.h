@@ -1,39 +1,25 @@
-/*********************************************************************
+/*
+ * This is part of the Bayesian Object Tracking (bot),
+ * (https://github.com/bayesian-object-tracking)
  *
- *  Copyright (c) 2014, Jeannette Bohg - MPI for Intelligent System
- *  (jbohg@tuebingen.mpg.de)
- *  All rights reserved.
+ * Copyright (c) 2015 Max Planck Society,
+ * 				 Autonomous Motion Department,
+ * 			     Institute for Intelligent Systems
  *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of Jeannette Bohg nor the names of MPI
- *     may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- *********************************************************************/
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License License (GNU GPL). A copy of the license can be found in the LICENSE
+ * file distributed with this source code.
+ */
 
-#ifndef POSE_TRACKING_INTERFACE_UTILS_KINEMATICS_FROM_URDF_HPP
-#define POSE_TRACKING_INTERFACE_UTILS_KINEMATICS_FROM_URDF_HPP
+/**
+ * \file kinematics_from_urdf.cpp
+ * \date 2014, 2016
+ * \author Jeannette Bohg (jbohg@tuebingen.mpg.de)
+ * \author jan issac (jan.issac@gmail.com)
+ * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
+ */
+
+#pragma once
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
@@ -84,7 +70,7 @@ public:
     int num_joints();
     int num_links();
     std::string get_link_name(int idx);
-    std::vector<std::string> get_joint_map();
+    const std::vector<std::string>& get_joint_map() const;
     std::string get_root_frame_id();
 
     /// convenience ************************************************************
@@ -139,4 +125,3 @@ private:
     osr::PoseVector camera_offset_;
 };
 
-#endif

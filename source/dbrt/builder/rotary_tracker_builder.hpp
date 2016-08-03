@@ -43,13 +43,11 @@ public:
 
 public:
     RotaryTrackerBuilder(
-        const int& joint_count,
-        const std::vector<int> joint_order,
+        const std::shared_ptr<KinematicsFromURDF>& kinematics,
         const std::shared_ptr<FactorizedTransitionBuilder<Tracker>>&
             transition_builder,
         const std::shared_ptr<RotarySensorBuilder<Tracker>>& sensor_builder)
-        : joint_count_(joint_count),
-          joint_order_(joint_order),
+        : kinematics_(kinematics),
           transition_builder_(transition_builder),
           sensor_builder_(sensor_builder)
     {
@@ -62,7 +60,7 @@ public:
     {
         auto joint_filters = create_joint_filters();
 
-        auto tracker = std::make_shared<Tracker>(joint_filters, joint_order_);
+        auto tracker = std::make_shared<Tracker>(joint_filters, kinematics_);
 
         return tracker;
     }
@@ -71,10 +69,9 @@ public:
     {
         auto joint_filters = std::make_shared<std::vector<JointFilter>>();
 
-        for (int i = 0; i < joint_count_; ++i)
+        for (int i = 0; i < kinematics_->num_joints(); ++i)
         {
-            auto transition =
-                this->transition_builder_->build(i);
+            auto transition = this->transition_builder_->build(i);
             auto sensor = this->sensor_builder_->build(i);
 
             auto filter = JointFilter(*transition, *sensor);
@@ -85,8 +82,7 @@ public:
     }
 
 protected:
-    int joint_count_;
-    std::vector<int> joint_order_;
+    std::shared_ptr<KinematicsFromURDF> kinematics_;
     std::shared_ptr<FactorizedTransitionBuilder<Tracker>> transition_builder_;
     std::shared_ptr<RotarySensorBuilder<Tracker>> sensor_builder_;
 };

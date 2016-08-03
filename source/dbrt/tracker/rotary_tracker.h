@@ -28,6 +28,7 @@
 #include <fl/model/transition/linear_transition.hpp>
 #include <fl/model/transition/interface/transition_function.hpp>
 #include <dbrt/tracker/robot_tracker.h>
+#include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt
 {
@@ -56,8 +57,7 @@ public:
         JointStateModel;
 
     // Linear observation function
-    typedef fl::LinearGaussianSensor<JointObsrv, JointState>
-        JointSensor;
+    typedef fl::LinearGaussianSensor<JointObsrv, JointState> JointSensor;
 
     // Kalman filter for a single joint
     typedef fl::GaussianFilter<JointStateModel, JointSensor> JointFilter;
@@ -68,9 +68,9 @@ public:
     typedef fl::Gaussian<Eigen::Matrix<fl::Real, 1, 1>> AngleBelief;
 
 public:
-    RotaryTracker(const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
-        const std::vector<int>& joint_order);
-
+    RotaryTracker(
+        const std::shared_ptr<std::vector<JointFilter>>& joint_filters,
+        const std::shared_ptr<KinematicsFromURDF>& kinematics);
 
     /**
      * \brief perform a single filter step
@@ -122,10 +122,11 @@ public:
 
     void track_callback(const sensor_msgs::JointState& joint_msg);
 
-    const std::vector<int>& joint_order() const;
+    /* const std::vector<int>& joint_order() const; */
 
 private:
-    std::vector<int> joint_order_;
+    /* std::vector<int> joint_order_; */
+    std::shared_ptr<KinematicsFromURDF> kinematics_;
     State current_state_;
     std::vector<JointBelief> beliefs_;
     std::shared_ptr<std::vector<JointFilter>> joint_filters_;
