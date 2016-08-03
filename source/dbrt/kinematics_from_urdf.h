@@ -78,6 +78,9 @@ public:
     void print_joints();
     void print_links();
 
+    // get the joint index in state array
+    int name_to_index(const std::string& name);
+
 private:
     void rename_camera_frame(const std::string& camera_frame,
                              urdf::Model& urdf);
@@ -88,8 +91,6 @@ private:
 
     void compute_transforms();
 
-    // get the joint index in state array
-    int name_to_index(const std::string& name);
 
     // std::string tf_correction_root_;
     std::string description_path_;

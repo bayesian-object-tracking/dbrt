@@ -38,13 +38,64 @@
 
 namespace dbrt
 {
-//     typedef std::vector<std::map<std::string, std::vector<std::string>>>
-//     SamplingBlocksDefinition;
 // void load_sampling_block_definition(
+//     const std::string& prefix,
+//     ros::NodeHandle& nh,
 //     SamplingBlocksDefinition& sampling_blocks_definition)
 // {
-    
 // }
+
+typedef std::vector<std::map<std::string, std::vector<std::string>>>
+    SamplingBlocksDefinition;
+
+std::vector<std::vector<int>> definition_to_sampling_block(
+    const SamplingBlocksDefinition& definition,
+    const std::shared_ptr<KinematicsFromURDF>& kinematics)
+{
+    std::vector<std::vector<int>> sampling_blocks;
+    for (auto block_definition : definition)
+    {
+        std::vector<int> block_vector;
+        for (auto joint_name : block_definition.begin()->second)
+        {
+            block_vector.push_back(kinematics->name_to_index(joint_name));
+        }
+        sampling_blocks.push_back(block_vector);
+    }
+
+    return sampling_blocks;
+}
+
+SamplingBlocksDefinition merge_sampling_block_definitions(
+    const SamplingBlocksDefinition& definition_A,
+    const SamplingBlocksDefinition& definition_B)
+{
+    SamplingBlocksDefinition merged = definition_A;
+
+    for (auto block_definition_B : definition_B)
+    {
+        auto block_B = block_definition_B.begin();
+
+        bool added = false;
+        for (auto& block_definition_A : merged)
+        {
+            auto block_A = block_definition_A.begin();
+            if (block_A->first == block_B->first)
+            {
+                block_A->second.insert(std::end(block_A->second),
+                                       std::begin(block_B->second),
+                                       std::end(block_B->second));
+                added = true;
+            }
+        }
+        if (!added)
+        {
+            merged.push_back(block_definition_B);
+        }
+    }
+
+    return merged;
+}
 
 /**
  * \brief Create a particle filter tracking the robot joints based on depth
@@ -157,8 +208,30 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     tracker_parameters.max_kl_divergence =
         ri::read<double>(prefix + "max_kl_divergence", nh);
 
+    // tracker_parameters.sampling_blocks =
+    //     ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks",
+    //     nh);
+
+    auto sampling_blocks_definition =
+        ri::read<SamplingBlocksDefinition>("sampling_blocks", nh);
+
+    auto camera_offset_sampling_blocks_definition =
+        ri::read<SamplingBlocksDefinition>("camera_offset/sampling_blocks", nh);
+
+    auto merged_definitions = merge_sampling_block_definitions(
+        sampling_blocks_definition, camera_offset_sampling_blocks_definition);
     tracker_parameters.sampling_blocks =
-        ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks", nh);
+        definition_to_sampling_block(merged_definitions, kinematics);
+
+    for (auto block: tracker_parameters.sampling_blocks)
+        {
+            std::cout << "[";
+            for (auto index: block)
+                {
+                    std::cout << index << ", ";
+                }
+            std::cout << "]\n";
+        }
 
     auto tracker_builder =
         dbrt::VisualTrackerBuilder<Tracker>(kinematics,

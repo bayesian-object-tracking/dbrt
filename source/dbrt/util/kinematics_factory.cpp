@@ -34,8 +34,8 @@ std::shared_ptr<KinematicsFromURDF> create_kinematics(
     auto rendering_root_left = ri::read<std::string>("rendering_root_left", nh);
     auto rendering_root_right =
         ri::read<std::string>("rendering_root_right", nh);
-
-    auto estimate_camera_offset = ri::read<bool>("estimate_camera_offset", nh);
+    auto estimate_camera_offset =
+        ri::read<bool>("camera_offset/estimate_camera_offset", nh);
 
     std::string prefixed_frame_id = camera_frame_id;
     std::size_t slash_index = prefixed_frame_id.find_last_of("/");
