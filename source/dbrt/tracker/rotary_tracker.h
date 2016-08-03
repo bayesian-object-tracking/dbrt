@@ -65,6 +65,7 @@ public:
     // Belief representation of a single joint, i.e. a Gaussian
     typedef typename JointFilter::Belief JointBelief;
 
+    // Belief distribution of a single joint
     typedef fl::Gaussian<Eigen::Matrix<fl::Real, 1, 1>> AngleBelief;
 
 public:
@@ -120,9 +121,10 @@ public:
      */
     State current_state() const;
 
+    /**
+     * Callback function to apply the filter for the given joint state message
+     */
     void track_callback(const sensor_msgs::JointState& joint_msg);
-
-    /* const std::vector<int>& joint_order() const; */
 
 private:
     /* std::vector<int> joint_order_; */

@@ -38,6 +38,14 @@
 
 namespace dbrt
 {
+//     typedef std::vector<std::map<std::string, std::vector<std::string>>>
+//     SamplingBlocksDefinition;
+// void load_sampling_block_definition(
+//     SamplingBlocksDefinition& sampling_blocks_definition)
+// {
+    
+// }
+
 /**
  * \brief Create a particle filter tracking the robot joints based on depth
  *     images measurements
@@ -148,6 +156,7 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
         ri::read<double>(prefix + "moving_average_update_rate", nh);
     tracker_parameters.max_kl_divergence =
         ri::read<double>(prefix + "max_kl_divergence", nh);
+
     tracker_parameters.sampling_blocks =
         ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks", nh);
 
@@ -164,7 +173,6 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     /* ------------------------------ */
     /* - Initialize tracker         - */
     /* ------------------------------ */
-
 
     std::vector<Eigen::VectorXd> initial_states_vectors = {
         kinematics->sensor_msg_to_eigen(*joint_state)};
