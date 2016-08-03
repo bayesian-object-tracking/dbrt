@@ -27,7 +27,12 @@
 
 #include <fl/util/profiling.hpp>
 
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/fill_image.h>
+#include <sensor_msgs/distortion_models.h>
+#include <image_transport/image_transport.h>
 
 #include <dbot/camera_data.hpp>
 #include <dbot/object_model.hpp>
@@ -71,19 +76,31 @@ public:
           dilation_(dilation),
           image_publishing_delay_(image_publishing_delay),
           image_timestamp_delay_(image_timestamp_delay),
-          paused_(false)
+          paused_(false),
+          node_handle_("~")
     {
+        std::string prefix = "";
+
         robot_publisher_ = std::make_shared<RobotPublisher<State>>(
-            urdf_kinematics_, "", "");
+                                                                      urdf_kinematics_, prefix, "");
+
+        // camera publisher
+        pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
+                    prefix + "/XTION/depth/camera_info", 0);
+        boost::shared_ptr<image_transport::ImageTransport> it(
+                    new image_transport::ImageTransport(node_handle_));
+        pub_depth_image_ = it->advertise(prefix + "/XTION/depth/image", 0);
+
+
     }
 
     void run()
     {
         running_ = true;
         joint_sensor_thread_ =
-            std::thread(&RobotEmulator::run_joint_sensors, this);
+                std::thread(&RobotEmulator::run_joint_sensors, this);
         visual_sensor_thread_ =
-            std::thread(&RobotEmulator::run_visual_sensors, this);
+                std::thread(&RobotEmulator::run_visual_sensors, this);
     }
 
     void pause() { paused_ = true; }
@@ -138,41 +155,42 @@ public:
 
             Eigen::VectorXd depth_image;
             renderer_->Render(
-                state, depth_image, std::numeric_limits<double>::quiet_NaN());
+                        state, depth_image, std::numeric_limits<double>::quiet_NaN());
 
             auto end = std::chrono::system_clock::now();
             auto elapsed_time =
-                std::chrono::duration<double>(end - start).count();
+                    std::chrono::duration<double>(end - start).count();
 
             // publish in parallel
             std::thread(
-                [state,
-                 timestamp,
-                 elapsed_time,
-                 depth_image,
-                 image_publishing_delay_,
-                 &publisher_mutex_,
-                 &camera_data_,
-                 &robot_publisher_]()
-                {
-                    double remaining_delay =
+                        [state,
+                        timestamp,
+                        elapsed_time,
+                        depth_image,
+                        image_publishing_delay_,
+                        &publisher_mutex_,
+                        &camera_data_,
+                        &robot_publisher_,
+                        this]()
+            {
+                double remaining_delay =
                         std::max(image_publishing_delay_ - elapsed_time, 0.0);
 
-                    ROS_INFO_STREAM("Visual simulation computation delay "
-                                    << elapsed_time);
+                ROS_INFO_STREAM("Visual simulation computation delay "
+                                << elapsed_time);
 
-                    std::this_thread::sleep_for(
-                        std::chrono::duration<double>(remaining_delay));
+                std::this_thread::sleep_for(
+                            std::chrono::duration<double>(remaining_delay));
 
-                    std::lock_guard<std::mutex> publisher_lock(
-                        publisher_mutex_);
-                    robot_publisher_->publish_camera_info(camera_data_,
-                                                          ros::Time(timestamp));
-                    robot_publisher_->publish_image(
-                        depth_image, camera_data_, ros::Time(timestamp));
+                std::lock_guard<std::mutex> publisher_lock(
+                            publisher_mutex_);
+                this->publish_camera_info(camera_data_,
+                                                      ros::Time(timestamp));
+                this->publish_image(
+                            depth_image, camera_data_, ros::Time(timestamp));
 
-                })
-                .detach();
+            })
+                    .detach();
         }
     }
 
@@ -202,6 +220,115 @@ public:
     //    }
 
 private:
+
+
+
+    void convert_to_depth_image_msg(
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const Eigen::VectorXd& depth_image,
+            sensor_msgs::Image& image)
+    {
+        Eigen::VectorXf float_vector = depth_image.cast<float>();
+
+        sensor_msgs::fillImage(image,
+                               sensor_msgs::image_encodings::TYPE_32FC1,
+                               camera_data->resolution().height,
+                               camera_data->resolution().width,
+                               camera_data->resolution().width * sizeof(float),
+                               float_vector.data());
+    }
+
+
+
+    bool has_image_subscribers() const
+    {
+        return pub_depth_image_.getNumSubscribers() > 0;
+    }
+
+
+    void publish_image(
+            const Eigen::VectorXd& depth_image,
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const ros::Time& time)
+    {
+        if (pub_depth_image_.getNumSubscribers() > 0)
+        {
+            sensor_msgs::Image ros_image;
+            convert_to_depth_image_msg(camera_data, depth_image, ros_image);
+
+            ros_image.header.frame_id = camera_data->frame_id();
+            ros_image.header.stamp = time;
+            pub_depth_image_.publish(ros_image);
+        }
+    }
+
+
+    void publish_camera_info(
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const ros::Time& time)
+    {
+        auto camera_info = create_camera_info(camera_data, time);
+        pub_camera_info_.publish(camera_info);
+    }
+
+
+    sensor_msgs::CameraInfoPtr create_camera_info(
+            const std::shared_ptr<dbot::CameraData>& camera_data,
+            const ros::Time& time)
+    {
+        sensor_msgs::CameraInfoPtr info_msg =
+                boost::make_shared<sensor_msgs::CameraInfo>();
+
+        info_msg->header.stamp = time;
+        // if internal registration is used, rgb camera intrinsic parameters are
+        // used
+        info_msg->header.frame_id = camera_data->frame_id();
+        info_msg->width = camera_data->native_resolution().width;
+        info_msg->height = camera_data->native_resolution().height;
+
+#if ROS_VERSION_MINIMUM(1, 3, 0)
+        info_msg->D = std::vector<double>(5, 0.0);
+        info_msg->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+#else
+        info_msg->D.assign(0.0);
+#endif
+        info_msg->K.assign(0.0);
+        info_msg->R.assign(0.0);
+        info_msg->P.assign(0.0);
+
+        auto camera_matrix = camera_data->camera_matrix();
+        camera_matrix.topLeftCorner(2, 3) *=
+                double(camera_data->downsampling_factor());
+
+        for (size_t col = 0; col < 3; col++)
+            for (size_t row = 0; row < 3; row++)
+                info_msg->K[col + row * 3] = camera_matrix(row, col);
+
+        // no rotation: identity
+        info_msg->R[0] = info_msg->R[4] = info_msg->R[8] = 1.0;
+        // no rotation, no translation => P=K(I|0)=(K|0)
+        info_msg->P[0] = info_msg->P[5] = info_msg->K[0];
+        info_msg->P[2] = info_msg->K[2];
+        info_msg->P[6] = info_msg->K[5];
+        info_msg->P[10] = 1.0;
+
+        return info_msg;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     double time_;
     Eigen::VectorXd state_;
     //    Eigen::VectorXd obsrv_vector_;
@@ -225,5 +352,10 @@ private:
     std::thread joint_sensor_thread_;
     std::thread visual_sensor_thread_;
     bool paused_;
+
+
+    ros::NodeHandle node_handle_;
+    ros::Publisher pub_camera_info_;
+    image_transport::Publisher pub_depth_image_;
 };
 }

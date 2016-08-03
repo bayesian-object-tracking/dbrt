@@ -115,9 +115,5 @@ protected:
     std::string root_frame_id_;
     std::vector<std::string> joint_names_;
 
-
-
-    ros::Publisher pub_camera_info_;
-    image_transport::Publisher pub_depth_image_;
 };
 }

@@ -68,13 +68,6 @@ RobotPublisher<State>::RobotPublisher(
     // joint angle publisher
     pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
         prefix_ + "/joint_states", 0);
-
-    // camera publisher
-    pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
-        prefix_ + "/XTION/depth/camera_info", 0);
-    boost::shared_ptr<image_transport::ImageTransport> it(
-        new image_transport::ImageTransport(node_handle_));
-    pub_depth_image_ = it->advertise(prefix_ + "/XTION/depth/image", 0);
 }
 
 template <typename State>
@@ -196,95 +189,4 @@ void RobotPublisher<State>::to_joint_map(
     }
 }
 
-template <typename State>
-void RobotPublisher<State>::convert_to_depth_image_msg(
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const Eigen::VectorXd& depth_image,
-    sensor_msgs::Image& image)
-{
-    Eigen::VectorXf float_vector = depth_image.cast<float>();
-
-    sensor_msgs::fillImage(image,
-                           sensor_msgs::image_encodings::TYPE_32FC1,
-                           camera_data->resolution().height,
-                           camera_data->resolution().width,
-                           camera_data->resolution().width * sizeof(float),
-                           float_vector.data());
-}
-
-template <typename State>
-bool RobotPublisher<State>::has_image_subscribers() const
-{
-    return pub_depth_image_.getNumSubscribers() > 0;
-}
-
-template <typename State>
-void RobotPublisher<State>::publish_image(
-    const Eigen::VectorXd& depth_image,
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    if (pub_depth_image_.getNumSubscribers() > 0)
-    {
-        sensor_msgs::Image ros_image;
-        convert_to_depth_image_msg(camera_data, depth_image, ros_image);
-
-        ros_image.header.frame_id = prefix_ + camera_data->frame_id();
-        ros_image.header.stamp = time;
-        pub_depth_image_.publish(ros_image);
-    }
-}
-
-template <typename State>
-void RobotPublisher<State>::publish_camera_info(
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    auto camera_info = create_camera_info(camera_data, time);
-    pub_camera_info_.publish(camera_info);
-}
-
-template <typename State>
-sensor_msgs::CameraInfoPtr RobotPublisher<State>::create_camera_info(
-    const std::shared_ptr<dbot::CameraData>& camera_data,
-    const ros::Time& time)
-{
-    sensor_msgs::CameraInfoPtr info_msg =
-        boost::make_shared<sensor_msgs::CameraInfo>();
-
-    info_msg->header.stamp = time;
-    // if internal registration is used, rgb camera intrinsic parameters are
-    // used
-    info_msg->header.frame_id = camera_data->frame_id();
-    info_msg->width = camera_data->native_resolution().width;
-    info_msg->height = camera_data->native_resolution().height;
-
-#if ROS_VERSION_MINIMUM(1, 3, 0)
-    info_msg->D = std::vector<double>(5, 0.0);
-    info_msg->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-#else
-    info_msg->D.assign(0.0);
-#endif
-    info_msg->K.assign(0.0);
-    info_msg->R.assign(0.0);
-    info_msg->P.assign(0.0);
-
-    auto camera_matrix = camera_data->camera_matrix();
-    camera_matrix.topLeftCorner(2, 3) *=
-        double(camera_data->downsampling_factor());
-
-    for (size_t col = 0; col < 3; col++)
-        for (size_t row = 0; row < 3; row++)
-            info_msg->K[col + row * 3] = camera_matrix(row, col);
-
-    // no rotation: identity
-    info_msg->R[0] = info_msg->R[4] = info_msg->R[8] = 1.0;
-    // no rotation, no translation => P=K(I|0)=(K|0)
-    info_msg->P[0] = info_msg->P[5] = info_msg->K[0];
-    info_msg->P[2] = info_msg->K[2];
-    info_msg->P[6] = info_msg->K[5];
-    info_msg->P[10] = 1.0;
-
-    return info_msg;
-}
 }
