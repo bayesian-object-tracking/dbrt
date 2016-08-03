@@ -56,7 +56,6 @@ public:
     void publish_tf(const State& state, const ros::Time& time);
     void publish_tf(const State& state,
                     const JointsObsrv& obsrv,
-                    const std::string& obsrv_tf_prefix,
                     const ros::Time& time);
 
     void publish_joint_state(const State& state, const ros::Time time);
@@ -84,8 +83,6 @@ protected:
     tf::StampedTransform get_root_transform(
         const std::map<std::string, double>& state_joint_map,
         const std::map<std::string, double>& obsrv_joint_map,
-        const std::string& obsrv_tf_prefix,
-        const std::string& connecting_frame,
         const ros::Time& time);
 
     bool has_image_subscribers() const;
@@ -111,7 +108,7 @@ protected:
     // such that a target frame_id is aligned in both.
     // \todo There is probably redundancy in all this publisher mess.
     RobotTransformer transformer_;
-    std::string target_frame_id_;
+    std::string connecting_frame_id;
     std::string root_frame_id_;
     std::vector<std::string> joint_names_;
 

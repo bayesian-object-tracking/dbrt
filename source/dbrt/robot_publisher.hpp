@@ -44,7 +44,7 @@ RobotPublisher<State>::RobotPublisher(
     const std::string& target_frame_id)
     : node_handle_("~"),
       prefix_(prefix),
-      target_frame_id_(target_frame_id),
+      connecting_frame_id(target_frame_id),
       robot_state_publisher_(
           std::make_shared<robot_state_pub::RobotStatePublisher>(
               urdf_kinematics->get_tree())),
@@ -88,7 +88,7 @@ void RobotPublisher<State>::publish_joint_state(const State& state,
 
 template <typename State>
 void RobotPublisher<State>::publish_tf(const State& state,
-                                              const ros::Time& time)
+                                       const ros::Time& time)
 {
     publish_id_transform(
         time, "/" + root_frame_id_, tf::resolve(prefix_, root_frame_id_));
@@ -99,7 +99,6 @@ template <typename State>
 void RobotPublisher<State>::publish_tf(
     const State& state,
     const JointsObsrv& obsrv,
-    const std::string& obsrv_tf_prefix,
     const ros::Time& time)
 {
     std::map<std::string, double> state_joint_map;
@@ -111,8 +110,6 @@ void RobotPublisher<State>::publish_tf(
     // linked at the specified target frame
     tf::StampedTransform root_transform = get_root_transform(state_joint_map,
                                                              obsrv_joint_map,
-                                                             obsrv_tf_prefix,
-                                                             target_frame_id_,
                                                              time);
 
     static tf::TransformBroadcaster br;
@@ -151,27 +148,25 @@ template <typename State>
 tf::StampedTransform RobotPublisher<State>::get_root_transform(
     const std::map<std::string, double>& state_joint_map,
     const std::map<std::string, double>& obsrv_joint_map,
-    const std::string& obsrv_tf_prefix,
-    const std::string& connecting_frame,
     const ros::Time& time)
 {
     // Lookup transform from target to root of joint map 1
     transformer_.set_joints(state_joint_map);
     tf::StampedTransform transform_t_r;
     transformer_.lookup_transform(
-        target_frame_id_, root_frame_id_, transform_t_r);
+        connecting_frame_id, root_frame_id_, transform_t_r);
 
     // Lookup transform from root to target of joint map 2
     transformer_.set_joints(obsrv_joint_map);
     tf::StampedTransform transform_r_t;
     transformer_.lookup_transform(
-        root_frame_id_, target_frame_id_, transform_r_t);
+        root_frame_id_, connecting_frame_id, transform_r_t);
 
     // Compose the two tf_transforms
     tf::StampedTransform transform_r_r(
         transform_r_t * transform_t_r,
         time,
-        tf::resolve(obsrv_tf_prefix, root_frame_id_),
+        tf::resolve("", root_frame_id_),
         tf::resolve(prefix_, root_frame_id_));
 
     return transform_r_r;
