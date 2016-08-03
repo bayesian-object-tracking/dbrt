@@ -200,10 +200,6 @@ void FusionTracker::run_visual_tracker()
             particle_tracker->filter()->transition());
 
         // #5
-//        std::cout << "setting covariance sqrt " << std::endl
-//                     << cov_sqrt << std::endl;
-
-
         transition->noise_matrix(cov_sqrt);
 
         // #6
