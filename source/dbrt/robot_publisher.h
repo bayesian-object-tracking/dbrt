@@ -60,14 +60,6 @@ public:
 
     void publish_joint_state(const State& state, const ros::Time time);
 
-    void publish_image(const Eigen::VectorXd& depth_image,
-                       const std::shared_ptr<dbot::CameraData>& camera_data,
-                       const ros::Time& time);
-
-    void publish_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const ros::Time& time);
-
 protected:
     /**
      * This mapping function is required since the received JointsObsrv order
@@ -85,16 +77,6 @@ protected:
         const std::map<std::string, double>& obsrv_joint_map,
         const ros::Time& time);
 
-    bool has_image_subscribers() const;
-
-    void convert_to_depth_image_msg(
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const Eigen::VectorXd& depth_image,
-        sensor_msgs::Image& image);
-
-    sensor_msgs::CameraInfoPtr create_camera_info(
-        const std::shared_ptr<dbot::CameraData>& camera_data,
-        const ros::Time& time);
 
 protected:
     sensor_msgs::JointState joint_state_;
