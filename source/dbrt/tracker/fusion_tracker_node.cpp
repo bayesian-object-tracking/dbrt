@@ -60,22 +60,6 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "fusion_tracker");
     ros::NodeHandle nh("~");
 
-    // try
-    // {
-    //     auto sampling_blocks_definition = ri::read<SamplingBlocksDefinition>(
-    //         "fusion_tracker/sampling_blocks_definition", nh);
-
-    //     for (auto block_definition : sampling_blocks_definition)
-    //     {
-    //         for (auto block : block_definition)
-    //         {
-    //             std::cout << block.first << ": [";
-    //             for (auto ind : block.second) std::cout << ind << ", ";
-    //             std::cout << "]\n";
-    //         }
-    //     }
-    // }
-
     typedef dbrt::RobotState<> State;
 
     /* ------------------------------ */

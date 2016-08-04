@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     dbrt::RobotState<>::kinematics_mutex_ = std::make_shared<std::mutex>();
 
     // parameter shorthand prefix
-    std::string pre = "rotary_tracker/";
+    std::string pre = "";
 
     /* ------------------------------ */
     /* - Get initial joint values   - */

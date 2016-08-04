@@ -73,7 +73,7 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     ros::NodeHandle nh("~");
 
     // parameter shorthand prefix
-    std::string prefix = "fusion_tracker/";
+    std::string prefix = "";
 
     /* ------------------------------ */
     /* - Our state representation   - */

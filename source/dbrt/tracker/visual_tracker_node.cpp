@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     /* - Create tracker             - */
     /* ------------------------------ */
     // parameter shorthand prefix
-    std::string pre = "particle_filter/";
+    std::string pre = "";
     auto tracker =
         dbrt::create_visual_tracker(pre, kinematics, camera_data, joint_state);
     dbrt::VisualTrackerRos tracker_ros(tracker, camera_data);
