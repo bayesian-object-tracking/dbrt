@@ -153,7 +153,6 @@ int main(int argc, char** argv)
         {
             tracker_publisher->publish_tf(current_state,
                                           current_angle_measurement,
-                                          "",
                                           ros::Time(current_time));
         }
     }
