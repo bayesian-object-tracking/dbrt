@@ -156,8 +156,6 @@ int main(int argc, char** argv)
                                           "",
                                           ros::Time(current_time));
         }
-
-        ros::spinOnce();
     }
 
     ROS_INFO("Shutting down ...");

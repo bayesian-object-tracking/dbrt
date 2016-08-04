@@ -39,12 +39,6 @@
 
 namespace dbrt
 {
-// void load_sampling_block_definition(
-//     const std::string& prefix,
-//     ros::NodeHandle& nh,
-//     SamplingBlocksDefinition& sampling_blocks_definition)
-// {
-// }
 
 /**
  * \brief Create a particle filter tracking the robot joints based on depth
@@ -172,30 +166,21 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     tracker_parameters.max_kl_divergence =
         ri::read<double>(prefix + "max_kl_divergence", nh);
 
-    // tracker_parameters.sampling_blocks =
-    //     ri::read<std::vector<std::vector<int>>>(prefix + "sampling_blocks",
-    //     nh);
-
     auto sampling_blocks_definition =
         ri::read<SamplingBlocksDefinition>("sampling_blocks", nh);
 
     auto camera_offset_sampling_blocks_definition =
         ri::read<SamplingBlocksDefinition>("camera_offset/sampling_blocks", nh);
 
-    auto merged_definitions = merge_sampling_block_definitions(
-        sampling_blocks_definition, camera_offset_sampling_blocks_definition);
-    tracker_parameters.sampling_blocks =
-        definition_to_sampling_block(merged_definitions, kinematics);
-
-    for (auto block : tracker_parameters.sampling_blocks)
+    if (estimate_camera_offset)
     {
-        std::cout << "[";
-        for (auto index : block)
-        {
-            std::cout << index << ", ";
-        }
-        std::cout << "]\n";
+        sampling_blocks_definition = merge_sampling_block_definitions(
+            camera_offset_sampling_blocks_definition,
+            sampling_blocks_definition);
     }
+
+    tracker_parameters.sampling_blocks =
+        definition_to_sampling_block(sampling_blocks_definition, kinematics);
 
     auto tracker_builder =
         dbrt::VisualTrackerBuilder<Tracker>(kinematics,

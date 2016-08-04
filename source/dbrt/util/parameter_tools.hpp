@@ -101,7 +101,6 @@ inline std::vector<double> extract_ordered_values(
     const std::shared_ptr<KinematicsFromURDF>& kinematics)
 {
     std::vector<double> ordered_values(parameter_map.size());
-    PF(parameter_map.size());
     for (auto entry : parameter_map)
     {
         if (kinematics->name_to_index(entry.first) > ordered_values.size())
@@ -115,7 +114,5 @@ inline std::vector<double> extract_ordered_values(
 
     return ordered_values;
 }
-
-
 
 }

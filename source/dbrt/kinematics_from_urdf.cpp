@@ -345,7 +345,6 @@ osr::PoseVector KinematicsFromURDF::get_link_pose(int index)
 Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
     const sensor_msgs::JointState& sensor_msg)
 {
-
     sensor_msgs::JointState joint_state = sensor_msg;
 
     if (use_camera_offset_)
