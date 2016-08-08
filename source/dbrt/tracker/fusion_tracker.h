@@ -109,6 +109,9 @@ private:
         const Eigen::MatrixXd& cov);
 
 private:
+    double i_t;
+    double j_t;
+
     VisualTrackerFactory visual_tracker_factory_;
     std::shared_ptr<dbot::CameraData> camera_data_;
     std::shared_ptr<KinematicsFromURDF> kinematics_;

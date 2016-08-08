@@ -39,6 +39,8 @@ FusionTracker::FusionTracker(
       ros_image_updated_(false)
 {
     gaussian_joint_tracker_ = rotary_tracker_factory();
+    i_t = 0;
+    j_t = 0;
 }
 
 void FusionTracker::initialize(const std::vector<State>& initial_states)
@@ -124,7 +126,7 @@ void FusionTracker::run_visual_tracker()
     while (running_)
     {
         // continue only if there is a new image available
-        usleep(10);
+        usleep(100);
         {
             std::lock_guard<std::mutex> lock(image_obsrvs_mutex_);
             if (!ros_image_updated_)
@@ -166,8 +168,8 @@ void FusionTracker::run_visual_tracker()
                                          belief_entry);
         if (belief_index < 0)
         {
-            std::cout << "belief_index < 0: " << belief_index << std::endl;
-
+            // no belief found, put back extracted beliefs from local to global
+            // buffer
             std::lock_guard<std::mutex> belief_buffer_lock(
                 joints_obsrv_belief_buffer_mutex_);
             while (joints_obsrv_belief_buffer_local.size() > 0)
@@ -178,15 +180,6 @@ void FusionTracker::run_visual_tracker()
             }
             continue;
         }
-
-
-        // // just some print -----------------------------------------------------
-        // static ros::Time last_image_stamp;
-        // ros::Duration delta = ros_image_.header.stamp - last_image_stamp;
-        // last_image_stamp = ros_image_.header.stamp;
-        // std::cout << "time difference between processed images: " << delta <<
-        //              std::endl;
-        // // ---------------------------------------------------------------------
 
         // #3
         auto mean = get_state_from_belief(belief_entry);
@@ -244,6 +237,7 @@ void FusionTracker::run_visual_tracker()
             joints_obsrv_belief_buffer_local.pop_front();
         }
 
+        // add back joint observations after belief index
         while (joints_obsrv_belief_buffer_local.size() > 0)
         {
             joints_obsrvs_buffer_.push_front(
@@ -261,8 +255,6 @@ void FusionTracker::run_visual_tracker()
             if (entry.timestamp < prev.timestamp)
             {
                 PV(entry.timestamp - prev.timestamp);
-                PV(entry.obsrv);
-                PV(prev.obsrv);
                 PInfo("constructed queue is wrong");
             }
 
@@ -300,12 +292,35 @@ int FusionTracker::find_belief_entry(const std::deque<JointsBeliefEntry>& queue,
         index++;
     }
 
-    std::cout.precision(20);
+    if (i_t > j_t)
+        {
+            std::cout << ">>>>>>>>> "; 
+        }
+ else
+     {
 
-    std::cout << "could not find a matching belief for time stamp "
-                 << timestamp << std::endl;
-    std::cout << "latest belief: " << max << std::endl;
-    std::cout << "oldest belief: " << min << std::endl;
+         std::cout << "<<<<<<<<< ";
+
+     }
+    std::cout << "Waiting for processed joint observation beliefs. "
+              << "Unprocessed observations: " << joints_obsrvs_buffer_.size()
+              << " ("
+              << " image t: " << i_t << ", joints t: " << j_t << "; diff: "
+              << i_t - j_t
+              << ")"
+              << std::endl;
+    // std::cout.precision(20);
+    // std::cout << "could not find a matching belief for time stamp "
+    //           << timestamp << " (delta: " << timestamp - max << ")" << std::endl;
+    // std::cout << "latest processed obsrv: " << max << std::endl;
+    // std::cout << "oldest processed obsrv: " << min << std::endl;
+    // std::cout << "unprocessed obsrvs size: " << joints_obsrvs_buffer_.size()
+    //           << ", processed buffer size: " << queue.size() << std::endl;
+    // if (joints_obsrvs_buffer_.size())
+    // {
+    //     std::cout << "joints_obsrvs_buffer_.back().timestamp" <<
+    //         joints_obsrvs_buffer_.back().timestamp << std::endl;
+    // }
 
     return -1;
 }
@@ -413,6 +428,7 @@ void FusionTracker::joints_obsrv_callback(
         ROS_WARN("Obsrv buffer max size reached.");
         joints_obsrvs_buffer_.pop_front();
     }
+    j_t = entry.timestamp;
 }
 
 void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
@@ -423,6 +439,9 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
     ros_image_ = ros_image;
     ros_image_.header.stamp.fromSec(
                 ros_image_.header.stamp.toSec() - camera_delay_);
+
+    std::lock_guard<std::mutex> lock_joint_obsrv(joints_obsrv_buffer_mutex_);
+    i_t = ros_image_.header.stamp.toSec();
 }
 
 }
