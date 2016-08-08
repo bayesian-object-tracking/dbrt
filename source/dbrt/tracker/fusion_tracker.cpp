@@ -428,6 +428,13 @@ void FusionTracker::joints_obsrv_callback(
         ROS_WARN("Obsrv buffer max size reached.");
         joints_obsrvs_buffer_.pop_front();
     }
+
+
+    if(j_t > entry.timestamp)
+    {
+        ROS_ERROR_STREAM("joint measurements not ordered!!!");
+    }
+
     j_t = entry.timestamp;
 }
 
@@ -441,7 +448,24 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
                 ros_image_.header.stamp.toSec() - camera_delay_);
 
     std::lock_guard<std::mutex> lock_joint_obsrv(joints_obsrv_buffer_mutex_);
+
+    if(i_t > ros_image_.header.stamp.toSec())
+    {
+        ROS_ERROR_STREAM("image measurements not ordered!!!");
+    }
+
     i_t = ros_image_.header.stamp.toSec();
+
+    if(i_t > j_t)
+    {
+        ROS_ERROR_STREAM("latest image newer than latest joint angles!!!"
+                         << std::endl <<
+                         "angle stamp: " << j_t << " imaga stamp : " << i_t
+                         << std::endl <<
+                         "difference: " << i_t - j_t << std::endl);
+
+    }
+
 }
 
 }
