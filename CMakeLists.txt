@@ -27,9 +27,8 @@ find_package(catkin REQUIRED
     roslib
     sensor_msgs
     cv_bridge
-     urdf
-     orocos_kdl
-     kdl_parser
+    urdf
+    kdl_parser
     rosbag
     message_filters
     robot_state_pub
@@ -39,6 +38,8 @@ find_package(catkin REQUIRED
     osr
     dbot_ros
 )
+
+find_package(orocos_kdl)
 
 set(PROJECT_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH ${PROJECT_MODULE_PATH})
@@ -96,7 +97,6 @@ catkin_package(
         roslib
         sensor_msgs
         urdf
-        orocos_kdl
         kdl_parser
         message_filters
         robot_state_pub
@@ -106,6 +106,7 @@ catkin_package(
         dbot
         dbot_ros
     DEPENDS
+        orocos_kdl
         OpenCV
         eigen
         assimp
