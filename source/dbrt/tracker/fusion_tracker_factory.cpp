@@ -100,11 +100,11 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     auto fusion_tracker = std::make_shared<dbrt::FusionTracker>(
         camera_data,
         kinematics,
-        [&, prefix]()
+        [=]()
         {
             return dbrt::create_rotary_tracker(prefix, kinematics, joint_state);
         },
-        [&, prefix]()
+        [=]()
         {
             return dbrt::create_visual_tracker(
                 prefix, kinematics, camera_data, joint_state);
