@@ -132,7 +132,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
 {
     rename_camera_frame(camera_frame, urdf);
 
-    std::string camera_frame_ = "XTION";
+    std::string camera_frame_ = "camera";
     std::vector<std::string> dofs = {camera_frame_ + "_X",
                                      camera_frame_ + "_Y",
                                      camera_frame_ + "_Z",
@@ -349,12 +349,12 @@ Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
 
     if (use_camera_offset_)
     {
-        joint_state.name.push_back("XTION_X_JOINT");
-        joint_state.name.push_back("XTION_Y_JOINT");
-        joint_state.name.push_back("XTION_Z_JOINT");
-        joint_state.name.push_back("XTION_ROLL_JOINT");
-        joint_state.name.push_back("XTION_PITCH_JOINT");
-        joint_state.name.push_back("XTION_YAW_JOINT");
+        joint_state.name.push_back("camera_X_JOINT");
+        joint_state.name.push_back("camera_Y_JOINT");
+        joint_state.name.push_back("camera_Z_JOINT");
+        joint_state.name.push_back("camera_ROLL_JOINT");
+        joint_state.name.push_back("camera_PITCH_JOINT");
+        joint_state.name.push_back("camera_YAW_JOINT");
 
         joint_state.position.push_back(0);
         joint_state.position.push_back(0);
