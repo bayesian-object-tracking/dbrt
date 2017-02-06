@@ -15,6 +15,7 @@
  * \file robot_publisher.hpp
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
+ * \author C. Garcia Cifuentes (c.garciacifuentes@gmail.com)
  */
 
 #pragma once
@@ -40,101 +41,114 @@ protected:
 template <typename State>
 RobotPublisher<State>::RobotPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-    const std::string& prefix,
-    const std::string& target_frame_id)
+    const std::string& estimated_prefix,
+    const std::string& connecting_frame_name)
     : node_handle_("~"),
-      prefix_(prefix),
-      connecting_frame_id(target_frame_id),
+      prefix_(estimated_prefix),
       robot_state_publisher_(
           std::make_shared<robot_state_pub::RobotStatePublisher>(
               urdf_kinematics->get_tree())),
+      joint_names_(urdf_kinematics->get_joint_map()),
+      root_frame_name_(urdf_kinematics->get_root_frame_id()),
+      connecting_frame_name_(connecting_frame_name),
       transformer_(robot_state_publisher_)
 {
-    // get the name of the root frame
-    root_frame_id_ = urdf_kinematics->get_root_frame_id();
-
-    // get joint map
-    joint_names_ = urdf_kinematics->get_joint_map();
-
-    // setup basic joint state message
-    joint_state_.position.resize(joint_names_.size());
-    joint_state_.effort.resize(joint_names_.size());
-    joint_state_.velocity.resize(joint_names_.size());
-    for (int i = 0; i < joint_names_.size(); ++i)
-    {
-        joint_state_.name.push_back(joint_names_[i]);
+    // setup basic joint angle message
+    auto sz = joint_names_.size();
+    joint_state_msg_.position.resize(sz);
+    joint_state_msg_.effort.resize(sz);
+    joint_state_msg_.velocity.resize(sz);
+    joint_state_msg_.name.clear();
+    for (int i = 0; i < sz; ++i) {
+        joint_state_msg_.name.push_back(joint_names_[i]);
     }
 
     // joint angle publisher
-    pub_joint_state_ = node_handle_.advertise<sensor_msgs::JointState>(
+    joint_state_publisher_ = node_handle_.advertise<sensor_msgs::JointState>(
         prefix_ + "/joint_states", 0);
 }
 
 template <typename State>
 void RobotPublisher<State>::publish_joint_state(const State& state,
-                                                       const ros::Time time)
+                                                const ros::Time time)
 {
-    ROS_FATAL_COND(joint_state_.position.size() != state.size(),
+    ROS_FATAL_COND(joint_state_msg_.position.size() != state.size(),
                    "Joint state message and robot state sizes do not match");
 
-    joint_state_.header.stamp = time;
+    joint_state_msg_.header.stamp = time;
     for (int i = 0; i < state.size(); ++i)
     {
-        joint_state_.position[i] = state(i, 0);
+        joint_state_msg_.position[i] = state(i, 0);
     }
 
-    pub_joint_state_.publish(joint_state_);
+    joint_state_publisher_.publish(joint_state_msg_);
 }
 
 template <typename State>
 void RobotPublisher<State>::publish_tf(const State& state,
                                        const ros::Time& time)
 {
-    publish_id_transform(
-        time, "/" + root_frame_id_, tf::resolve(prefix_, root_frame_id_));
+    /**
+     * [Cris] I'm removing this id transform. Either we have and use an explicit
+     * connecting_frame_id, or we don't connect at all.
+     *
+     * This may break some rviz visualization, but prevents the user from
+     * inadvertedly looking up transforms that don't make sense.
+     *
+     * To obtain this id behavior, the user needs to set the
+     * connecting_frame_id to be the root (in the corresponding config file).
+     */
+    // Publish id transform between roots
+    //publish_id_transform(
+    //    time,
+    //    tf::resolve("", root_frame_name_),
+    //    tf::resolve(prefix_, root_frame_name_));
+
+    // Publish estimated tree
     publish_tf_tree(state, time);
 }
 
 template <typename State>
-void RobotPublisher<State>::publish_tf(
-    const State& state,
-    const JointsObsrv& obsrv,
-    const ros::Time& time)
+void RobotPublisher<State>::publish_tf(const State& state,
+                                       const JointsObsrv& obsrv,
+                                       const ros::Time& time)
 {
-    std::map<std::string, double> state_joint_map;
-    std::map<std::string, double> obsrv_joint_map;
-    state.GetJointState(state_joint_map);
-    to_joint_map(obsrv, obsrv_joint_map);
+    std::map<std::string, double> estimated_joint_positions;
+    std::map<std::string, double> observed_joint_positions;
+    state.GetJointState(estimated_joint_positions);
+    to_joint_map(obsrv, observed_joint_positions);
 
-    // get the transform between the estimated root and measured root both
-    // linked at the specified target frame
-    tf::StampedTransform root_transform = get_root_transform(state_joint_map,
-                                                             obsrv_joint_map,
-                                                             time);
+    // Get the transform between the estimated root and measured root,
+    // such that the estimated tree and measured tree are aligned
+    // at the connecting frame
+    tf::StampedTransform root_transform = get_root_transform(
+        estimated_joint_positions, observed_joint_positions, time);
 
+    // Publish transform between roots
     static tf::TransformBroadcaster br;
     br.sendTransform(root_transform);
 
+    // Publish estimated tree
     publish_tf_tree(state, time);
 }
 
 template <typename State>
 void RobotPublisher<State>::publish_tf_tree(const State& state,
-                                                   const ros::Time& time)
+                                            const ros::Time& time)
 {
-    // publish movable joints
+    // Publish movable joints
     std::map<std::string, double> joint_positions;
     state.GetJointState(joint_positions);
     robot_state_publisher_->publishTransforms(joint_positions, time, prefix_);
 
-    // publish fixed transforms
+    // Publish fixed transforms
     robot_state_publisher_->publishFixedTransforms(prefix_, time);
 }
 
 template <typename State>
 void RobotPublisher<State>::publish_id_transform(const ros::Time& time,
-                                                        const std::string& from,
-                                                        const std::string& to)
+                                                 const std::string& from,
+                                                 const std::string& to)
 {
     if (from == to) return;
 
@@ -146,30 +160,30 @@ void RobotPublisher<State>::publish_id_transform(const ros::Time& time,
 
 template <typename State>
 tf::StampedTransform RobotPublisher<State>::get_root_transform(
-    const std::map<std::string, double>& state_joint_map,
-    const std::map<std::string, double>& obsrv_joint_map,
+    const std::map<std::string, double>& estimated_joint_positions,
+    const std::map<std::string, double>& observed_joint_positions,
     const ros::Time& time)
 {
-    // Lookup transform from target to root of joint map 1
-    transformer_.set_joints(state_joint_map);
-    tf::StampedTransform transform_t_r;
+    // Lookup transform target<-root in estimated tree
+    transformer_.set_joints(estimated_joint_positions);
+    tf::StampedTransform estimated_target_root;
     transformer_.lookup_transform(
-        connecting_frame_id, root_frame_id_, transform_t_r);
+        connecting_frame_name_, root_frame_name_, estimated_target_root);
 
-    // Lookup transform from root to target of joint map 2
-    transformer_.set_joints(obsrv_joint_map);
-    tf::StampedTransform transform_r_t;
+    // Lookup transform root<-target in measured tree
+    transformer_.set_joints(observed_joint_positions);
+    tf::StampedTransform observed_root_target;
     transformer_.lookup_transform(
-        root_frame_id_, connecting_frame_id, transform_r_t);
+        root_frame_name_, connecting_frame_name_, observed_root_target);
 
-    // Compose the two tf_transforms
-    tf::StampedTransform transform_r_r(
-        transform_r_t * transform_t_r,
+    // Compose the two transforms
+    tf::StampedTransform transform_root_root(
+        observed_root_target * estimated_target_root,
         time,
-        tf::resolve("", root_frame_id_),
-        tf::resolve(prefix_, root_frame_id_));
+        tf::resolve("", root_frame_name_),
+        tf::resolve(prefix_, root_frame_name_));
 
-    return transform_r_r;
+    return transform_root_root;
 }
 
 template <typename State>

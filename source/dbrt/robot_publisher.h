@@ -15,6 +15,7 @@
  * \file robot_publisher.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
+ * \author C. Garcia Cifuentes (c.garciacifuentes@gmail.com)
  */
 
 #pragma once
@@ -41,8 +42,7 @@ namespace dbrt
 typedef Eigen::Matrix<fl::Real, Eigen::Dynamic, 1> JointsObsrv;
 
 /**
- * \brief Represents the object tracker publisher. This publishes the object
- * estimated state and its marker.
+ * \brief Represents the robot tracker publisher.
  */
 template <typename State>
 class RobotPublisher
@@ -50,17 +50,46 @@ class RobotPublisher
 public:
     RobotPublisher(
         const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
-        const std::string& prefix,
-        const std::string& target_frame_id);
+        const std::string& estimated_prefix,
+        const std::string& connecting_frame_name);
 
+    /**
+     * \brief publish estimated tree on /tf topic
+     */
     void publish_tf(const State& state, const ros::Time& time);
+
+    /**
+     * \brief publish estimated tree on /tf, connected to measured tree at the
+     * root such that the connecting_frame_id in both trees align.
+     */
     void publish_tf(const State& state,
                     const JointsObsrv& obsrv,
                     const ros::Time& time);
 
+    /**
+     * \brief publish estimated joint states to topic named
+     * prefix_ + '/joint_states'
+     */
     void publish_joint_state(const State& state, const ros::Time time);
 
+
 protected:
+
+    void publish_tf_tree(const State& state, const ros::Time& time);
+
+    /**
+     * \todo obsolete? -- better to not connect the trees than to connect them
+     * with an arbitrary transform.
+     */
+    void publish_id_transform(const ros::Time& time,
+                              const std::string& from,
+                              const std::string& to);
+
+    tf::StampedTransform get_root_transform(
+        const std::map<std::string, double>& estimated_joint_positions,
+        const std::map<std::string, double>& observed_joint_positions,
+        const ros::Time& time);
+
     /**
      * This mapping function is required since the received JointsObsrv order
      * differs from the state type order provided through state.get_joint_map by
@@ -68,31 +97,30 @@ protected:
      */
     void to_joint_map(const JointsObsrv& joint_values,
                       std::map<std::string, double>& named_joint_values) const;
-    void publish_tf_tree(const State& state, const ros::Time& time);
-    void publish_id_transform(const ros::Time& time,
-                              const std::string& from,
-                              const std::string& to);
-    tf::StampedTransform get_root_transform(
-        const std::map<std::string, double>& state_joint_map,
-        const std::map<std::string, double>& obsrv_joint_map,
-        const ros::Time& time);
+
 
 
 protected:
-    sensor_msgs::JointState joint_state_;
     ros::NodeHandle node_handle_;
+
+    // use this prefix to publish anything related to the estimated state
     std::string prefix_;
+
+    // for publishing estimated robot state of /tf topic
     std::shared_ptr<robot_state_pub::RobotStatePublisher>
         robot_state_publisher_;
-    ros::Publisher pub_joint_state_;
+
+    // for publishing estimated joint states
+    std::vector<std::string> joint_names_;
+    sensor_msgs::JointState joint_state_msg_;
+    ros::Publisher joint_state_publisher_;
 
     // These are needed for publishing a transform between the two roots
-    // such that a target frame_id is aligned in both.
+    // such that a connecting_frame_id is aligned in both.
     // \todo There is probably redundancy in all this publisher mess.
+    std::string root_frame_name_;
+    std::string connecting_frame_name_;
     RobotTransformer transformer_;
-    std::string connecting_frame_id;
-    std::string root_frame_id_;
-    std::vector<std::string> joint_names_;
 
 };
 }
