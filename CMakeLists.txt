@@ -35,7 +35,6 @@ find_package(catkin REQUIRED
     image_transport
     fl
     dbot
-    osr
     dbot_ros
 )
 
@@ -102,7 +101,6 @@ catkin_package(
         robot_state_pub
         image_transport
         fl
-        osr
         dbot
         dbot_ros
     DEPENDS

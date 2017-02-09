@@ -32,7 +32,6 @@
   <build_depend>robot_state_pub</build_depend>
   <build_depend>image_transport</build_depend>
   <build_depend>fl</build_depend>
-  <build_depend>osr</build_depend>
   <build_depend>dbot</build_depend>
   <build_depend>dbot_ros</build_depend>
 
@@ -51,7 +50,6 @@
   <run_depend>robot_state_pub</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>fl</run_depend>
-  <run_depend>osr</run_depend>
   <run_depend>dbot</run_depend>
   <run_depend>dbot_ros</run_depend>
 

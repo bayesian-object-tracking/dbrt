@@ -40,7 +40,7 @@
 // tools
 #include <dbrt/part_mesh_model.hpp>
 
-#include <osr/pose_vector.hpp>
+#include <dbot/pose/pose_vector.hpp>
 
 class KinematicsFromURDF
 {

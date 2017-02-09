@@ -19,8 +19,8 @@
 #include <memory>
 #include <mutex>
 
-#include <osr/euler_vector.hpp>
-#include <osr/rigid_bodies_state.hpp>
+#include <dbot/pose/euler_vector.hpp>
+#include <dbot/pose/rigid_bodies_state.hpp>
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
