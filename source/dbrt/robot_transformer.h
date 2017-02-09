@@ -12,9 +12,9 @@
  */
 
 /**
- * \file robot_transformer.hpp
+ * \file robot_transformer.h
  * \date April 2016
- * \author Cristina garcia Cifuentes (c.garciacifuentes@gmail.com)
+ * \author C. Garcia Cifuentes (c.garciacifuentes@gmail.com)
  */
 
 #pragma once
@@ -36,7 +36,7 @@ class RobotTransformer
 {
 public:
     /**
-     * \brief Creates a RobotTransformer. Needs access to a publisher from robot_state_pub.
+     * \brief Creates a RobotTransformer. Needs access to a robot publisher.
      */
     RobotTransformer(
         const std::shared_ptr<robot_state_pub::RobotStatePublisher>& state_publisher);
@@ -52,13 +52,13 @@ public:
     const std::vector<tf::StampedTransform>& get_transforms() const;
 
     /**
-     * \brief Lookup transform by frame_id pair.
+     * \brief Lookup transform between pair of frame names.
      */
     void lookup_transform(const std::string& from, const std::string& to,
         tf::StampedTransform& tf_transform) const;
 
 protected:
-    void set_transformer_() const;
+    void set_lookup_provider_() const;
 
     // Joint values
     std::map<std::string, double> joints_;
@@ -70,9 +70,9 @@ protected:
     std::string fake_prefix_;
 
     // This guy knows how to build a tree of tf_transforms and do magical lookups.
-    mutable tf::Transformer tf_transformer_;
+    mutable tf::Transformer lookup_provider_;
     mutable bool is_empty_;
-    mutable std::vector<tf::StampedTransform> tf_transforms_;
+    mutable std::vector<tf::StampedTransform> transforms_;
 };
 
 } // end of namespace
