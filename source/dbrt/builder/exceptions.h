@@ -23,7 +23,6 @@
 
 namespace dbrt
 {
-
 /**
  * \brief Represents an exception thrown if the number of joint sigmas in the
  * of the joint_transition model does not match the state dimension.
@@ -38,7 +37,6 @@ public:
     }
 };
 
-
 /**
  * \brief Represents an exception thrown if the number of indices in the
  * sampling block does not match the state dimension.
@@ -48,13 +46,13 @@ class InvalidNumberOfSamplingBlocksException : public std::exception
 public:
     const char* what() const noexcept
     {
-        return "The number of indices in the sampling blocks does not match the "
+        return "The number of indices in the sampling blocks does not match "
+               "the "
                "number of joints (joint state dimension) of the robot.";
     }
 };
 
-
-class JointIndexOutOfBoundsException: public std::exception
+class JointIndexOutOfBoundsException : public std::exception
 {
 public:
     const char* what() const noexcept
@@ -63,7 +61,4 @@ public:
                " of available joints!";
     }
 };
-
-
-
 }

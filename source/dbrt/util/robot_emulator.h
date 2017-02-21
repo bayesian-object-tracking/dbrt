@@ -20,28 +20,24 @@
 #pragma once
 
 #include <chrono>
-#include <functional>
-#include <memory>
-#include <thread>
-#include <thread>
-
+#include <dbot/camera_data.h>
+#include <dbot/object_model.h>
+#include <dbot/rigid_body_renderer.h>
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/kinematics_from_urdf.h>
+#include <dbrt/robot_publisher.h>
+#include <dbrt/util/robot_animator.h>
 #include <fl/util/profiling.hpp>
-
+#include <functional>
 #include <image_transport/image_transport.h>
+#include <memory>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/fill_image.h>
-
-#include <dbot/camera_data.hpp>
-#include <dbot/object_model.hpp>
-#include <dbot/rigid_body_renderer.hpp>
-#include <dbot_ros/util/ros_interface.hpp>
-
-#include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/robot_publisher.h>
-#include <dbrt/util/robot_animator.h>
+#include <thread>
+#include <thread>
 
 namespace dbrt
 {

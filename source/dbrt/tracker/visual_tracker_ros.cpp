@@ -17,14 +17,13 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
+#include <dbot_ros/util/ros_interface.h>
 #include <dbrt/tracker/visual_tracker_ros.h>
-
-#include <dbot_ros/util/ros_interface.hpp>
 
 namespace dbrt
 {
 VisualTrackerRos::VisualTrackerRos(
-                                   const std::shared_ptr<VisualTracker>& tracker,
+    const std::shared_ptr<VisualTracker>& tracker,
     const std::shared_ptr<dbot::CameraData>& camera_data)
     : tracker_(tracker),
       camera_data_(camera_data),
@@ -40,19 +39,16 @@ void VisualTrackerRos::track(const sensor_msgs::Image& ros_image)
 
     current_state_ = tracker_->track(image);
     // current_pose_.pose = ri::to_ros_pose(current_state_);
-    // current_pose_.header.stamp = ros_image.header.stamp; 
+    // current_pose_.header.stamp = ros_image.header.stamp;
     // current_pose_.header.frame_id= ros_image.header.frame_id;
 }
 
-
-void VisualTrackerRos::update_obsrv(
-    const sensor_msgs::Image& ros_image)
+void VisualTrackerRos::update_obsrv(const sensor_msgs::Image& ros_image)
 {
     std::lock_guard<std::mutex> lock_obsrv(obsrv_mutex_);
     current_ros_image_ = ros_image;
-    obsrv_updated_     = true;
+    obsrv_updated_ = true;
 }
-
 
 void VisualTrackerRos::shutdown()
 {
@@ -83,7 +79,7 @@ bool VisualTrackerRos::process()
     sensor_msgs::Image ros_image;
     {
         std::lock_guard<std::mutex> lock_obsrv(obsrv_mutex_);
-        ros_image      = current_ros_image_;
+        ros_image = current_ros_image_;
         obsrv_updated_ = false;
     }
     track(ros_image);
@@ -91,9 +87,8 @@ bool VisualTrackerRos::process()
     return true;
 }
 
-auto VisualTrackerRos::current_state() const -> const State &
+auto VisualTrackerRos::current_state() const -> const State&
 {
     return current_state_;
 }
-
 }

@@ -19,21 +19,20 @@
 
 #pragma once
 
-#include <list>
-#include <deque>
-#include <vector>
-#include <mutex>
-#include <memory>
-#include <thread>
-#include <functional>
-
-#include <fl/filter/gaussian/gaussian_filter_linear.hpp>
-#include <fl/model/sensor/linear_gaussian_sensor.hpp>
-#include <fl/model/transition/linear_transition.hpp>
-#include <fl/model/transition/interface/transition_function.hpp>
 #include <dbrt/tracker/robot_tracker.h>
 #include <dbrt/tracker/rotary_tracker.h>
 #include <dbrt/tracker/visual_tracker.h>
+#include <deque>
+#include <fl/filter/gaussian/gaussian_filter_linear.hpp>
+#include <fl/model/sensor/linear_gaussian_sensor.hpp>
+#include <fl/model/transition/interface/transition_function.hpp>
+#include <fl/model/transition/linear_transition.hpp>
+#include <functional>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 namespace dbrt
 {
@@ -88,9 +87,11 @@ public:
     void joints_obsrv_callback(const sensor_msgs::JointState& joints_obsrv);
     void image_obsrv_callback(const sensor_msgs::Image& ros_image);
 
-    void current_state_and_time(State& current_state, double& current_time) const;
-    void current_things(State& current_state, double& current_time,
-        JointsObsrv& current_angle_measurement) const;
+    void current_state_and_time(State& current_state,
+                                double& current_time) const;
+    void current_things(State& current_state,
+                        double& current_time,
+                        JointsObsrv& current_angle_measurement) const;
 
 protected:
     void run_rotary_tracker();
@@ -121,7 +122,8 @@ private:
     double camera_delay_;
 
     State current_state_;
-    // We need this to publish estimated tfs with the stamp corresponding to the current state.
+    // We need this to publish estimated tfs with the stamp corresponding to the
+    // current state.
     double current_time_;
     // We need this to calculate "measured" tfs at the same point in time.
     JointsObsrv current_angle_measurement_;

@@ -18,16 +18,14 @@
 
 #pragma once
 
+#include <dbrt/kinematics_from_urdf.h>
+#include <dbrt/tracker/rotary_tracker.h>
+#include <sensor_msgs/JointState.h>
 #include <string>
 #include <vector>
 
-#include <sensor_msgs/JointState.h>
-#include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/tracker/rotary_tracker.h>
-
 namespace dbrt
 {
-    
 /**
  * \brief Create a gaussian filter tracking the robot joints based on joint
  *     measurements
@@ -40,5 +38,4 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     std::string prefix,
     const std::shared_ptr<KinematicsFromURDF>& kinematics,
     sensor_msgs::JointState::ConstPtr joint_state);
-
 }

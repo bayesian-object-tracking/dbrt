@@ -17,11 +17,10 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
+#include <dbot_ros/util/ros_interface.h>
 #include <dbrt/tracker/fusion_tracker.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-
-#include <dbot_ros/util/ros_interface.hpp>
 
 namespace dbrt
 {

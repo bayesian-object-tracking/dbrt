@@ -14,13 +14,11 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <vector>
-
+#include <dbot/pose/euler_vector.h>
+#include <dbot/pose/rigid_bodies_state.h>
 #include <memory>
 #include <mutex>
-
-#include <dbot/pose/euler_vector.hpp>
-#include <dbot/pose/rigid_bodies_state.hpp>
+#include <vector>
 
 // TODO: THERE IS A PROBLEM HERE BECAUSE WE SHOULD NOT DEPEND ON THIS FILE,
 // SINCE IT IS IN A PACKAGE WHICH IS BELOW THIS PACKAGE.
@@ -28,20 +26,18 @@
 
 namespace dbrt
 {
-
 template <int JointCount = Eigen::Dynamic, int BodyCount = Eigen::Dynamic>
-class RobotState : public osr::RigidBodiesState<JointCount>
+class RobotState : public dbot::RigidBodiesState<JointCount>
 {
 public:
-    typedef osr::RigidBodiesState<JointCount> Base;
+    typedef dbot::RigidBodiesState<JointCount> Base;
     typedef typename Base::Vector Vector;
     typedef typename Base::PoseVelocityBlock PoseVelocityBlock;
 
 public:
     RobotState() : Base() {}
     template <typename T>
-    RobotState(const Eigen::MatrixBase<T>& state_vector)
-        : Base(state_vector)
+    RobotState(const Eigen::MatrixBase<T>& state_vector) : Base(state_vector)
     {
     }
 
@@ -56,7 +52,6 @@ public:
         return kinematics_->num_links();
     }
 
-
     virtual int count_parts() const
     {
         CheckKinematics();
@@ -65,10 +60,10 @@ public:
 
     /// todo: why does this return a pose velocity vector, but not
     /// set the velocity?
-    virtual osr::PoseVelocityVector component(int index) const
+    virtual dbot::PoseVelocityVector component(int index) const
     {
         std::lock_guard<std::mutex> lock(*kinematics_mutex_);
-        osr::PoseVelocityVector vector;
+        dbot::PoseVelocityVector vector;
         vector.position() = position(index);
         vector.orientation() = euler_vector(index);
 
@@ -89,10 +84,10 @@ public:
         }
     }
 
-//    void recount(int new_count)
-//    {
-//        return this->resize(new_count);
-//    }
+    //    void recount(int new_count)
+    //    {
+    //        return this->resize(new_count);
+    //    }
 
 private:
     virtual Vector position(const size_t& object_index = 0) const
@@ -105,13 +100,13 @@ private:
         return v;
     }
 
-    virtual osr::EulerVector euler_vector(const size_t& object_index = 0) const
+    virtual dbot::EulerVector euler_vector(const size_t& object_index = 0) const
     {
         assert(this->size() > 0);
         CheckKinematics();
         kinematics_->set_joint_angles(*this);
 
-        osr::EulerVector v;
+        dbot::EulerVector v;
         v.quaternion(kinematics_->get_link_orientation(object_index));
         return v;
     }
@@ -137,5 +132,4 @@ std::shared_ptr<KinematicsFromURDF>
 template <int JointCount, int BodyCount>
 std::shared_ptr<std::mutex>
     RobotState<JointCount, BodyCount>::kinematics_mutex_;
-
 }

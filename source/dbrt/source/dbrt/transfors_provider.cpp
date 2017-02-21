@@ -2,7 +2,7 @@
  * This is part of the Bayesian Object Tracking (bot),
  * (https://github.com/bayesian-object-tracking)
  *
- * Copyright (c) 2015 Max Planck Society,
+ * Copyright (c) 2016 Max Planck Society,
  * 				 Autonomous Motion Department,
  * 			     Institute for Intelligent Systems
  *
@@ -12,19 +12,8 @@
  */
 
 /**
- * \file robot_tracker.cpp
- * \date December 2015
- * \author Jan Issac (jan.issac@gmail.com)
- * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
+ * \file transforms_provider.cpp
+ * \date Feb 2017
+ * \author Jan Issac (jan.issac@gmail.com) 
+ * \author C. Garcia Cifuentes (c.garciacifuentes@gmail.com)
  */
-
-#include <dbrt/tracker/robot_tracker.h>
-#include <fl/util/profiling.hpp>
-
-namespace dbrt
-{
-RobotTracker::Input RobotTracker::zero_input() const
-{
-    return Input::Zero(1);
-}
-}

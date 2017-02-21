@@ -19,11 +19,9 @@
 
 #pragma once
 
+#include <dbot/camera_data.h>
 #include <memory>
-
 #include <ros/ros.h>
-
-#include <dbot/camera_data.hpp>
 
 namespace dbrt
 {

@@ -19,12 +19,10 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-
-#include <ros/ros.h>
-
 #include <dbrt/kinematics_from_urdf.h>
+#include <memory>
+#include <ros/ros.h>
+#include <string>
 
 namespace dbrt
 {

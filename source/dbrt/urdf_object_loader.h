@@ -12,7 +12,7 @@
  */
 
 /**
- * \file urdf_object_model_loader.hpp
+ * \file urdf_object_model_loader.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
@@ -20,8 +20,7 @@
 #pragma once
 
 #include <memory>
-
-#include <dbot/object_model_loader.hpp>
+#include <dbot/object_model_loader.h>
 #include <dbrt/kinematics_from_urdf.h>
 
 namespace dbrt

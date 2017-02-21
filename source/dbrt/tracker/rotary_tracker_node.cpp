@@ -33,22 +33,17 @@
 
 #include <cv.h>
 #include <cv_bridge/cv_bridge.h>
-
-#include <sensor_msgs/Image.h>
-
-#include <dbot_ros/util/ros_interface.hpp>
-#include <dbot_ros/util/ros_camera_data_provider.hpp>
-
-#include <dbrt/urdf_object_loader.h>
-
-#include <dbrt/robot_state.hpp>
-#include <dbrt/tracker/robot_tracker.h>
-#include <dbot/rigid_body_renderer.hpp>
+#include <dbot/rigid_body_renderer.h>
+#include <dbot_ros/util/ros_camera_data_provider.h>
+#include <dbot_ros/util/ros_interface.h>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/tracker/visual_tracker.h>
-
+#include <dbrt/robot_state.h>
+#include <dbrt/tracker/robot_tracker.h>
 #include <dbrt/tracker/rotary_tracker_factory.h>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/urdf_object_loader.h>
 #include <dbrt/util/kinematics_factory.h>
+#include <sensor_msgs/Image.h>
 
 int main(int argc, char** argv)
 {

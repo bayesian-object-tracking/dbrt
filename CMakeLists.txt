@@ -31,8 +31,11 @@ find_package(catkin REQUIRED
     kdl_parser
     rosbag
     message_filters
-    robot_state_pub
+    robot_state_publisher
     image_transport
+    tf
+    tf_conversions
+    tf2_ros
     fl
     dbot
     dbot_ros
@@ -46,11 +49,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_MODULE_PATH})
 find_package(Boost REQUIRED)
 find_package(Eigen REQUIRED)
 find_package(OpenCV REQUIRED)
-#find_package(PCL 1.3 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
-#include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ##########################################
@@ -98,8 +99,11 @@ catkin_package(
         urdf
         kdl_parser
         message_filters
-        robot_state_pub
+        robot_state_publisher
         image_transport
+        tf
+        tf_conversions
+        tf2_ros
         fl
         dbot
         dbot_ros
@@ -124,6 +128,7 @@ set(sources
     source/${PROJECT_NAME}/urdf_object_loader.cpp
     source/${PROJECT_NAME}/kinematics_from_urdf.cpp
     source/${PROJECT_NAME}/robot_transformer.cpp
+    source/${PROJECT_NAME}/robot_transforms_provider.cpp
     source/${PROJECT_NAME}/tracker/robot_tracker.cpp
     source/${PROJECT_NAME}/tracker/fusion_tracker.cpp
     source/${PROJECT_NAME}/tracker/visual_tracker.cpp
@@ -142,10 +147,10 @@ add_library(${PROJECT_NAME} ${dbot_headers}
                             ${headers}
                             ${sources})
 
-target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES}
-                                      ${catkin_LIBRARIES}
-                                      ${OpenCV_LIBRARIES}
-                                      assimp)
+target_link_libraries(${PROJECT_NAME} 
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  assimp)
 
 add_executable(visual_tracker
      source/${PROJECT_NAME}/tracker/visual_tracker_node.cpp)
@@ -153,7 +158,6 @@ target_link_libraries(visual_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
      yaml-cpp)
 
 add_executable(rotary_tracker
@@ -162,7 +166,6 @@ target_link_libraries(rotary_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
      yaml-cpp)
 
 add_executable(fusion_tracker
@@ -170,7 +173,6 @@ add_executable(fusion_tracker
 target_link_libraries(fusion_tracker
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
-     ${OpenCV_LIBS}
      ${PCL_LIBRARIES}
      yaml-cpp)
 
@@ -180,6 +182,5 @@ target_link_libraries(robot_emulator
      ${PROJECT_NAME}
      ${catkin_LIBRARIES}
      ${OpenCV_LIBS}
-     ${PCL_LIBRARIES}
      yaml-cpp)
 

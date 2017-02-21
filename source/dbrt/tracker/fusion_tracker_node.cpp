@@ -16,41 +16,31 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <memory>
-#include <thread>
-#include <functional>
-
+#include <XmlRpcException.h>
 #include <cv.h>
 #include <cv_bridge/cv_bridge.h>
-
-#include <ros/ros.h>
-#include <sensor_msgs/Image.h>
-
-#include <fl/util/profiling.hpp>
-
-#include <dbot/rigid_body_renderer.hpp>
-#include <dbot/virtual_camera_data_provider.hpp>
-#include <dbot/builder/particle_tracker_builder.hpp>
-
-#include <dbot_ros/util/ros_interface.hpp>
-#include <dbot_ros/util/data_set_camera_data_provider.hpp>
-
-#include <dbrt/robot_state.hpp>
+#include <dbot/builder/particle_tracker_builder.h>
+#include <dbot/rigid_body_renderer.h>
+#include <dbot/virtual_camera_data_provider.h>
+#include <dbot_ros/util/ros_interface.h>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/tracker/robot_tracker.h>
-#include <dbrt/tracker/rotary_tracker.h>
-#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/robot_state.h>
 #include <dbrt/tracker/fusion_tracker.h>
 #include <dbrt/tracker/fusion_tracker_factory.h>
-
+#include <dbrt/tracker/fusion_tracker_factory.h>
+#include <dbrt/tracker/robot_tracker.h>
+#include <dbrt/tracker/rotary_tracker.h>
+#include <dbrt/tracker/rotary_tracker_factory.h>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
 #include <dbrt/util/camera_data_factory.h>
 #include <dbrt/util/kinematics_factory.h>
-#include <dbrt/tracker/fusion_tracker_factory.h>
-#include <dbrt/tracker/visual_tracker_factory.h>
-#include <dbrt/tracker/rotary_tracker_factory.h>
-
-#include <XmlRpcException.h>
-
+#include <fl/util/profiling.hpp>
+#include <functional>
+#include <memory>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <thread>
 
 /**
  * \brief Node entry point

@@ -30,13 +30,11 @@
 
 #pragma once
 
-#include <string>
-
-#include <dbot/camera_data.hpp>
-#include <dbot/object_model.hpp>
-
+#include <dbot/camera_data.h>
+#include <dbot/object_model.h>
 #include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/tracker/visual_tracker.h>
+#include <string>
 
 namespace dbrt
 {

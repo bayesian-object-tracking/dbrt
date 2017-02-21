@@ -12,29 +12,23 @@
  */
 
 /**
- * \file robot_joint_sensor_builder.hpp
+ * \file robot_joint_sensor_builder.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #pragma once
 
-#include <memory>
-
-#include <fl/util/profiling.hpp>
-#include <fl/util/meta.hpp>
-#include <fl/model/sensor/linear_gaussian_sensor.hpp>
-
 #include <Eigen/Dense>
-
-#include <dbot/builder/transition_function_builder.hpp>
-
-#include <dbrt/builder/exceptions.hpp>
-#include <dbrt/builder/exceptions.hpp>
+#include <dbot/builder/transition_function_builder.h>
+#include <dbrt/builder/exceptions.h>
+#include <fl/model/sensor/linear_gaussian_sensor.hpp>
+#include <fl/util/meta.hpp>
+#include <fl/util/profiling.hpp>
+#include <memory>
 
 namespace dbrt
 {
-
 template <typename Tracker>
 class RotarySensorBuilder
 {
@@ -55,10 +49,7 @@ public:
         int joint_count;
     };
 
-    RotarySensorBuilder(const Parameters& param) : param_(param)
-    {
-    }
-
+    RotarySensorBuilder(const Parameters& param) : param_(param) {}
     virtual std::shared_ptr<Model> build(int joint_index) const
     {
         if (param_.joint_count != param_.joint_sigmas.size())
@@ -71,8 +62,7 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
-
-        if(StateDim != 2 || ObsrvDim != 1)
+        if (StateDim != 2 || ObsrvDim != 1)
         {
             std::cout << "dawg you screwed up dimensions" << std::endl;
             exit(-1);

@@ -12,23 +12,21 @@
  */
 
 /**
- * \file particle_tracker_builder.hpp
+ * \file rotary_sensor_builder.h
  * \date November 2015
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #pragma once
 
-#include <exception>
-
-#include <dbot/object_resource_identifier.hpp>
-#include <dbot/tracker/tracker.hpp>
-#include <dbot/builder/particle_tracker_builder.hpp>
-
+#include <dbot/builder/particle_tracker_builder.h>
+#include <dbot/object_resource_identifier.h>
+#include <dbot/tracker/tracker.h>
+#include <dbrt/builder/factorized_transition_builder.h>
+#include <dbrt/builder/rotary_sensor_builder.h>
 #include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/tracker/rotary_tracker.h>
-#include <dbrt/builder/factorized_transition_builder.hpp>
-#include <dbrt/builder/rotary_sensor_builder.hpp>
+#include <exception>
 
 namespace dbrt
 {

@@ -17,7 +17,7 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/robot_state.hpp>
+#include <dbrt/robot_state.h>
 #include <dbrt/robot_publisher.h>
 #include <dbrt/robot_publisher.hpp>
 

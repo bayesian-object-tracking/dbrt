@@ -16,23 +16,18 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <memory>
-#include <thread>
+#include <dbot/rigid_body_renderer.h>
+#include <dbot/virtual_camera_data_provider.h>
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/robot_state.h>
+#include <dbrt/urdf_object_loader.h>
+#include <dbrt/util/robot_emulator.h>
+#include <fl/util/profiling.hpp>
 #include <functional>
-
+#include <memory>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-
-#include <fl/util/profiling.hpp>
-
-#include <dbot/rigid_body_renderer.hpp>
-#include <dbot/virtual_camera_data_provider.hpp>
-
-#include <dbot_ros/util/ros_interface.hpp>
-
-#include <dbrt/robot_state.hpp>
-#include <dbrt/urdf_object_loader.h>
-#include <dbrt/util/robot_emulator.hpp>
+#include <thread>
 
 class RobotAnimator : public dbrt::RobotAnimator
 {
@@ -64,7 +59,6 @@ protected:
     double t_;
 };
 
-
 /**
  * \brief Node entry point
  */
@@ -76,18 +70,16 @@ int main(int argc, char** argv)
     // parameter shorthand prefix
     std::string prefix = "robot_emulator/";
 
-
     /* ------------------------------ */
     /* - Setup camera data          - */
     /* ------------------------------ */
     auto camera_downsampling_factor =
-            ri::read<double>(prefix + "camera_downsampling_factor", nh);
+        ri::read<double>(prefix + "camera_downsampling_factor", nh);
     auto camera_frame_id = ri::read<std::string>("camera_frame_id", nh);
 
     auto camera_data = std::make_shared<dbot::CameraData>(
         std::make_shared<dbot::VirtualCameraDataProvider>(
             camera_downsampling_factor, "/" + camera_frame_id));
-
 
     /* ------------------------------ */
     /* - Create the robot kinematics- */
@@ -95,25 +87,22 @@ int main(int argc, char** argv)
     /* ------------------------------ */
 
     auto robot_description =
-            ri::read<std::string>("robot_description", ros::NodeHandle());
+        ri::read<std::string>("robot_description", ros::NodeHandle());
     auto robot_description_package_path =
-            ri::read<std::string>("robot_description_package_path", nh);
-    auto rendering_root_left =
-            ri::read<std::string>("rendering_root_left", nh);
+        ri::read<std::string>("robot_description_package_path", nh);
+    auto rendering_root_left = ri::read<std::string>("rendering_root_left", nh);
     auto rendering_root_right =
-            ri::read<std::string>("rendering_root_right", nh);
+        ri::read<std::string>("rendering_root_right", nh);
 
     std::shared_ptr<KinematicsFromURDF> urdf_kinematics(
-                new KinematicsFromURDF(robot_description,
-                                       robot_description_package_path,
-                                       rendering_root_left,
-                                       rendering_root_right,
-                                       camera_frame_id));
+        new KinematicsFromURDF(robot_description,
+                               robot_description_package_path,
+                               rendering_root_left,
+                               rendering_root_right,
+                               camera_frame_id));
 
     auto object_model = std::make_shared<dbot::ObjectModel>(
         std::make_shared<dbrt::UrdfObjectModelLoader>(urdf_kinematics), false);
-
-
 
     /* ------------------------------ */
     /* - Robot renderer             - */
@@ -145,14 +134,13 @@ int main(int argc, char** argv)
     State state;
     state = Eigen::Map<Eigen::VectorXd>(joints.data(), joints.size());
 
-
     auto joint_rate = ri::read<double>(prefix + "joint_sensor_rate", nh);
     auto image_rate = ri::read<double>(prefix + "visual_sensor_rate", nh);
     auto dilation = ri::read<double>(prefix + "dilation", nh);
     auto image_publishing_delay =
-            ri::read<double>(prefix + "image_publishing_delay", nh);
+        ri::read<double>(prefix + "image_publishing_delay", nh);
     auto image_timestamp_delay =
-            ri::read<double>(prefix + "image_timestamp_delay", nh);
+        ri::read<double>(prefix + "image_timestamp_delay", nh);
 
     dbrt::RobotEmulator<State> robot(object_model,
                                      urdf_kinematics,
@@ -176,10 +164,11 @@ int main(int argc, char** argv)
     spinner.start();
 
     ROS_INFO("Robot emulator running ... ");
-    ROS_INFO("Use RETURN to toggle between pause/resume."
-             "To explicitly pause the emulator type 'pause' and to resule the "
-             "emulator enter 'resume'.");
-    while(ros::ok())
+    ROS_INFO(
+        "Use RETURN to toggle between pause/resume."
+        "To explicitly pause the emulator type 'pause' and to resule the "
+        "emulator enter 'resume'.");
+    while (ros::ok())
     {
         std::string cmd;
         std::getline(std::cin, cmd);
@@ -187,7 +176,7 @@ int main(int argc, char** argv)
         {
             robot.pause();
         }
-        else if(cmd == "resume")
+        else if (cmd == "resume")
         {
             robot.resume();
         }

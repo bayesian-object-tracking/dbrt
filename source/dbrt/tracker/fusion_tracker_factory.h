@@ -30,12 +30,11 @@
 
 #pragma once
 
-#include <string>
-
-#include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
 #include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/tracker/fusion_tracker.h>
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
+#include <string>
 
 namespace dbrt
 {

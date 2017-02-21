@@ -28,18 +28,15 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/tracker/visual_tracker_factory.h>
-
-#include <dbot_ros/util/ros_interface.hpp>
 #include <dbot/builder/rb_sensor_builder.h>
-
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/builder/visual_tracker_builder.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
 #include <dbrt/urdf_object_loader.h>
-#include <dbrt/builder/visual_tracker_builder.hpp>
-#include <dbrt/util/parameter_tools.hpp>
+#include <dbrt/util/parameter_tools.h>
 
 namespace dbrt
 {
-
 /**
  * \brief Create a particle filter tracking the robot joints based on depth
  *     images measurements

@@ -23,27 +23,24 @@
  */
 
 /**
- * \file particle_tracker_builder.hpp
+ * \file particle_tracker_builder.h
  * \date November 2015
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #pragma once
 
-#include <exception>
-
-#include <dbot/object_resource_identifier.hpp>
-#include <dbot/tracker/tracker.hpp>
-#include <dbot/builder/particle_tracker_builder.hpp>
-
-#include <dbrt/tracker/visual_tracker.h>
+#include <dbot/builder/particle_tracker_builder.h>
+#include <dbot/object_resource_identifier.h>
+#include <dbot/tracker/tracker.h>
+#include <dbrt/builder/exceptions.h>
+#include <dbrt/builder/transition_builder.h>
 #include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/builder/transition_builder.hpp>
-#include <dbrt/builder/exceptions.hpp>
+#include <dbrt/tracker/visual_tracker.h>
+#include <exception>
 
 namespace dbrt
 {
-
 template <typename Tracker>
 class VisualTrackerBuilder
 {
@@ -53,8 +50,7 @@ public:
     typedef typename Tracker::Input Input;
 
     /* == Model Builder Interfaces ========================================== */
-    typedef dbrt::TransitionBuilder<Tracker>
-        TransitionBuilder;
+    typedef dbrt::TransitionBuilder<Tracker> TransitionBuilder;
     typedef dbot::RbSensorBuilder<State> SensorBuilder;
 
     /* == Model Interfaces ================================================== */
@@ -63,8 +59,8 @@ public:
     typedef typename Sensor::Observation Obsrv;
 
     /* == Filter algorithm ================================================== */
-    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition,
-                                                       Sensor> Filter;
+    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition, Sensor>
+        Filter;
 
     /* == Tracker parameters ================================================ */
     struct Parameters
@@ -122,10 +118,8 @@ public:
         auto transition = this->transition_builder_->build();
         auto sensor = this->sensor_builder_->build();
 
-        auto filter = std::make_shared<Filter>(transition,
-                                               sensor,
-                                               params_.sampling_blocks,
-                                               max_kl_divergence);
+        auto filter = std::make_shared<Filter>(
+            transition, sensor, params_.sampling_blocks, max_kl_divergence);
         return filter;
     }
 

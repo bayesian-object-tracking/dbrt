@@ -29,8 +29,7 @@
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  */
 
-#include <dbot/rigid_body_renderer.hpp>
-
+#include <dbot/rigid_body_renderer.h>
 #include <dbrt/tracker/visual_tracker.h>
 
 namespace dbrt
@@ -47,8 +46,7 @@ VisualTracker::VisualTracker(
 {
 }
 
-void VisualTracker::initialize(
-    const std::vector<State>& initial_states)
+void VisualTracker::initialize(const std::vector<State>& initial_states)
 {
     filter_->set_particles(initial_states);
     filter_->resample(evaluation_count_ / block_count_);

@@ -17,11 +17,9 @@
  * \author jan issac (jan.issac@gmail.com)
  */
 
+#include <dbot_ros/util/ros_camera_data_provider.h>
+#include <dbot_ros/util/ros_interface.h>
 #include <dbrt/util/camera_data_factory.h>
-
-#include <dbot_ros/util/ros_interface.hpp>
-
-#include <dbot_ros/util/ros_camera_data_provider.hpp>
 
 namespace dbrt
 {

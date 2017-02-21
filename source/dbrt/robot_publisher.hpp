@@ -20,24 +20,18 @@
 
 #pragma once
 
-#include <sensor_msgs/fill_image.h>
-#include <sensor_msgs/distortion_models.h>
-
-#include <fl/util/types.hpp>
-#include <fl/util/profiling.hpp>
-
-#include <dbot_ros/util/ros_interface.hpp>
-
 #include <dbrt/robot_publisher.h>
+
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/robot_transforms_provider.h>
+#include <fl/util/profiling.hpp>
+#include <fl/util/types.hpp>
+#include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/fill_image.h>
+#include <tf/transform_broadcaster.h>
 
 namespace dbrt
 {
-class ObjectRenderTools
-{
-public:
-protected:
-};
-
 template <typename State>
 RobotPublisher<State>::RobotPublisher(
     const std::shared_ptr<KinematicsFromURDF>& urdf_kinematics,
@@ -46,12 +40,14 @@ RobotPublisher<State>::RobotPublisher(
     : node_handle_("~"),
       prefix_(estimated_prefix),
       robot_state_publisher_(
-          std::make_shared<robot_state_pub::RobotStatePublisher>(
+          std::make_shared<robot_state_publisher::RobotStatePublisher>(
               urdf_kinematics->get_tree())),
+      transforms_provider_(std::make_shared<RobotTransformsProvider>(
+          urdf_kinematics->get_tree())),
       joint_names_(urdf_kinematics->get_joint_map()),
       root_frame_name_(urdf_kinematics->get_root_frame_id()),
       connecting_frame_name_(connecting_frame_name),
-      transformer_(robot_state_publisher_)
+      transformer_(transforms_provider_)
 {
     // setup basic joint angle message
     auto sz = joint_names_.size();
@@ -59,7 +55,8 @@ RobotPublisher<State>::RobotPublisher(
     joint_state_msg_.effort.resize(sz);
     joint_state_msg_.velocity.resize(sz);
     joint_state_msg_.name.clear();
-    for (int i = 0; i < sz; ++i) {
+    for (int i = 0; i < sz; ++i)
+    {
         joint_state_msg_.name.push_back(joint_names_[i]);
     }
 
@@ -99,7 +96,7 @@ void RobotPublisher<State>::publish_tf(const State& state,
      * connecting_frame_id to be the root (in the corresponding config file).
      */
     // Publish id transform between roots
-    //publish_id_transform(
+    // publish_id_transform(
     //    time,
     //    tf::resolve("", root_frame_name_),
     //    tf::resolve(prefix_, root_frame_name_));
@@ -142,7 +139,7 @@ void RobotPublisher<State>::publish_tf_tree(const State& state,
     robot_state_publisher_->publishTransforms(joint_positions, time, prefix_);
 
     // Publish fixed transforms
-    robot_state_publisher_->publishFixedTransforms(prefix_, time);
+    robot_state_publisher_->publishFixedTransforms(prefix_, false);
 }
 
 template <typename State>
@@ -197,5 +194,4 @@ void RobotPublisher<State>::to_joint_map(
         joint_map[joint_names_[i]] = joint_values[i];
     }
 }
-
 }

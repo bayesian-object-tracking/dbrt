@@ -23,28 +23,23 @@
  */
 
 /**
- * \file transition_builder.hpp
+ * \file transition_builder.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #pragma once
 
-#include <memory>
-
-#include <fl/util/profiling.hpp>
-#include <fl/util/meta.hpp>
-
 #include <Eigen/Dense>
-
-#include <dbot/builder/transition_function_builder.hpp>
+#include <dbot/builder/transition_function_builder.h>
+#include <dbrt/builder/exceptions.h>
 #include <fl/model/transition/linear_transition.hpp>
-
-#include <dbrt/builder/exceptions.hpp>
+#include <fl/util/meta.hpp>
+#include <fl/util/profiling.hpp>
+#include <memory>
 
 namespace dbrt
 {
-
 template <typename State>
 struct RobotJointStateTrait
 {
@@ -77,7 +72,6 @@ public:
     };
 
     TransitionBuilder(const Parameters& param) : param_(param) {}
-
     virtual std::shared_ptr<Model> build() const
     {
         if (param_.joint_count != param_.joint_sigmas.size())
@@ -88,7 +82,8 @@ public:
         int total_state_dim = param_.joint_count;
         int total_noise_dim = total_state_dim;
 
-        auto model = std::make_shared<Model>(total_state_dim, total_noise_dim, 1);
+        auto model =
+            std::make_shared<Model>(total_state_dim, total_noise_dim, 1);
 
         auto A = model->create_dynamics_matrix();
         auto B = model->create_noise_matrix();

@@ -28,11 +28,11 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <dbrt/robot_state.hpp>
+// #include <kdl_parser/kdl_parser.hpp>
+#include <dbrt/robot_state.h>
 
 #include <dbot/builder/rb_sensor_builder.h>
 #include <dbot/builder/rb_sensor_builder.hpp>
-
 
 namespace dbot
 {

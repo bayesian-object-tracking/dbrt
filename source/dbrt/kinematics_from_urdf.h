@@ -21,26 +21,19 @@
 
 #pragma once
 
-#include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
-
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <boost/random/mersenne_twister.hpp>
-
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <list>
-#include <vector>
-#include <list>
-#include <urdf/model.h>
-#include <kdl_parser/kdl_parser.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/shared_ptr.hpp>
+#include <dbot/pose/pose_vector.h>
+#include <dbrt/part_mesh_model.h>
 #include <kdl/treefksolverpos_recursive.hpp>
-
-// tools
-#include <dbrt/part_mesh_model.hpp>
-
-#include <dbot/pose/pose_vector.hpp>
+#include <kdl_parser/kdl_parser.hpp>
+#include <list>
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
+#include <urdf/model.h>
+#include <vector>
 
 class KinematicsFromURDF
 {
@@ -60,7 +53,7 @@ public:
     /// accessors **************************************************************
     Eigen::VectorXd get_link_position(int index);
     Eigen::Quaternion<double> get_link_orientation(int index);
-    osr::PoseVector get_link_pose(int index);
+    dbot::PoseVector get_link_pose(int index);
 
     std::vector<int> get_joint_order(const sensor_msgs::JointState& state);
     void get_part_meshes(
@@ -90,7 +83,6 @@ private:
     void check_size(int size);
 
     void compute_transforms();
-
 
     // std::string tf_correction_root_;
     std::string description_path_;
@@ -123,6 +115,5 @@ private:
     std::string rendering_root_left_, rendering_root_right_;
 
     bool use_camera_offset_;
-    osr::PoseVector camera_offset_;
+    dbot::PoseVector camera_offset_;
 };
-

@@ -21,26 +21,19 @@
 #pragma once
 
 #include <Eigen/Dense>
-
-#include <vector>
-#include <string>
-#include <memory>
+#include <dbrt/robot_state.h>
+#include <fl/util/types.hpp>
 #include <mutex>
+#include <vector>
 
-#include <dbot/camera_data.hpp>
-#include <dbot/object_model.hpp>
-
-#include <dbot/pose/pose_vector.hpp>
-#include <dbot/pose/composed_vector.hpp>
-#include <dbot/pose/free_floating_rigid_bodies_state.hpp>
-
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-
-#include <robot_state_pub/robot_state_publisher.h>
-
-#include <dbrt/robot_state.hpp>
-#include <dbrt/kinematics_from_urdf.h>
+// #include <dbot/pose/composed_vector.h>
+// #include <dbot/pose/free_floating_rigid_bodies_state.h>
+// #include <dbot/pose/pose_vector.h>
+// #include <dbrt/kinematics_from_urdf.h>
+// #include <image_transport/image_transport.h>
+// #include <memory>
+// #include <ros/ros.h>
+// #include <string>
 
 namespace dbrt
 {
@@ -62,13 +55,11 @@ public:
      * \param filter
      *     Rbc particle filter instance
      */
-    RobotTracker() { }
-
+    RobotTracker() {}
     /**
      * \brief Overridable default destructor
      */
-    virtual ~RobotTracker() { }
-
+    virtual ~RobotTracker() {}
     /**
      * \brief perform a single filter step
      *
@@ -84,7 +75,6 @@ public:
      * @param evaluation_count
      */
     virtual void initialize(const std::vector<State>& initial_states) = 0;
-
 
     /**
      * \brief Shorthand for a zero input vector

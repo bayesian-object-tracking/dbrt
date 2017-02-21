@@ -32,18 +32,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#ifndef POSE_TRACKING_UTILS_PART_MESH_MODEL_
-#define POSE_TRACKING_UTILS_PART_MESH_MODEL_
+#pragma once
 
+#include <Eigen/Dense>
 #include <boost/shared_ptr.hpp>
 #include <urdf/model.h>
 
-#include <Eigen/Dense>
-
 #ifdef HAVE_V2
-#include "assimp/assimp.h"
 #include "assimp/aiPostProcess.h"
 #include "assimp/aiScene.h"
+#include "assimp/assimp.h"
 #elif defined HAVE_V3
 #include "assimp/cimport.h"
 #include "assimp/postprocess.h"
@@ -246,5 +244,3 @@ private:
 
     std::string filename_;
 };
-
-#endif  // _PART_MESH_MODEL_

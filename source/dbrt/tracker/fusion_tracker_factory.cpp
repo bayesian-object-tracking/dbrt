@@ -28,40 +28,31 @@
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
-#include <string>
-
-#include <memory>
-#include <thread>
-#include <functional>
-
 #include <cv.h>
 #include <cv_bridge/cv_bridge.h>
-
-#include <ros/ros.h>
-#include <sensor_msgs/Image.h>
-
-#include <fl/util/profiling.hpp>
-
-#include <dbot/rigid_body_renderer.hpp>
-#include <dbot/virtual_camera_data_provider.hpp>
-#include <dbot/builder/particle_tracker_builder.hpp>
-
-#include <dbot_ros/util/ros_interface.hpp>
-#include <dbot_ros/util/data_set_camera_data_provider.hpp>
-
-#include <dbrt/robot_state.hpp>
+#include <dbot/builder/particle_tracker_builder.h>
+#include <dbot/rigid_body_renderer.h>
+#include <dbot/virtual_camera_data_provider.h>
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/builder/rotary_tracker_builder.h>
+#include <dbrt/kinematics_from_urdf.h>
 #include <dbrt/robot_publisher.h>
-#include <dbrt/urdf_object_loader.h>
+#include <dbrt/robot_state.h>
+#include <dbrt/tracker/fusion_tracker.h>
+#include <dbrt/tracker/fusion_tracker_factory.h>
 #include <dbrt/tracker/robot_tracker.h>
 #include <dbrt/tracker/rotary_tracker.h>
-#include <dbrt/tracker/visual_tracker.h>
-#include <dbrt/tracker/fusion_tracker.h>
-
-#include <dbrt/kinematics_from_urdf.h>
-#include <dbrt/tracker/fusion_tracker_factory.h>
-#include <dbrt/tracker/visual_tracker_factory.h>
 #include <dbrt/tracker/rotary_tracker_factory.h>
-#include <dbrt/builder/rotary_tracker_builder.hpp>
+#include <dbrt/tracker/visual_tracker.h>
+#include <dbrt/tracker/visual_tracker_factory.h>
+#include <dbrt/urdf_object_loader.h>
+#include <fl/util/profiling.hpp>
+#include <functional>
+#include <memory>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <string>
+#include <thread>
 
 namespace dbrt
 {
@@ -84,8 +75,8 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     /* - Initialize                 - */
     /* ------------------------------ */
 
-    std::vector<Eigen::VectorXd> initial_states_vectors =
-        {kinematics->sensor_msg_to_eigen(*joint_state)};
+    std::vector<Eigen::VectorXd> initial_states_vectors = {
+        kinematics->sensor_msg_to_eigen(*joint_state)};
     std::vector<State> initial_states;
     for (auto state : initial_states_vectors)
     {
@@ -100,12 +91,10 @@ std::shared_ptr<dbrt::FusionTracker> create_fusion_tracker(
     auto fusion_tracker = std::make_shared<dbrt::FusionTracker>(
         camera_data,
         kinematics,
-        [=]()
-        {
+        [=]() {
             return dbrt::create_rotary_tracker(prefix, kinematics, joint_state);
         },
-        [=]()
-        {
+        [=]() {
             return dbrt::create_visual_tracker(
                 prefix, kinematics, camera_data, joint_state);
         },

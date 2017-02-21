@@ -19,9 +19,9 @@
  * \author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  */
 
+#include <boost/random/normal_distribution.hpp>
 #include <dbrt/kinematics_from_urdf.h>
 #include <fl/util/profiling.hpp>
-#include <boost/random/normal_distribution.hpp>
 
 KinematicsFromURDF::KinematicsFromURDF(
     const std::string& robot_description,
@@ -181,7 +181,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
     camera_leaf_link->name = camera_frame;
     camera_leaf_link->parent_joint = urdf.joints_[dofs[5] + "_JOINT"];
     urdf.links_[camera_frame] = camera_leaf_link;
-    
+
     for (int i = 0; i < dofs.size() - 1; ++i)
     {
         auto link = urdf.links_[dofs[i] + "_LINK"];
@@ -191,7 +191,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
         // This means there is no ROLL link and there fore we do the next step
         // until PITCH link and YAW obtains the camera frame as child link
         if (i < dofs.size() - 2)
-        {            
+        {
             link->child_links.push_back(urdf.links_[dofs[i + 1] + "_LINK"]);
         }
         else
@@ -333,9 +333,9 @@ Eigen::Quaternion<double> KinematicsFromURDF::get_link_orientation(int index)
     return quat;
 }
 
-osr::PoseVector KinematicsFromURDF::get_link_pose(int index)
+dbot::PoseVector KinematicsFromURDF::get_link_pose(int index)
 {
-    osr::PoseVector pose_vector;
+    dbot::PoseVector pose_vector;
     pose_vector.orientation().quaternion(get_link_orientation(index));
     pose_vector.position() = get_link_position(index);
 
@@ -433,7 +433,7 @@ int KinematicsFromURDF::num_links()
     return mesh_names_.size();
 }
 
-const std::vector<std::string>& KinematicsFromURDF::get_joint_map() const    
+const std::vector<std::string>& KinematicsFromURDF::get_joint_map() const
 {
     return joint_map_;
 }

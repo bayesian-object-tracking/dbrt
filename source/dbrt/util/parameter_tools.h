@@ -11,19 +11,17 @@
  * file distributed with this source code.
  */
 
-
 /**
- * \file parameter_tools.hpp 
+ * \file parameter_tools.h
  * \date August 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
+#include <dbot_ros/util/ros_interface.h>
+#include <dbrt/kinematics_from_urdf.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <dbot_ros/util/ros_interface.hpp>
-#include <dbrt/kinematics_from_urdf.h>
-
 
 namespace dbrt
 {
@@ -105,8 +103,9 @@ inline std::vector<double> extract_ordered_values(
     {
         if (kinematics->name_to_index(entry.first) > ordered_values.size())
         {
-            ROS_ERROR("Joint index exceeds number of read joints. "
-                      "Did you forget to merge joint lists?");
+            ROS_ERROR(
+                "Joint index exceeds number of read joints. "
+                "Did you forget to merge joint lists?");
             exit(-1);
         }
         ordered_values[kinematics->name_to_index(entry.first)] = entry.second;
@@ -114,5 +113,4 @@ inline std::vector<double> extract_ordered_values(
 
     return ordered_values;
 }
-
 }

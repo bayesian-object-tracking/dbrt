@@ -19,16 +19,15 @@
 
 #pragma once
 
-#include <mutex>
-#include <memory>
-#include <sensor_msgs/JointState.h>
-
+#include <dbrt/kinematics_from_urdf.h>
+#include <dbrt/tracker/robot_tracker.h>
 #include <fl/filter/gaussian/gaussian_filter_linear.hpp>
 #include <fl/model/sensor/linear_gaussian_sensor.hpp>
-#include <fl/model/transition/linear_transition.hpp>
 #include <fl/model/transition/interface/transition_function.hpp>
-#include <dbrt/tracker/robot_tracker.h>
-#include <dbrt/kinematics_from_urdf.h>
+#include <fl/model/transition/linear_transition.hpp>
+#include <memory>
+#include <mutex>
+#include <sensor_msgs/JointState.h>
 
 namespace dbrt
 {

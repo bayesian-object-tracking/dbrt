@@ -12,25 +12,20 @@
  */
 
 /**
- * \file factorized_transition_builder.hpp
+ * \file factorized_transition_builder.h
  * \date January 2016
  * \author Jan Issac (jan.issac@gmail.com)
  */
 
 #pragma once
 
-#include <memory>
-
-#include <fl/util/profiling.hpp>
-#include <fl/util/meta.hpp>
-#include <fl/model/transition/linear_transition.hpp>
-
 #include <Eigen/Dense>
-
-#include <dbot/builder/transition_function_builder.hpp>
-
-#include <dbrt/builder/exceptions.hpp>
-#include <dbrt/builder/exceptions.hpp>
+#include <dbot/builder/transition_function_builder.h>
+#include <dbrt/builder/exceptions.h>
+#include <fl/model/transition/linear_transition.hpp>
+#include <fl/util/meta.hpp>
+#include <fl/util/profiling.hpp>
+#include <memory>
 
 namespace dbrt
 {
@@ -52,7 +47,7 @@ public:
 
     struct Parameters
     {
-//        double joint_sigma;
+        //        double joint_sigma;
         std::vector<double> joint_sigmas;
         std::vector<double> bias_sigmas;
         std::vector<double> bias_factors;
@@ -80,8 +75,7 @@ public:
             throw JointIndexOutOfBoundsException();
         }
 
-
-        if(StateDim != 2 || NoiseDim != 2 || InputDim != 1)
+        if (StateDim != 2 || NoiseDim != 2 || InputDim != 1)
         {
             std::cout << "damn you screwed up dimensions" << std::endl;
             exit(-1);
@@ -94,11 +88,11 @@ public:
         auto C = model->create_input_matrix();
 
         A.setIdentity();
-        A(1,1) = param_.bias_factors[joint_index];
+        A(1, 1) = param_.bias_factors[joint_index];
 
         B.setIdentity();
-        B(0,0) = param_.joint_sigmas[joint_index];
-        B(1,1) = param_.bias_sigmas[joint_index];
+        B(0, 0) = param_.joint_sigmas[joint_index];
+        B(1, 1) = param_.bias_sigmas[joint_index];
 
         model->dynamics_matrix(A);
         model->noise_matrix(B);

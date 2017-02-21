@@ -11,7 +11,6 @@
  * file distributed with this source code.
  */
 
-
 /*
  * This file implements a part of the algorithm published in:
  *
@@ -32,13 +31,12 @@
 
 #pragma once
 
-#include <image_transport/image_transport.h>
-
-#include <fl/model/transition/interface/transition_function.hpp>
-
-#include <dbot/filter/rao_blackwell_coordinate_particle_filter.hpp>
-
+#include <dbot/camera_data.h>
+#include <dbot/filter/rao_blackwell_coordinate_particle_filter.h>
+#include <dbot/object_model.h>
 #include <dbrt/tracker/robot_tracker.h>
+#include <fl/model/transition/interface/transition_function.hpp>
+#include <image_transport/image_transport.h>
 
 namespace dbrt
 {
@@ -51,8 +49,8 @@ public:
     typedef fl::TransitionFunction<State, Noise, Input> Transition;
     typedef dbot::RbSensor<State> Sensor;
 
-    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition,
-                                                       Sensor> Filter;
+    typedef dbot::RaoBlackwellCoordinateParticleFilter<Transition, Sensor>
+        Filter;
 
 public:
     /**
@@ -68,9 +66,9 @@ public:
      *     Moving average update rate
      */
     VisualTracker(const std::shared_ptr<Filter>& filter,
-        const std::shared_ptr<dbot::ObjectModel>& object_model,
-        int evaluation_count,
-        int block_count);
+                  const std::shared_ptr<dbot::ObjectModel>& object_model,
+                  int evaluation_count,
+                  int block_count);
 
     /**
      * \brief perform a single filter step
