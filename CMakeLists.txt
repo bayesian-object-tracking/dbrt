@@ -19,7 +19,7 @@ else(DBOT_BUILD_GPU AND CUDA_FOUND)
   set(DBOT_BUILD_GPU OFF)
 endif(DBOT_BUILD_GPU AND CUDA_FOUND)
 
-add_definitions(-std=c++0x -fno-omit-frame-pointer)
+add_definitions(-std=c++11 -fno-omit-frame-pointer)
 add_definitions(-DPROFILING_ON=1) #print profiling output
 
 find_package(catkin REQUIRED
