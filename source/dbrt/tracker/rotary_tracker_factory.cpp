@@ -31,6 +31,9 @@ namespace dbrt
  *     parameter prefix, e.g. fusion_tracker
  * \param kinematics
  *     URDF robot kinematics
+ * \param camera_frame_id
+ *     This is the camera frame id or name used when the 
+ *     estimate_camera_offset is on.
  */
 std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
     std::string prefix,
@@ -72,15 +75,22 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
 
     if (estimate_camera_offset)
     {
-        transition_joint_sigmas_map.insert(
-            camera_transition_joint_sigmas_map.begin(),
-            camera_transition_joint_sigmas_map.end());
+        insert_map_with_prefixed_keys(
+            camera_transition_joint_sigmas_map,
+            kinematics->camera_frame_id() + "_",
+            transition_joint_sigmas_map);
 
-        joint_bias_sigmas_map.insert(camera_joint_bias_sigmas_map.begin(),
-                                     camera_joint_bias_sigmas_map.end());
 
-        joint_bias_factors_map.insert(camera_joint_bias_factors_map.begin(),
-                                      camera_joint_bias_factors_map.end());
+        insert_map_with_prefixed_keys(
+            camera_joint_bias_sigmas_map,
+            kinematics->camera_frame_id() + "_",
+            joint_bias_sigmas_map);
+
+
+        insert_map_with_prefixed_keys(
+            camera_joint_bias_factors_map,
+            kinematics->camera_frame_id() + "_",
+            joint_bias_factors_map);
     }
 
     // linear state transition parameters
@@ -103,9 +113,10 @@ std::shared_ptr<dbrt::RotaryTracker> create_rotary_tracker(
 
     if (estimate_camera_offset)
     {
-        observation_joint_sigmas_map.insert(
-            camera_observation_joint_sigmas_map.begin(),
-            camera_observation_joint_sigmas_map.end());
+        insert_map_with_prefixed_keys(
+            camera_observation_joint_sigmas_map,
+            kinematics->camera_frame_id() + "_",
+            observation_joint_sigmas_map);
     }
 
     sensor_parameters.joint_sigmas =

@@ -74,6 +74,8 @@ public:
     // get the joint index in state array
     int name_to_index(const std::string& name);
 
+    const std::string& camera_frame_id() const { return cam_frame_name_; }
+
 private:
     void rename_camera_frame(const std::string& camera_frame,
                              urdf::Model& urdf);

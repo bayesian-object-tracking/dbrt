@@ -132,13 +132,13 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
 {
     rename_camera_frame(camera_frame, urdf);
 
-    std::string camera_frame_ = "camera";
-    std::vector<std::string> dofs = {camera_frame_ + "_X",
-                                     camera_frame_ + "_Y",
-                                     camera_frame_ + "_Z",
-                                     camera_frame_ + "_PITCH",
-                                     camera_frame_ + "_YAW",
-                                     camera_frame_ + "_ROLL"};
+//    std::string camera_frame_ = "camera";
+    std::vector<std::string> dofs = {camera_frame + "_X",
+                                     camera_frame + "_Y",
+                                     camera_frame + "_Z",
+                                     camera_frame + "_PITCH",
+                                     camera_frame + "_YAW",
+                                     camera_frame + "_ROLL"};
 
     std::string current_parent_link = camera_frame + "_DEFAULT";
 
@@ -349,12 +349,12 @@ Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
 
     if (use_camera_offset_)
     {
-        joint_state.name.push_back("camera_X_JOINT");
-        joint_state.name.push_back("camera_Y_JOINT");
-        joint_state.name.push_back("camera_Z_JOINT");
-        joint_state.name.push_back("camera_ROLL_JOINT");
-        joint_state.name.push_back("camera_PITCH_JOINT");
-        joint_state.name.push_back("camera_YAW_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_X_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_Y_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_Z_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_ROLL_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_PITCH_JOINT");
+        joint_state.name.push_back(cam_frame_name_ + "_YAW_JOINT");
 
         joint_state.position.push_back(0);
         joint_state.position.push_back(0);

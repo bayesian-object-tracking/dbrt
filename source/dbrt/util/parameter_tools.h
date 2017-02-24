@@ -48,29 +48,38 @@ inline std::vector<std::vector<int>> definition_to_sampling_block(
 
 inline SamplingBlocksDefinition merge_sampling_block_definitions(
     const SamplingBlocksDefinition& definition_A,
-    const SamplingBlocksDefinition& definition_B)
+    const SamplingBlocksDefinition& definition_B,
+    const std::string& prefixB)
 {
     SamplingBlocksDefinition merged = definition_A;
 
     for (auto block_definition_B : definition_B)
     {
-        auto block_B = block_definition_B.begin();
+      std::map<std::string, std::vector<std::string>> prefixed_block_definition_B;
+      for (auto block : block_definition_B)
+      {
+	for (auto value : block.second)
+	{
+	  prefixed_block_definition_B[block.first].push_back(prefixB + value);
+	}
+      }
 
+      auto block_B = prefixed_block_definition_B.begin();
         bool added = false;
         for (auto& block_definition_A : merged)
         {
             auto block_A = block_definition_A.begin();
             if (block_A->first == block_B->first)
             {
-                block_A->second.insert(std::end(block_A->second),
-                                       std::begin(block_B->second),
-                                       std::end(block_B->second));
-                added = true;
+	       block_A->second.insert(std::end(block_A->second),
+                                      std::begin(block_B->second),
+                                      std::end(block_B->second));
+               added = true;
             }
         }
         if (!added)
         {
-            merged.push_back(block_definition_B);
+            merged.push_back(prefixed_block_definition_B);
         }
     }
 
@@ -101,16 +110,26 @@ inline std::vector<double> extract_ordered_values(
     std::vector<double> ordered_values(parameter_map.size());
     for (auto entry : parameter_map)
     {
-        if (kinematics->name_to_index(entry.first) > ordered_values.size())
+        std::string joint_name = entry.first;
+        if (kinematics->name_to_index(joint_name) > ordered_values.size())
         {
             ROS_ERROR(
                 "Joint index exceeds number of read joints. "
                 "Did you forget to merge joint lists?");
             exit(-1);
         }
-        ordered_values[kinematics->name_to_index(entry.first)] = entry.second;
+        ordered_values[kinematics->name_to_index(joint_name)] = entry.second;
     }
 
     return ordered_values;
+}
+
+inline void insert_map_with_prefixed_keys(
+    const std::map<std::string, double>& new_values, 
+    const std::string& prefix, 
+    std::map<std::string, double>& destination){
+  for (auto new_value: new_values){
+    destination[prefix + new_value.first] = new_value.second;
+  }
 }
 }

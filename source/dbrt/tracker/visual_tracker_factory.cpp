@@ -83,9 +83,9 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
         read_maps_from_map_list(prefix + "joint_transition/joint_sigmas", nh);
     if (estimate_camera_offset)
     {
-        transition_joint_sigmas_map.insert(
-            camera_transition_joint_sigmas_map.begin(),
-            camera_transition_joint_sigmas_map.end());
+       insert_map_with_prefixed_keys(camera_transition_joint_sigmas_map, 
+                                     kinematics->camera_frame_id() + "_", 
+                                     transition_joint_sigmas_map);
     }
 
     // linear state transition parameters
@@ -172,8 +172,8 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
     if (estimate_camera_offset)
     {
         sampling_blocks_definition = merge_sampling_block_definitions(
-            camera_offset_sampling_blocks_definition,
-            sampling_blocks_definition);
+	   sampling_blocks_definition,
+           camera_offset_sampling_blocks_definition, kinematics->camera_frame_id() + '_');
     }
 
     tracker_parameters.sampling_blocks =
