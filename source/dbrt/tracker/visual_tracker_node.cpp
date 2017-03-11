@@ -116,13 +116,12 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
         visualization_rate.sleep();
-        auto current_state = tracker_ros.current_state();
+        State state;
+        ros::Time time;
+        tracker_ros.get_current_state(state, time);
 
-        // std::cout << "PUBLISHING ESTIMATED JONT ANGLES AND TF WITH"
-        //              "NOW() TIMESTAMP. THIS HAS TO BE FIXED!"
-        //           << std::endl;
-        ros::Time time = ros::Time::now();
-        tracker_publisher->publish_tf(current_state, time);
+        state[2] = 3;
+        tracker_publisher->publish_tf(state, time);
 
         ros::spinOnce();
     }

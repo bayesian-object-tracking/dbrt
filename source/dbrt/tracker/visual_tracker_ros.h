@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <dbrt/tracker/visual_tracker.h>
+#include <ros/time.h>
 
 namespace dbrt
 {
@@ -57,13 +58,14 @@ public:
      */
     void update_obsrv(const sensor_msgs::Image& ros_image);
 
-    const State& current_state() const;
+    void get_current_state(State& state, ros::Time& time) const;
     const std::shared_ptr<VisualTracker>& tracker() { return tracker_; }
 
 protected:
     bool obsrv_updated_;
     bool running_;
     State current_state_;
+    ros::Time current_time_;
     sensor_msgs::Image current_ros_image_;
     std::mutex obsrv_mutex_;
     std::mutex state_mutex_;
