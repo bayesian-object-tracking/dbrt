@@ -396,13 +396,21 @@ void FusionTracker::joints_obsrv_callback(
 
     if (joints_obsrvs_buffer_.size() > 1000000)
     {
-        ROS_WARN_STREAM("Obsrv buffer max size (" << 1000000 << ") reached.");
+        ROS_ERROR_STREAM("Joint angle max buffer size (" << 1000000 << ") "
+                         << "reached! This means most likely that no image "
+                         << "has been received in a while. Old joint angles "
+                         << "can only be discarded once an image with a later "
+                         << "time stamp is received.");
         joints_obsrvs_buffer_.pop_front();
     }
 
     if (j_t > entry.timestamp)
     {
-        ROS_ERROR_STREAM("Joint measurements not ordered!");
+        ROS_ERROR_STREAM("Joint angle measurements not ordered! This means "
+                         << "that a joint angle measurement was received with "
+                         << "an older time stamp than a joint angle "
+                         << "measurement previously received. This case should "
+                         << "never occurr and is not handled!");
     }
 
     j_t = entry.timestamp;
@@ -421,23 +429,33 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 
     if (i_t > ros_image_.header.stamp.toSec())
     {
-        ROS_ERROR_STREAM("Image measurements not ordered!");
+        ROS_ERROR_STREAM("Image measurements not ordered! This means that an "
+                         << "image was received with an older time stamp than "
+                         << "an image previously received. This case should "
+                         << "never occurr and is not handled!");
     }
 
     i_t = ros_image_.header.stamp.toSec();
 
     if (i_t > j_t)
     {
-        ROS_ERROR_STREAM("latest image newer than latest joint angles!!!"
-                         << std::endl
-                         << "angle stamp: "
-                         << j_t
-                         << " imaga stamp : "
-                         << i_t
-                         << std::endl
-                         << "difference: "
-                         << i_t - j_t
-                         << std::endl);
+        ROS_WARN_STREAM("Latest image newer than latest joint angles! "
+                        << "Will wait until a joint angle measurement is "
+                        << "received with a time stamp at least as new as "
+                        << "the latest image."
+                        << std::endl
+                        << "This case not expected since images are assumed to "
+                        << "have less delay than joint angles. There might be "
+                        << "a time synchronization issue."
+                        << std::endl
+                        << "angle stamp: "
+                        << j_t
+                        << " image stamp : "
+                        << i_t
+                        << std::endl
+                        << "difference: "
+                        << i_t - j_t
+                        << std::endl);
     }
 }
 }
