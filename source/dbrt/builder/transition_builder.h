@@ -111,8 +111,6 @@ public:
         model->noise_matrix(B);
         model->input_matrix(C);
 
-        PV(A);
-
         return model;
     }
 

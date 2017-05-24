@@ -93,7 +93,6 @@ std::shared_ptr<dbrt::VisualTracker> create_visual_tracker(
         extract_ordered_values(transition_joint_sigmas_map, kinematics);
     ROS_INFO("Transition parameter loaded");
     transition_parameters.joint_count = kinematics->num_joints();
-    PV(transition_parameters.joint_count);
 
     ROS_INFO("Transition parameter loaded");
 

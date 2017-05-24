@@ -47,7 +47,7 @@ public:
 
     struct Parameters
     {
-        //        double joint_sigma;
+        // double joint_sigma;
         std::vector<double> joint_sigmas;
         std::vector<double> bias_sigmas;
         std::vector<double> bias_factors;

@@ -50,6 +50,8 @@ void FusionTracker::initialize(const std::vector<State>& initial_states)
 
 void FusionTracker::run_rotary_tracker()
 {
+    ROS_INFO("Rotary tracker running ...");
+
     while (running_)
     {
         usleep(10);
@@ -118,6 +120,8 @@ void FusionTracker::run_visual_tracker()
 
     current_state_and_time(current_state, garbage);
     particle_tracker->initialize({current_state});
+
+    ROS_INFO("Visual tracker running ...");
 
     while (running_)
     {
@@ -240,7 +244,7 @@ void FusionTracker::run_visual_tracker()
             joints_obsrv_belief_buffer_local.pop_back();
         }
 
-        MEASURE("total time for visual processing");
+        // MEASURE("total time for visual processing");
     }
 }
 
@@ -396,21 +400,23 @@ void FusionTracker::joints_obsrv_callback(
 
     if (joints_obsrvs_buffer_.size() > 1000000)
     {
-        ROS_ERROR_STREAM("Joint angle max buffer size (" << 1000000 << ") "
-                         << "reached! This means most likely that no image "
-                         << "has been received in a while. Old joint angles "
-                         << "can only be discarded once an image with a later "
-                         << "time stamp is received.");
+        ROS_WARN_STREAM("Joint angle max buffer size ("
+                        << 1000000
+                        << ") "
+                        << "reached! This means most likely that no image "
+                        << "has been received in a while. Old joint angles "
+                        << "can only be discarded once an image with a later "
+                        << "time stamp is received.");
         joints_obsrvs_buffer_.pop_front();
     }
 
     if (j_t > entry.timestamp)
     {
-        ROS_ERROR_STREAM("Joint angle measurements not ordered! This means "
-                         << "that a joint angle measurement was received with "
-                         << "an older time stamp than a joint angle "
-                         << "measurement previously received. This case should "
-                         << "never occurr and is not handled!");
+        ROS_WARN_STREAM("Joint angle measurements not ordered! This means "
+                        << "that a joint angle measurement was received with "
+                        << "an older time stamp than a joint angle "
+                        << "measurement previously received. This case should "
+                        << "never occurr and is not handled!");
     }
 
     j_t = entry.timestamp;
@@ -429,17 +435,17 @@ void FusionTracker::image_obsrv_callback(const sensor_msgs::Image& ros_image)
 
     if (i_t > ros_image_.header.stamp.toSec())
     {
-        ROS_ERROR_STREAM("Image measurements not ordered! This means that an "
-                         << "image was received with an older time stamp than "
-                         << "an image previously received. This case should "
-                         << "never occurr and is not handled!");
+        ROS_WARN_STREAM("Image measurements not ordered! This means that an "
+                        << "image was received with an older time stamp than "
+                        << "an image previously received. This case should "
+                        << "never occurr and is not handled!");
     }
 
     i_t = ros_image_.header.stamp.toSec();
 
     if (i_t > j_t)
     {
-        ROS_WARN_STREAM("Latest image newer than latest joint angles! "
+        ROS_INFO_STREAM("Latest image newer than latest joint angles! "
                         << "Will wait until a joint angle measurement is "
                         << "received with a time stamp at least as new as "
                         << "the latest image."
