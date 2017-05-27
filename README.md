@@ -1,50 +1,53 @@
-# ROS Depth Based Robot Tracking Library (dbrt)
+# ROS Depth-Based Robot Tracking Package (dbrt)
 
-This package provides three robot trackers
-* Rotary tracker: A robot tracker based on joint angle measurements. This 
-  tracker runs typically at 100Hz or 1kHz
-* Visual tracker: This tracker uses depth images from a Kinect or XTION to 
-  estimate the joint state. The filter is based on the Rao-Blackwellized 
-  corrdinate descent particle filter implemented in 
-  [dbot](https://github.com/bayesian-object-tracking/dbot) package. The tracking 
-  rate lies between 5Hz to 30Hz depending on the degree-of-freedom and model
-  configurations. 
-* Fusion tracker: This tracker fuses both filters mentioned above. The fusion 
-  is performed while taking into considering the camera delay and the 
-  computational time of the vision filter. 
+This package extends the object tracking packages, dbot and dbot_ros to track 
+articulated rigid bodies with several degree of freedom. In addition to depth
+images, the robot tracker incorporates joint angle measurements at a higher 
+rate, typically 100Hz-1kHz. Here are some of the core features
 
-## Running robot trackers with default configuration
+ * Provides joint state estimates at the rate of joint encoders
+ * Compensates for inaccurate kinematics by estimating biases on the joint 
+   angles
+ * Estimates the head camera to robot base, if needed. Typically, the exact 
+   camera location is unknown
+ * Handles occlusion
+ * Copes with camera delays 
+ * Requires only the model, i.e. the URDF description including the link meshes.
 
-These trackers are robot specific. You will need to create your own package and
-add your config files and URDF models there. 
-Take [dbrt_apollo](http://git-amd.tuebingen.mpg.de/amd-clmc/dbrt_apollo)
-Apollo robot configuration package as an example or a template.
+## Getting Started Example
 
-Make sure the robot is publishing the joint state to `/joint_states` topic. If 
-you are using the visual or the fusion tracker, make also sure that the depth 
-camera is providing depth images to a topic of choice spcified in the 
-`dbrt_my_robot/config/camera.yaml`
+First follow the steps of setting up the object tracking as described in
+Check out the [dbrt_getting_started](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started.git)
+for a full example of a robot setup with recorded data. You can find the setup 
+steps in the (Getting Started)[https://github.com/bayesian-object-tracking/getting_started#robot-tracking]
+documentation.
 
-Launching the trackers takes a single `roslaunch` call
-```bash
-roslaunch dbrt_apollo rotary_tracker.launch
-```
-```bash
-roslaunch dbrt_apollo visual_tracker.launch
-```
-```bash
-roslaunch dbrt_apollo fusion_tracker.launch
-```
+## Setting Up Your Own Robot
+Provided a URDF, you only need adapt the Fusion Tracker config. For that take 
+the [dbrt_example](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/tree/master/dbrt_example)
+as an example. 
 
-## Running robot trackers with custom configuration
-The predefined launch files allow you to pass a custom config file
+In the Fusion Tracker config file, you have map all the joint names to 
+uncertainty standard deviations for the joint process model and joint 
+observation models. The [dbrt_example](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/tree/master/dbrt_example) 
+package provides a good starting point.
+
+### URDF Camera Frame
+
+In case your URDF model does not specify a camera link, you have to attach 
+one to some part of the robot where the camera is mounted. This requires 
+connecting a camera link through a joint to another link of the robot. Take a 
+look at (head.urdf.xacro)[https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/blob/master/apollo_robot_model/models/head.urdf.xacro#L319].
+The XTION camera link *XTION_RGB* is linked to the link *B_HEAD* through the 
+joint *XTION_JOINT*. The transformation between the camera and the robot is not 
+required to be very precise. However, it must be accurate enough to provide 
+a rough initial pose.
+
+Finally, the camera link name (here XTION_RGB) must match the camera frame 
+provided by the point cloud topic. To determine the name of the depth camera 
+frame or the RGB frame if registration is used, run 
+
 ```bash
-roslaunch dbrt_apollo rotary_tracker.launch rotary_tracker_config:=my_custom_rotary_tracker_config.yaml
-```
-```bash
-roslaunch dbrt_apollo visual_tracker.launch visual_tracker_config:=my_custom_visual_tracker_config.yaml
-```
-```bash
-roslaunch dbrt_apollo fusion_tracker.launch fusion_tracker_config:=my_custom_fusion_tracker_config.yaml
+rostopic echo /camera/depth/camera_info
 ```
 
