@@ -39,6 +39,19 @@ one to some part of the robot where the camera is mounted. This requires
 connecting a camera link through a joint to another link of the robot. Take a 
 look at [head.urdf.xacro](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/blob/master/apollo_robot_model/models/head.urdf.xacro#L319) .
 
+The XTION camera link *XTION_RGB* is linked to the link *B_HEAD* through the 
+joint *XTION_JOINT*. The transformation between the camera and the robot is not 
+required to be very precise. However, it must be accurate enough to provide 
+a rough initial pose.
+
+Finally, the camera link name (here XTION_RGB) must match the camera frame 
+provided by the point cloud topic. To determine the name of the depth camera 
+frame or the RGB frame if registration is used, run 
+
+```bash
+rostopic echo /camera/depth/camera_info
+```
+
 ## How to cite?
 ```
 @article{GarciaCifuentes.RAL,
@@ -53,17 +66,3 @@ look at [head.urdf.xacro](https://git-amd.tuebingen.mpg.de/open-source/dbrt_gett
  month_numeric = {4}
 }
 ```
-
-The XTION camera link *XTION_RGB* is linked to the link *B_HEAD* through the 
-joint *XTION_JOINT*. The transformation between the camera and the robot is not 
-required to be very precise. However, it must be accurate enough to provide 
-a rough initial pose.
-
-Finally, the camera link name (here XTION_RGB) must match the camera frame 
-provided by the point cloud topic. To determine the name of the depth camera 
-frame or the RGB frame if registration is used, run 
-
-```bash
-rostopic echo /camera/depth/camera_info
-```
-
