@@ -38,6 +38,22 @@ In case your URDF model does not specify a camera link, you have to attach
 one to some part of the robot where the camera is mounted. This requires 
 connecting a camera link through a joint to another link of the robot. Take a 
 look at [head.urdf.xacro](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/blob/master/apollo_robot_model/models/head.urdf.xacro#L319) .
+
+## How to cite?
+```
+@article{GarciaCifuentes.RAL,
+ title = {Probabilistic Articulated Real-Time Tracking for Robot Manipulation},
+ author = {Garcia Cifuentes, Cristina and Issac, Jan and W{\"u}thrich, Manuel and Schaal, Stefan and Bohg, Jeannette},
+ journal = {IEEE Robotics and Automation Letters (RA-L)},
+ volume = {2},
+ number = {2},
+ pages = {577-584},
+ month = apr,
+ year = {2017},
+ month_numeric = {4}
+}
+```
+
 The XTION camera link *XTION_RGB* is linked to the link *B_HEAD* through the 
 joint *XTION_JOINT*. The transformation between the camera and the robot is not 
 required to be very precise. However, it must be accurate enough to provide 
