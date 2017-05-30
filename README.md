@@ -13,6 +13,8 @@ rate, typically 100Hz-1kHz. Here are some of the core features
  * Handles occlusion
  * Copes with camera delays 
  * Requires only the model, i.e. the URDF description including the link meshes.
+ 
+For more details on the algorithm, please check https://am.is.tuebingen.mpg.de/publications/garciacifuentes-ral.
 
 ## Getting Started Example
 
@@ -40,9 +42,9 @@ nominal camera in your robot model.
 
 Our algorithm assumes that the frame of the depth image (specified by
 the camera_info topic) exists in your URDF robot model. You can check the camera frame
-by running 
+by running:
 ```bash
-rostopic echo /camera/depth/camera_info.
+rostopic echo /camera/depth/camera_info
 ```
 If this frame does not exist in your robot URDF, you have to add such a camera frame to the 
 part of the robot where the camera is mounted. This requires 
