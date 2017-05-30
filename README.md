@@ -16,10 +16,7 @@ rate, typically 100Hz-1kHz. Here are some of the core features
 
 ## Getting Started Example
 
-First follow the steps of setting up the object tracking as described in
-Check out the [dbrt_getting_started](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started.git)
-for a full example of a robot setup with recorded data. You can find the setup 
-steps in the [Getting Started](https://github.com/bayesian-object-tracking/getting_started#robot-tracking)
+First of all, set up and run the example, as described in the [Getting Started](https://github.com/bayesian-object-tracking/getting_started#robot-tracking)
 documentation.
 
 ## Setting Up Your Own Robot
