@@ -20,34 +20,42 @@ First of all, set up and run the example, as described in the [Getting Started](
 documentation.
 
 ## Setting Up Your Own Robot
-Provided a URDF, you only need to adapt the fusion tracker config. Take a look 
-at the [dbrt_example](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/tree/master/dbrt_example)
-to get started.
 
-In the fusion tracker config file, you have to map all the joint names to 
-uncertainty standard deviations for the joint process model and joint 
-observation models. The [dbrt_example](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/tree/master/dbrt_example) 
-package provides a good starting point.
+Now you can use the working example as a starting point. To use your own robot, you will need
+its URDF, and you will need to modify some launch and config files in [dbrt_example](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/tree/master/dbrt_example). The launch files
+should be self explanatory and easy to adapt. You will need to edit 
+the file fusion_tracker_gpu.launch (fusion_tracker_cpu.launch) to use
+your own robot model, instead of Apollo. 
+
+The main work will be to adapt the fusion_tracker_gpu.yaml 
+(fusion_tracker_cpu.yaml) file to your robot. All the parameters 
+for the tracking algorithm are specified in this file, and it is robot
+specific. You will have to adapt the link and joint names to your robot.
+Furthermore, you can specify which joints should be corrected using the 
+depth images, how aggressively they should be corrected, and whether
+you want to estimate an offset between the true camera and the 
+nominal camera in your robot model. 
 
 ### URDF Camera Frame
 
-In case your URDF model does not specify a camera link, you have to attach 
-one to some part of the robot where the camera is mounted. This requires 
+Our algorithm assumes that the frame of the depth image (specified by
+the camera_info topic) exists in your URDF robot model. You can check the camera frame
+by running 
+```bash
+rostopic echo /camera/depth/camera_info.
+```
+If this frame does not exist in your robot URDF, you have to add such a camera frame to the 
+part of the robot where the camera is mounted. This requires 
 connecting a camera link through a joint to another link of the robot. Take a 
 look at [head.urdf.xacro](https://git-amd.tuebingen.mpg.de/open-source/dbrt_getting_started/blob/master/apollo_robot_model/models/head.urdf.xacro#L319) .
 
-The XTION camera link *XTION_RGB* is linked to the link *B_HEAD* through the 
+The XTION camera link *XTION_RGB* is connected to the link *B_HEAD* through the 
 joint *XTION_JOINT*. The transformation between the camera and the robot is not 
-required to be very precise. However, it must be accurate enough to provide 
+required to be very precise, since our algorithm can estimate an offset. 
+However, it must be accurate enough to provide 
 a rough initial pose.
 
-Finally, the camera link name (here XTION_RGB) must match the camera frame 
-provided by the point cloud topic. To determine the name of the depth camera 
-frame or the RGB frame if registration is used, run 
 
-```bash
-rostopic echo /camera/depth/camera_info
-```
 
 ## How to cite?
 ```
