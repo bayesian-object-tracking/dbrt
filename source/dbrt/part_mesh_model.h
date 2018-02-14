@@ -37,6 +37,9 @@
 #include <Eigen/Dense>
 #include <boost/shared_ptr.hpp>
 #include <urdf/model.h>
+#include <boost/algorithm/string.hpp>
+
+
 
 #ifdef HAVE_V2
 #include "assimp/aiPostProcess.h"
@@ -63,126 +66,85 @@ public:
           vertices_(new std::vector<Eigen::Vector3d>),
           indices_(new std::vector<std::vector<int>>)
     {
-        if (collision)
+        // get link shape and origin -------------------------------------------
+        boost::shared_ptr<urdf::Geometry> geometry;
+        urdf::Pose origin;
+        if(collision && link_->collision)
         {
-            if ((link_->collision.get() != NULL) &&
-                (link_->collision->geometry.get() != NULL) &&
-                (link_->collision->geometry->type == urdf::Geometry::MESH))
-            {
-                boost::shared_ptr<urdf::Mesh> mesh =
-                    boost::dynamic_pointer_cast<urdf::Mesh>(
-                        link_->collision->geometry);
-                std::string filename(mesh->filename);
-                filename_ = filename;
-
-                if (filename.substr(filename.size() - 4, 4) == ".stl" ||
-                    filename.substr(filename.size() - 4, 4) == ".dae")
-                {
-                    if (filename.substr(filename.size() - 4, 4) == ".dae")
-                        filename.replace(filename.size() - 4, 4, ".stl");
-                    //	      filename.erase(0,25);
-                    //	      filename = p_description_path + filename;
-
-                    // remove 'package://' from string
-                    std::string to_be_removed = "package://";
-                    std::string::size_type location =
-                        filename.find(to_be_removed);
-                    if (location != std::string::npos)
-                        filename.erase(location, to_be_removed.length());
-
-                    // remove first folder
-                    std::string::size_type location_2 = filename.find("/");
-                    if (location_2 != std::string::npos)
-                        filename.erase(0, location_2);
-
-                    filename = p_description_path + filename;
-
-                    if (!boost::filesystem::exists(filename))
-                    {
-                        std::cout << "mesh file " << filename
-                                  << " does not exist" << std::endl;
-                        exit(-1);
-                    }
-
-                    scene_ =
-                        aiImportFile(filename.c_str(),
-                                     aiProcessPreset_TargetRealtime_Quality);
-                    numFaces_ = scene_->mMeshes[0]->mNumFaces;
-
-                    original_transform_.linear() =
-                        Eigen::Quaterniond(link_->collision->origin.rotation.w,
-                                           link_->collision->origin.rotation.x,
-                                           link_->collision->origin.rotation.y,
-                                           link_->collision->origin.rotation.z)
-                            .toRotationMatrix();
-                    original_transform_.translation() =
-                        Eigen::Vector3d(link_->collision->origin.position.x,
-                                        link_->collision->origin.position.y,
-                                        link_->collision->origin.position.z);
-                    std::cout << filename << std::endl;
-                    proper_ = true;
-                }
-            }
+            geometry = link_->collision->geometry;
+            origin = link_->collision->origin;
         }
-        else
+        if(!collision && link_->visual)
         {
-            if ((link_->visual.get() != NULL) &&
-                (link_->visual->geometry.get() != NULL) &&
-                (link_->visual->geometry->type == urdf::Geometry::MESH))
-            {
-                boost::shared_ptr<urdf::Mesh> mesh =
-                    boost::dynamic_pointer_cast<urdf::Mesh>(
-                        link_->visual->geometry);
-                std::string filename(mesh->filename);
-                filename_ = filename;
-
-                if (filename.substr(filename.size() - 4, 4) == ".stl" ||
-                    filename.substr(filename.size() - 4, 4) == ".dae")
-                {
-                    if (filename.substr(filename.size() - 4, 4) == ".dae")
-                        filename.replace(filename.size() - 4, 4, ".stl");
-
-                    // remove 'package://' from string
-                    std::string to_be_removed = "package://";
-                    std::string::size_type location =
-                        filename.find(to_be_removed);
-                    if (location != std::string::npos)
-                        filename.erase(location, to_be_removed.length());
-
-                    // remove first folder
-                    std::string::size_type location_2 = filename.find("/");
-                    if (location_2 != std::string::npos)
-                        filename.erase(0, location_2);
-
-                    filename = p_description_path + filename;
-
-                    if (!boost::filesystem::exists(filename))
-                    {
-                        std::cout << "mesh file " << filename
-                                  << " does not exist" << std::endl;
-                        exit(-1);
-                    }
-
-                    scene_ =
-                        aiImportFile(filename.c_str(),
-                                     aiProcessPreset_TargetRealtime_Quality);
-                    numFaces_ = scene_->mMeshes[0]->mNumFaces;
-
-                    original_transform_.linear() =
-                        Eigen::Quaterniond(link_->visual->origin.rotation.w,
-                                           link_->visual->origin.rotation.x,
-                                           link_->visual->origin.rotation.y,
-                                           link_->visual->origin.rotation.z)
-                            .toRotationMatrix();
-                    original_transform_.translation() =
-                        Eigen::Vector3d(link_->visual->origin.position.x,
-                                        link_->visual->origin.position.y,
-                                        link_->visual->origin.position.z);
-                    //	      std::cout << filename << std::endl;
-                    proper_ = true;
-                }
-            }
+            geometry = link_->visual->geometry;
+            origin = link_->visual->origin;
         }
+        if(!geometry || geometry->type != urdf::Geometry::MESH)
+        {
+            return;
+        }
+
+        // get mesh path -------------------------------------------------------
+        boost::shared_ptr<urdf::Mesh> mesh =
+                boost::dynamic_pointer_cast<urdf::Mesh>(geometry);
+        boost::filesystem::path filename(mesh->filename);
+        filename_ = filename.string();
+
+        if(filename.extension() == ".dae")
+        {
+            filename.replace_extension(".stl");
+        }
+        else if(filename.extension() == ".DAE")
+        {
+            filename.replace_extension(".STL");
+        }
+
+        std::string filename_str = filename.string();
+        std::string to_be_removed = "package://";
+        std::string::size_type location =
+                filename_str.find(to_be_removed);
+        if (location != std::string::npos)
+            filename_str.erase(location, to_be_removed.length());
+
+        std::string::size_type location_2 = filename_str.find("/");
+        if (location_2 != std::string::npos)
+            filename_str.erase(0, location_2);
+        filename = p_description_path / boost::filesystem::path(filename_str);
+
+        if(!boost::iequals(filename.extension().string(), ".stl"))
+        {
+            std::cout << "unknown extension: " << filename << std::endl;
+            exit(-1);
+        }
+        if (!boost::filesystem::exists(filename))
+        {
+            std::cout << "mesh file " << filename
+                      << " does not exist" << std::endl;
+            exit(-1);
+        }
+
+        // load mesh -----------------------------------------------------------
+        scene_ = aiImportFile(filename.c_str(),
+                              aiProcessPreset_TargetRealtime_Quality);
+        if(scene_ == NULL)
+        {
+            std::cout << "error: assimp could not import mesh "
+                      << filename << std::endl;
+            exit(-1);
+        }
+
+        numFaces_ = scene_->mMeshes[0]->mNumFaces;
+
+        original_transform_.linear() =
+                Eigen::Quaterniond(origin.rotation.w,
+                                   origin.rotation.x,
+                                   origin.rotation.y,
+                                   origin.rotation.z).toRotationMatrix();
+        original_transform_.translation() =
+                Eigen::Vector3d(origin.position.x,
+                                origin.position.y,
+                                origin.position.z);
+        proper_ = true;
     }
 
     boost::shared_ptr<std::vector<Eigen::Vector3d>> get_vertices()

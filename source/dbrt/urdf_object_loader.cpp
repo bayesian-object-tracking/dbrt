@@ -36,6 +36,15 @@ void UrdfObjectModelLoader::load(
     std::vector<boost::shared_ptr<PartMeshModel>> part_meshes_;
     urdf_kinematics_->get_part_meshes(part_meshes_);
 
+    if(part_meshes_.size() == 0)
+    {
+        std::cout << "error: the number of robot parts (meshes) loaded"
+                     " is equal to 0. there seems to be a problem with your"
+                     " urdf model. maybe you did not set the rendering roots"
+                     " correctly?" << std::endl;
+        exit(-1);
+    }
+
     vertices.resize(part_meshes_.size());
     triangle_indices.resize(part_meshes_.size());
     for (size_t i = 0; i < part_meshes_.size(); i++)
