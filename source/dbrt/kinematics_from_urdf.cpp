@@ -342,6 +342,35 @@ dbot::PoseVector KinematicsFromURDF::get_link_pose(int index)
     return pose_vector;
 }
 
+// convert all joint angles to eigen
+Eigen::VectorXd KinematicsFromURDF::joint_sensor_msg_to_eigen(
+        const sensor_msgs::JointState::ConstPtr sensor_msg)
+{
+  sensor_msgs::JointState joint_state = *sensor_msg;  
+  check_size(joint_state.position.size());
+  
+  Eigen::VectorXd eigen(joint_state.position.size());
+  
+  for (size_t i = 0; i < joint_state.position.size(); i++)
+    {
+      int joint_index = name_to_index(joint_state.name[i]);
+      
+      if (joint_index >= 0)
+        {
+	  eigen(joint_index) = joint_state.position[i];
+        }
+      else
+        {
+	  ROS_ERROR("i: %d, No joint index for %s",
+		    int(i),
+		    joint_state.name[i].c_str());
+        }
+    }
+  
+  return eigen;
+}
+
+
 Eigen::VectorXd KinematicsFromURDF::sensor_msg_to_eigen(
     const sensor_msgs::JointState& sensor_msg)
 {

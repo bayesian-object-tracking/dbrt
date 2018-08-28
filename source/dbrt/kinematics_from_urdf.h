@@ -68,6 +68,7 @@ public:
 
     /// convenience ************************************************************
     Eigen::VectorXd sensor_msg_to_eigen(const sensor_msgs::JointState& angles);
+    Eigen::VectorXd joint_sensor_msg_to_eigen(const sensor_msgs::JointState::ConstPtr sensor_msg);
     void print_joints();
     void print_links();
 
