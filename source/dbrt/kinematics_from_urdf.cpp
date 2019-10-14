@@ -55,7 +55,7 @@ KinematicsFromURDF::KinematicsFromURDF(
 
     // create segment map for correct ordering of joints
     segment_map_ = kin_tree_.getSegments();
-    boost::shared_ptr<const urdf::Joint> joint;
+    std::shared_ptr<const urdf::Joint> joint;
     joint_map_.resize(kin_tree_.getNrOfJoints());
     for (KDL::SegmentMap::const_iterator seg_it = segment_map_.begin();
          seg_it != segment_map_.end();
@@ -145,7 +145,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
     for (int i = 0; i < dofs.size(); ++i)
     {
         // construct joint
-        auto joint = boost::make_shared<urdf::Joint>();
+        auto joint = std::make_shared<urdf::Joint>();
         joint->name = dofs[i] + "_JOINT";
         joint->type = i < 3 ? urdf::Joint::PRISMATIC : urdf::Joint::REVOLUTE;
         joint->axis.x = double(i == 0 || i == 3);
@@ -163,7 +163,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
         // last dof has no link
         if (i > 4) continue;
 
-        auto link = boost::make_shared<urdf::Link>();
+        auto link = std::make_shared<urdf::Link>();
         link->name = dofs[i] + "_LINK";
         link->parent_joint = joint;
 
@@ -177,7 +177,7 @@ void KinematicsFromURDF::inject_offset_joints_and_links(
     camera_root_link->child_links.push_back(urdf.links_[dofs[0] + "_LINK"]);
 
     // add leaf original camera frame
-    auto camera_leaf_link = boost::make_shared<urdf::Link>();
+    auto camera_leaf_link = std::make_shared<urdf::Link>();
     camera_leaf_link->name = camera_frame;
     camera_leaf_link->parent_joint = urdf.joints_[dofs[5] + "_JOINT"];
     urdf.links_[camera_frame] = camera_leaf_link;
@@ -208,16 +208,16 @@ KinematicsFromURDF::~KinematicsFromURDF()
 }
 
 void KinematicsFromURDF::get_part_meshes(
-    std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes)
+    std::vector<std::shared_ptr<PartMeshModel>>& part_meshes)
 {
     // Load robot mesh for each link
-    std::vector<boost::shared_ptr<urdf::Link>> links;
+    std::vector<std::shared_ptr<urdf::Link>> links;
     urdf_.getLinks(links);
     std::string global_root = urdf_.getRoot()->name;
     for (unsigned i = 0; i < links.size(); i++)
     {
         // keep only the links descending from our root
-        boost::shared_ptr<urdf::Link> tmp_link = links[i];
+        std::shared_ptr<urdf::Link> tmp_link = links[i];
         while (tmp_link->name.compare(rendering_root_left_) == 0 &&
                tmp_link->name.compare(rendering_root_right_) == 0 &&
                tmp_link->name.compare(global_root) == 0)
@@ -227,7 +227,7 @@ void KinematicsFromURDF::get_part_meshes(
 
         if (tmp_link->name.compare(global_root) == 0) continue;
 
-        boost::shared_ptr<PartMeshModel> part_ptr(
+        std::shared_ptr<PartMeshModel> part_ptr(
             new PartMeshModel(links[i], description_path_, i, false));
 
         if (part_ptr->proper_)  // if the link has an actual mesh file to read
@@ -313,7 +313,7 @@ void KinematicsFromURDF::print_joints()
 
 void KinematicsFromURDF::print_links()
 {
-    std::vector<boost::shared_ptr<urdf::Link>> links;
+    std::vector<std::shared_ptr<urdf::Link>> links;
     urdf_.getLinks(links);
 
     std::cout << "robot links: " << std::endl;
