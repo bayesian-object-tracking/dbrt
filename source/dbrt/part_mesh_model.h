@@ -56,7 +56,7 @@
 class PartMeshModel
 {
 public:
-    PartMeshModel(const boost::shared_ptr<urdf::Link> p_link,
+    PartMeshModel(const std::shared_ptr<urdf::Link> p_link,
                   const std::string& p_description_path,
                   unsigned p_index,
                   bool collision)
@@ -67,7 +67,7 @@ public:
           indices_(new std::vector<std::vector<int>>)
     {
         // get link shape and origin -------------------------------------------
-        boost::shared_ptr<urdf::Geometry> geometry;
+        std::shared_ptr<urdf::Geometry> geometry;
         urdf::Pose origin;
         if(collision && link_->collision)
         {
@@ -85,8 +85,8 @@ public:
         }
 
         // get mesh path -------------------------------------------------------
-        boost::shared_ptr<urdf::Mesh> mesh =
-                boost::dynamic_pointer_cast<urdf::Mesh>(geometry);
+        std::shared_ptr<urdf::Mesh> mesh =
+                std::dynamic_pointer_cast<urdf::Mesh>(geometry);
         boost::filesystem::path filename(mesh->filename);
         filename_ = filename.string();
 
@@ -147,7 +147,7 @@ public:
         proper_ = true;
     }
 
-    boost::shared_ptr<std::vector<Eigen::Vector3d>> get_vertices()
+    std::shared_ptr<std::vector<Eigen::Vector3d>> get_vertices()
     {
         const struct aiMesh* mesh = scene_->mMeshes[0];
         unsigned num_vertices = mesh->mNumVertices;
@@ -163,7 +163,7 @@ public:
         return vertices_;
     }
 
-    boost::shared_ptr<std::vector<std::vector<int>>> get_indices()
+    std::shared_ptr<std::vector<std::vector<int>>> get_indices()
     {
         const struct aiMesh* mesh = scene_->mMeshes[0];
         unsigned num_faces = mesh->mNumFaces;
@@ -193,12 +193,12 @@ public:
     bool proper_;
 
 private:
-    const boost::shared_ptr<urdf::Link> link_;
+    const std::shared_ptr<urdf::Link> link_;
     const struct aiScene* scene_;
     unsigned numFaces_;
 
-    boost::shared_ptr<std::vector<Eigen::Vector3d>> vertices_;
-    boost::shared_ptr<std::vector<std::vector<int>>> indices_;
+    std::shared_ptr<std::vector<Eigen::Vector3d>> vertices_;
+    std::shared_ptr<std::vector<std::vector<int>>> indices_;
 
     Eigen::Affine3d original_transform_;
 

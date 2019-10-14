@@ -57,7 +57,7 @@ public:
 
     std::vector<int> get_joint_order(const sensor_msgs::JointState& state);
     void get_part_meshes(
-        std::vector<boost::shared_ptr<PartMeshModel>>& part_meshes);
+        std::vector<std::shared_ptr<PartMeshModel>>& part_meshes);
     KDL::Tree get_tree();
 
     int num_joints();

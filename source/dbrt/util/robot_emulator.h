@@ -82,7 +82,7 @@ public:
         // camera publisher
         pub_camera_info_ = node_handle_.advertise<sensor_msgs::CameraInfo>(
             prefix + "/XTION/depth/camera_info", 0);
-        boost::shared_ptr<image_transport::ImageTransport> it(
+        std::shared_ptr<image_transport::ImageTransport> it(
             new image_transport::ImageTransport(node_handle_));
         pub_depth_image_ = it->advertise(prefix + "/XTION/depth/image", 0);
     }
